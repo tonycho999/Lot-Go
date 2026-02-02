@@ -1,134 +1,110 @@
-/* --- 기초 설정 및 테마 --- */
-* { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-}
+/* [폰트] 구글 폰트 Exo 2 적용 (가독성 좋고 미래지향적) */
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body { 
     margin: 0; 
-    background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%); 
-    color: white; 
-    font-family: 'Orbitron', sans-serif; 
+    /* [배경] 칠흑 같은 검정이 아닌, 깊은 바다색(Deep Blue) 그라데이션 */
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    color: #e2e8f0; 
+    font-family: 'Exo 2', sans-serif; /* 폰트 변경 */
     overflow: hidden; 
     height: 100vh;
 }
 
-/* --- 공용 뷰 컨테이너 --- */
+/* 뷰 컨테이너 */
 .view-container { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    height: 100vh; 
-    padding: 20px; 
-    text-align: center; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    height: 100vh; padding: 20px; text-align: center; max-width: 600px; margin: 0 auto;
 }
 
-/* --- 인증 및 로비 디자인 --- */
-.main-logo {
-    width: 100px;
-    height: auto;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6));
-}
-
-.auth-box { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 10px; }
-input { 
-    width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; 
-    background: #1e293b; color: white; font-size: 14px; outline: none;
-}
-input:focus { border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
-
-/* --- 버튼 시스템 --- */
+/* 버튼 공통 스타일 */
 .main-btn { 
-    width: 100%; padding: 15px; border-radius: 12px; border: none; 
-    background: #6366f1; color: white; font-weight: 900; cursor: pointer; 
-    transition: 0.2s; font-family: 'Orbitron';
+    width: 100%; padding: 18px; border-radius: 16px; border: none; 
+    color: white; font-weight: 700; cursor: pointer; 
+    transition: transform 0.2s, filter 0.2s; 
+    font-family: 'Exo 2', sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
-.main-btn:active { transform: scale(0.98); opacity: 0.9; }
+.main-btn:active { transform: scale(0.98); }
 
-.link-btn { background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; margin-top: 10px; }
+/* 버튼 내부 텍스트 가독성 */
+.btn-title { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+.btn-desc { font-size: 0.9rem; margin-top: 4px; opacity: 0.9; font-weight: 400; }
 
-/* --- 하단 네비게이션 --- */
-.bottom-nav { 
-    position: fixed; bottom: 0; width: 100%; display: flex; 
-    background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px);
-    padding: 12px 0; border-top: 1px solid #334155; 
-}
-.bottom-nav button { 
-    flex: 1; background: none; border: none; color: #94a3b8; 
-    font-size: 10px; cursor: pointer; display: flex; flex-direction: column; 
-    align-items: center; gap: 5px; font-family: 'Orbitron';
+/* 광고 버튼 스타일 */
+.ad-btn-style {
+    background: linear-gradient(45deg, #6d28d9, #8b5cf6);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    font-size: 1.1rem;
 }
 
-/* --- [싱글 게임 전용 디자인] --- */
+/* 난이도별 버튼 색상 (가독성 높은 컬러) */
+.easy-btn { background: linear-gradient(to right, #059669, #10b981); }
+.normal-btn { background: linear-gradient(to right, #2563eb, #3b82f6); }
+.hard-btn { background: linear-gradient(to right, #dc2626, #ef4444); }
 
-/* 게임 제목 및 메타 정보 */
-.game-title { font-size: 1.8rem; margin: 10px 0 25px; text-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
-.highlight { color: #818cf8; font-weight: 900; }
-.back-link { color: #64748b; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
-.back-link:hover { color: #6366f1; }
+/* 구분선 */
+.divider { width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 5px 0; }
 
-/* 상단 상금 패널 */
-.prize-panel { margin-bottom: 20px; }
-.prize-panel small { color: #94a3b8; letter-spacing: 2px; }
-.prize-amount { font-size: 2rem; color: #fbbf24; font-weight: 900; text-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
-
-/* 카드 그리드 공통 */
-.card-grid { 
-    display: grid; gap: 12px; width: 100%; max-width: 420px; 
-    margin: 0 auto; justify-content: center;
+/* 게임 타이틀 */
+.game-title { 
+    font-size: 2.2rem; margin: 10px 0 20px; 
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    font-weight: 800; 
 }
+.highlight { color: #38bdf8; }
+.back-link { color: #94a3b8; font-size: 0.9rem; cursor: pointer; padding: 10px; }
+
+/* 상금 패널 */
+.prize-panel-wrapper {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid #6366f1;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.25);
+    min-width: 280px;
+}
+.prize-label { font-size: 0.85rem; color: #cbd5e1; letter-spacing: 2px; font-weight: 600; margin-bottom: 8px; }
+.prize-amount { font-size: 2.8rem; color: #fbbf24; font-weight: 900; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+
+/* 카드 그리드 */
+.card-grid { display: grid; gap: 10px; width: 100%; justify-content: center; }
 .grid-easy, .grid-normal, .grid-hard { grid-template-columns: repeat(5, 1fr); }
 
-/* 카드 기본 스타일 */
+/* 카드 디자인 */
 .card { 
-    background: #1e293b; aspect-ratio: 1; display: flex; align-items: center; 
-    justify-content: center; border-radius: 12px; border: 1px solid #334155; 
-    font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    background: #1e293b; aspect-ratio: 1; border-radius: 12px; 
+    border: 1px solid #334155; display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: #e2e8f0;
 }
+.card.selected { background: #4f46e5; border-color: #818cf8; color: white; box-shadow: 0 0 10px rgba(79, 70, 229, 0.5); }
+.card.flipped-card { background: #6366f1 !important; color: white !important; transform: rotateY(180deg); }
 
-/* 선택 단계 카드 */
-.selection-card.selected { 
-    background: rgba(99, 102, 241, 0.3); border-color: #6366f1; 
-    transform: translateY(-5px); box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); 
-}
-
-/* 플레이 단계 카드 (숨김/뒤집힘) */
-.hidden-card { 
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%); 
-    color: transparent; position: relative;
-}
-.hidden-card::after { content: '?'; color: rgba(255,255,255,0.1); font-size: 1.5rem; }
-
-.flipped-card { 
-    background: #6366f1 !important; border-color: #818cf8 !important; 
-    color: white !important; transform: rotateY(180deg); 
-}
-
-/* 타겟 바 및 타겟 노드 */
-.target-container { display: flex; gap: 8px; justify-content: center; margin-bottom: 25px; }
+/* 하단 타겟 바 */
+.target-container { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
 .target-node { 
-    width: 45px !important; height: 45px !important; font-size: 14px; 
-    background: #334155; border: 2px solid #475569; border-radius: 10px;
+    width: 40px; height: 40px; background: #334155; border-radius: 8px; 
+    display: flex; align-items: center; justify-content: center; font-weight: bold; color: #94a3b8;
 }
-.target-node.found { 
-    background: #10b981; border-color: #34d399; 
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); 
-}
+.target-node.found { background: #10b981; color: white; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
 
-/* --- 액션 및 결과 영역 --- */
-.action-area { width: 100%; display: flex; justify-content: center; margin-top: 30px; }
-.result-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
-
+/* 네온 버튼 (Start Game) */
 .neon-btn {
-    padding: 15px 30px; border-radius: 12px; border: none; font-family: 'Orbitron';
-    font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px;
+    padding: 16px 40px; border-radius: 12px; border: none; font-family: 'Exo 2';
+    font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1.2rem;
+    background: #f43f5e; color: white; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+    margin-top: 20px;
 }
-.neon-btn.primary { background: #6366f1; color: white; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-.neon-btn.success { background: #10b981; color: white; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-.neon-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+.neon-btn.success { background: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+.neon-btn.primary { background: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
 
-.result-msg { font-size: 2rem; color: #fbbf24; margin-bottom: 20px; font-weight: 900; }
+/* 결과 메시지 */
+.result-msg { font-size: 1.8rem; margin-bottom: 10px; font-weight: 800; }
+.win-gold .result-msg { color: #fbbf24; }
+.win-fail .result-msg { color: #f43f5e; }
+.final-prize { font-size: 1.2rem; color: #cbd5e1; }
