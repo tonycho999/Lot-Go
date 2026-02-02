@@ -1,22 +1,38 @@
-<div id="app-viewport">
-    <div id="auth-view" class="view-container" style="display:none;">
-        <h2>Celestial Login</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pw" placeholder="Password">
-        <button onclick="handleLogin()">Login</button>
-    </div>
-
-    <div id="lobby-view" class="view-container" style="display:none;">
-        <h3>Welcome back!</h3>
-        <div class="coin-display">Balance: <span id="user-coins">0</span></div>
-        <button onclick="startSingleGame()" class="start-btn">Single Game Start</button>
-    </div>
-
-    <div id="game-view" class="view-container" style="display:none;">
-        <div class="game-header">
-            <button onclick="window.switchView('lobby-view')">Back to Lobby</button>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestial Numbers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* CSS 파일이 안 읽힐 경우를 대비한 최소한의 스타일 */
+        body { background-color: #f8fafc; font-family: 'Orbitron', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .view-container { display: flex; flex-direction: column; align-items: center; background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div id="app-viewport">
+        <div id="auth-view" class="view-container">
+            <h2 style="color: #6366f1;">CELESTIAL LOGIN</h2>
+            <input type="email" id="email" placeholder="이메일" style="margin-bottom: 10px; padding: 10px; width: 250px;">
+            <input type="password" id="pw" placeholder="비밀번호" style="margin-bottom: 20px; padding: 10px; width: 250px;">
+            <button onclick="handleLogin()" style="padding: 12px 30px; background: #6366f1; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;">START GAME</button>
         </div>
-        <div id="game-board">
-            </div>
+
+        <div id="lobby-view" class="view-container" style="display:none;">
+            <h3>LOBBY</h3>
+            <div style="font-size: 24px; margin: 20px 0;">Coins: <span id="user-coins">0</span></div>
+            <button onclick="startSingleGame()" style="padding: 12px 30px; background: #10b981; color: white; border: none; border-radius: 10px;">SINGLE PLAY</button>
+        </div>
+
+        <div id="game-view" class="view-container" style="display:none;">
+            <button onclick="window.switchView('lobby-view')">BACK</button>
+            <div id="game-board"></div>
+        </div>
     </div>
-</div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
