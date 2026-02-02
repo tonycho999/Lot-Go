@@ -41,35 +41,46 @@ export async function initSingleGame(level, auth, db) {
 }
 
 /**
- * 3. 숫자 선택 단계
+ * 3. 숫자 선택 단계 (디자인 개편)
  */
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
     
+    // 상단에 최소화된 로비 이동 링크 배치
     header.innerHTML = `
-        <button class="link-btn" onclick="location.reload()" style="margin-bottom:15px; color:#94a3b8;">← BACK TO LOBBY</button>
-        <h3 style="color: #6366f1; margin:0;">PICK ${gameState.mode.pick} NUMBERS</h3>`;
+        <div class="game-meta">
+            <span class="back-link" onclick="location.reload()">← LOBBY</span>
+        </div>
+        <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
+    `;
     
     board.className = "card-grid grid-easy";
     board.innerHTML = "";
 
     for (let i = 1; i <= gameState.mode.total; i++) {
         const card = document.createElement('div');
-        card.className = "card";
-        card.innerText = i;
+        card.className = "card selection-card";
+        card.innerHTML = `<span class="card-num">${i}</span>`;
+        
         card.onclick = () => {
             if (gameState.selected.includes(i) || gameState.selected.length >= gameState.mode.pick) return;
             gameState.selected.push(i);
-            card.style.background = "#6366f1";
+            card.classList.add('selected');
             
             if (gameState.selected.length === gameState.mode.pick) {
-                const startBtn = document.createElement('button');
-                startBtn.className = "main-btn";
-                startBtn.style.marginTop = "20px";
-                startBtn.innerText = "START GAME (SHUFFLE)";
-                startBtn.onclick = renderPlayPhase;
-                board.appendChild(startBtn);
+                // 기존 버튼 제거 후 깔끔한 START 버튼 생성
+                const existingBtn = document.querySelector('.action-area');
+                if (existingBtn) existingBtn.remove();
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = "action-area";
+                btnContainer.innerHTML = `
+                    <button class="neon-btn" onclick="renderPlayPhase()">
+                        START GAME
+                    </button>
+                `;
+                board.after(btnContainer);
             }
         };
         board.appendChild(card);
@@ -77,62 +88,54 @@ function renderSelectionPhase() {
 }
 
 /**
- * 4. 실시간 상금 계산기 (핵심 로직)
+ * 4. 실시간 상금 계산기
  */
 function calculateCurrentPrize() {
     const { mode, flips, level } = gameState;
-    
-    // 마지막 카드는 무조건 0원
     if (flips === mode.total) return 0;
 
-    // 1단계: EASY (2/5) 수동 감쇄
     if (level === 1) {
         if (flips <= 2) return 500;
         if (flips === 3) return 200;
         if (flips === 4) return 50;
     }
 
-    // 2단계: NORMAL (4/10) - 5장째 20% 폭락, 이후 30% 잔존
     if (level === 2) {
         if (flips <= 4) return 100000;
-        if (flips === 5) return 20000; // 100,000의 20%
-        
+        if (flips === 5) return 20000;
         let prize = 20000;
-        for (let i = 6; i <= flips; i++) {
-            prize = Math.floor(prize * 0.3); // 이전 상금의 30%만 남음
-        }
+        for (let i = 6; i <= flips; i++) { prize = Math.floor(prize * 0.3); }
         return prize;
     }
 
-    // 3단계: HARD (6/20) - 7장째 20% 폭락, 이후 30% 잔존
     if (level === 3) {
         if (flips <= 6) return 100000000;
-        if (flips === 7) return 20000000; // 100,000,000의 20%
-        
+        if (flips === 7) return 20000000;
         let prize = 20000000;
-        for (let i = 8; i <= flips; i++) {
-            prize = Math.floor(prize * 0.3); // 이전 상금의 30%만 남음
-        }
+        for (let i = 8; i <= flips; i++) { prize = Math.floor(prize * 0.3); }
         return prize;
     }
-
     return 0;
 }
 
 /**
- * 5. 게임 플레이 단계
+ * 5. 게임 플레이 단계 (카드 뒤집기)
  */
 function renderPlayPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
+    const actionArea = document.querySelector('.action-area');
+    
+    // 시작 버튼 영역 제거
+    if (actionArea) actionArea.remove();
 
     header.innerHTML = `
-        <div style="margin-bottom: 10px;">
-            <small style="color:#94a3b8;">CURRENT PRIZE</small>
-            <div id="live-prize" style="font-size:24px; color:#fbbf24; font-weight:900;">${gameState.mode.max.toLocaleString()}</div>
+        <div class="prize-panel">
+            <small>CURRENT PRIZE</small>
+            <div id="live-prize" class="prize-amount">${gameState.mode.max.toLocaleString()}</div>
         </div>
-        <div id="target-bar" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 15px;">
-            ${gameState.selected.map(num => `<div id="target-${num}" class="card target" style="width:40px; height:40px;">${num}</div>`).join('')}
+        <div id="target-bar" class="target-container">
+            ${gameState.selected.map(num => `<div id="target-${num}" class="card target-node">${num}</div>`).join('')}
         </div>`;
 
     board.className = `card-grid ${gameState.mode.grid}`;
@@ -142,16 +145,15 @@ function renderPlayPhase() {
 
     shuffled.forEach(num => {
         const card = document.createElement('div');
-        card.className = "card hidden";
+        card.className = "card hidden-card";
         card.innerText = "?";
         card.onclick = () => {
-            if (gameState.isGameOver || !card.classList.contains('hidden')) return;
+            if (gameState.isGameOver || !card.classList.contains('hidden-card')) return;
             
             gameState.flips++;
-            card.className = "card flipped";
+            card.className = "card flipped-card";
             card.innerText = num;
 
-            // 실시간 상금 UI 업데이트
             const livePrizeEl = document.getElementById('live-prize');
             if (livePrizeEl) {
                 livePrizeEl.innerText = calculateCurrentPrize().toLocaleString();
@@ -159,7 +161,9 @@ function renderPlayPhase() {
 
             if (gameState.selected.includes(num)) {
                 gameState.found.push(num);
-                document.getElementById(`target-${num}`).style.background = "#10b981";
+                const targetNode = document.getElementById(`target-${num}`);
+                if (targetNode) targetNode.classList.add('found');
+                
                 if (gameState.found.length === gameState.mode.pick) handleGameWin();
             } else if (gameState.flips === gameState.mode.total) {
                 handleGameOver();
@@ -180,7 +184,7 @@ async function handleGameWin() {
         const userDocRef = doc(window.lotGoDb, "users", window.lotGoAuth.currentUser.uid);
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
-    showResultButtons(`MATCH! WINNER PRIZE: ${prize.toLocaleString()} C`);
+    showResultButtons(`WINNER: ${prize.toLocaleString()} C`);
 }
 
 /**
@@ -188,7 +192,7 @@ async function handleGameWin() {
  */
 function handleGameOver() {
     gameState.isGameOver = true;
-    showResultButtons("GAME OVER! NO PRIZE.");
+    showResultButtons("GAME OVER");
 }
 
 /**
@@ -196,9 +200,11 @@ function handleGameOver() {
  */
 function showResultButtons(message) {
     const header = document.getElementById('game-header');
-    header.innerHTML = `<h3 style="color:#fbbf24;">${message}</h3>`;
+    header.innerHTML = `<h2 class="result-msg">${message}</h2>`;
     const board = document.getElementById('game-board');
     board.innerHTML = `
-        <button class="main-btn" onclick="initSingleGame(${gameState.level}, window.lotGoAuth, window.lotGoDb)" style="background:#10b981; margin-bottom:10px;">PLAY AGAIN</button>
-        <button class="main-btn" onclick="location.reload()" style="background:#6366f1;">BACK TO LOBBY</button>`;
+        <div class="result-actions">
+            <button class="neon-btn success" onclick="initSingleGame(${gameState.level}, window.lotGoAuth, window.lotGoDb)">PLAY AGAIN</button>
+            <button class="neon-btn primary" onclick="location.reload()">LOBBY</button>
+        </div>`;
 }
