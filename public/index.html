@@ -4,37 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lot-Go</title>
+    
     <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366f1">
+    
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app-viewport">
         <div id="auth-view" class="view-container">
-            <img src="images/logo.png" class="main-logo">
-            <h2>LOT-GO</h2>
-            <div id="auth-inputs">
-                <input type="email" id="email" placeholder="Email">
+            <img src="images/logo.png" class="main-logo" alt="Lot-Go Logo">
+            <h2 class="title-glow">LOT-GO</h2>
+            <div id="auth-inputs" class="auth-box">
+                <input type="email" id="email" placeholder="Email Address">
                 <input type="password" id="pw" placeholder="Password">
-                <button onclick="handleLogin()">LOGIN</button>
-                <button onclick="showSignup()">CREATE ACCOUNT</button>
+                <button class="main-btn" onclick="handleLogin()">LOGIN</button>
+                <button class="link-btn" onclick="switchView('signup-view')">CREATE ACCOUNT</button>
+            </div>
+        </div>
+
+        <div id="signup-view" class="view-container" style="display:none;">
+            <h2>CREATE ACCOUNT</h2>
+            <div class="auth-box">
+                <input type="email" id="signup-email" placeholder="New Email">
+                <input type="password" id="signup-pw" placeholder="New Password">
+                <button class="main-btn signup" onclick="handleSignUp()">SIGN UP</button>
+                <button class="link-btn" onclick="switchView('auth-view')">BACK TO LOGIN</button>
             </div>
         </div>
 
         <div id="lobby-view" class="view-container" style="display:none;">
-            <div id="balance-container"></div> <div class="tab-system">
-                <div class="tab-content" id="single-tab"></div>  <div class="tab-content" id="multi-tab" style="display:none;"></div>   <div class="tab-content" id="profile-tab" style="display:none;"></div> </div>
+            <div id="balance-container" style="width: 100%;"></div> 
+
+            <div class="tab-system">
+                <div class="tab-content" id="single-tab"></div>
+                <div id="online-tab" class="tab-content" style="display:none;">
+                    <div class="placeholder-box">Online Mode Coming Soon...</div>
+                </div>
+                <div id="shop-tab" class="tab-content" style="display:none;"></div>
+                <div id="profile-tab" class="tab-content" style="display:none;"></div>
+            </div>
 
             <nav class="bottom-nav">
-                <button onclick="switchTab('single')">SINGLE</button>
-                <button onclick="switchTab('multi')">MULTI</button>
-                <button onclick="switchTab('profile')">PROFILE</button>
+                <button onclick="switchTab('single')">
+                    <span class="nav-icon">🎮</span>
+                    <span>SINGLE</span>
+                </button>
+                <button onclick="switchTab('online')">
+                    <span class="nav-icon">🌐</span>
+                    <span>ONLINE</span>
+                </button>
+                <button onclick="switchTab('shop')">
+                    <span class="nav-icon">🛒</span>
+                    <span>SHOP</span>
+                </button>
+                <button onclick="switchTab('profile')">
+                    <span class="nav-icon">👤</span>
+                    <span>PROFILE</span>
+                </button>
             </nav>
         </div>
 
         <div id="game-view" class="view-container" style="display:none;">
             <div id="game-header"></div>
-            <div id="game-board"></div>
+            <div id="game-board" class="card-grid"></div>
+            <button class="exit-btn" onclick="location.reload()">EXIT GAME</button>
         </div>
     </div>
 
