@@ -23,7 +23,33 @@
                 START LOT-GO
             </button>
         </div>
+<div id="app-viewport">
+    <div id="auth-view" class="view-container">
+        <div class="logo-area" style="margin-bottom: 25px;">
+            <img src="images/logo.png" alt="Lot-Go Logo" style="width: 140px; height: auto; border-radius: 20px;">
+        </div>
+        <h2 style="color: #6366f1; margin-bottom: 25px;">LOT-GO LOGIN</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pw" placeholder="Password">
+        <button class="main-btn" onclick="handleLogin()" style="background: #6366f1; color: white;">START LOT-GO</button>
+        
+        <p style="margin-top: 20px; font-size: 12px; color: #64748b;">
+            계정이 없으신가요? <a href="#" onclick="switchView('signup-view')" style="color: #6366f1; font-weight: bold; text-decoration: none;">계정 생성</a>
+        </p>
+    </div>
 
+    <div id="signup-view" class="view-container" style="display:none;">
+        <h2 style="color: #10b981; margin-bottom: 25px;">CREATE ACCOUNT</h2>
+        <input type="email" id="signup-email" placeholder="New Email">
+        <input type="password" id="signup-pw" placeholder="New Password">
+        <button class="main-btn" onclick="handleSignUp()" style="background: #10b981; color: white;">CREATE & START</button>
+        
+        <button onclick="switchView('auth-view')" style="margin-top: 20px; background: none; border: none; color: #94a3b8; cursor: pointer; font-family: 'Orbitron'; font-size: 11px;">
+            BACK TO LOGIN
+        </button>
+    </div>
+    
+    </div>
         <div id="lobby-view" class="view-container" style="display:none;">
             <h3 style="margin-top: 0; color: #1e293b;">LOT-GO LOBBY</h3>
             
@@ -42,6 +68,7 @@
                 LOGOUT
             </button>
         </div>
+        
 
         <div id="game-view" class="view-container" style="display:none; width: 90vw; max-width: 480px;">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
@@ -52,6 +79,7 @@
             <div id="game-board" style="width: 100%;"></div>
         </div>
     </div>
+    
 
     <script type="module" src="js/app.js"></script>
 </body>
