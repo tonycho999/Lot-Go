@@ -86,33 +86,39 @@ function renderSelectionPhase() {
 }
 
 /**
- * 4. 실시간 상금 계산기
+ * 4. 확률 기반 정밀 상금 계산기 (마지막 장 0원 적용)
  */
 function calculateCurrentPrize() {
     const { mode, flips, level } = gameState;
-    if (flips === mode.total) return 0;
+    
+    // [핵심] 마지막 장을 뒤집은 경우 상금은 무조건 0원
+    if (flips >= mode.total) return 0;
 
+    // EASY (2/5): 마지막 5장째는 위 조건에서 0원 처리됨
     if (level === 1) {
-        if (flips <= 2) return 500;
-        if (flips === 3) return 200;
-        if (flips === 4) return 50;
+        const easyTable = { 2: 1, 3: 3, 4: 6 };
+        const divisor = easyTable[flips] || 1;
+        return Math.floor(mode.max / divisor);
     }
 
+    // NORMAL (4/10): 마지막 10장째는 위 조건에서 0원 처리됨
     if (level === 2) {
-        if (flips <= 4) return 100000;
-        if (flips === 5) return 20000;
-        let prize = 20000;
-        for (let i = 6; i <= flips; i++) { prize = Math.floor(prize * 0.3); }
-        return prize;
+        const normalTable = { 4: 1, 5: 5, 6: 15, 7: 35, 8: 70, 9: 126 };
+        const divisor = normalTable[flips] || 1;
+        return Math.floor(mode.max / divisor);
     }
 
+    // HARD (6/20): 마지막 20장째는 위 조건에서 0원 처리됨
     if (level === 3) {
-        if (flips <= 6) return 100000000;
-        if (flips === 7) return 20000000;
-        let prize = 20000000;
-        for (let i = 8; i <= flips; i++) { prize = Math.floor(prize * 0.3); }
-        return prize;
+        const hardTable = { 
+            6: 1, 7: 7, 8: 28, 9: 84, 10: 210, 11: 462, 12: 924, 
+            13: 1716, 14: 3003, 15: 5005, 16: 8008, 17: 12376, 
+            18: 18564, 19: 27132 
+        };
+        const divisor = hardTable[flips] || 1;
+        return Math.floor(mode.max / divisor);
     }
+    
     return 0;
 }
 
@@ -171,7 +177,7 @@ function renderPlayPhase() {
 }
 
 /**
- * 6. 승리 및 정산 (감정 텍스트 연출)
+ * 6. 승리 및 정산
  */
 async function handleGameWin() {
     gameState.isGameOver = true;
@@ -196,6 +202,7 @@ async function handleGameWin() {
         resultTitle = `ALMOST! But you lost ${(cost - prize).toLocaleString()} C...`;
         statusClass = "win-bronze";
     } else {
+        // 마지막 장을 열었거나 상금이 0원인 경우
         resultTitle = "UNLUCKY! Zero prize on the last card.";
         statusClass = "win-fail";
     }
