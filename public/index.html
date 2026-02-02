@@ -1,26 +1,43 @@
-<div id="lobby-view" class="view-container" style="display:none; width: 400px;">
-    <div class="tab-header" style="display:flex; width:100%; justify-content:space-around; margin-bottom:20px;">
-        <button onclick="switchTab('single-tab')">SINGLE</button>
-        <button onclick="switchTab('multi-tab')">MULTI</button>
-        <button onclick="switchTab('profile-tab')">PROFILE</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lot-Go</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-viewport">
+        <div id="auth-view" class="view-container">
+            <img src="images/logo.png" class="main-logo">
+            <h2>LOT-GO</h2>
+            <div id="auth-inputs">
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="pw" placeholder="Password">
+                <button onclick="handleLogin()">LOGIN</button>
+                <button onclick="showSignup()">CREATE ACCOUNT</button>
+            </div>
+        </div>
+
+        <div id="lobby-view" class="view-container" style="display:none;">
+            <div id="balance-container"></div> <div class="tab-system">
+                <div class="tab-content" id="single-tab"></div>  <div class="tab-content" id="multi-tab" style="display:none;"></div>   <div class="tab-content" id="profile-tab" style="display:none;"></div> </div>
+
+            <nav class="bottom-nav">
+                <button onclick="switchTab('single')">SINGLE</button>
+                <button onclick="switchTab('multi')">MULTI</button>
+                <button onclick="switchTab('profile')">PROFILE</button>
+            </nav>
+        </div>
+
+        <div id="game-view" class="view-container" style="display:none;">
+            <div id="game-header"></div>
+            <div id="game-board"></div>
+        </div>
     </div>
 
-    <div id="single-tab">
-        <div class="coin-box">Balance: <span id="user-coins">0</span></div>
-        <button id="ad-btn" onclick="handleAdWatch()" class="main-btn" style="background:#fbbf24; margin-bottom:10px;">📺 +300 COINS</button>
-        
-        <button onclick="startSingleGame(1)" class="main-btn" style="background:#10b981">EASY (2/5)</button>
-        <button onclick="startSingleGame(2)" class="main-btn" style="background:#3b82f6">NORMAL (4/10)</button>
-        <button onclick="startSingleGame(3)" class="main-btn" style="background:#ef4444">HARD (6/20)</button>
-    </div>
-
-    <div id="multi-tab" style="display:none;">
-        <p>Multiplayer Mode Opening Soon!</p>
-    </div>
-
-    <div id="profile-tab" style="display:none;">
-        <h3>My Account</h3>
-        <p id="user-email-display"></p>
-        <button onclick="handleLogout()" class="main-btn">LOGOUT</button>
-    </div>
-</div>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
