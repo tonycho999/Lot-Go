@@ -1,6 +1,5 @@
 import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. 상금 데이터
 export const SINGLE_MODES = {
     1: { 
         name: 'EASY', pick: 2, total: 5, cost: 100, max: 500, grid: 'grid-easy',
@@ -20,56 +19,53 @@ export const SINGLE_MODES = {
     }
 };
 
+// [수정] 광고 보상 300 코인으로 변경
 const AD_CONFIG = {
-    COOLDOWN: 10 * 60 * 1000, 
+    COOLDOWN: 10 * 60 * 1000, // 10분
     MAX_DAILY: 10, 
-    REWARD: 100 
+    REWARD: 300 
 };
 
 let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: false, level: 1 };
 
-/** * [수정됨] export 추가 
- * 1. 메뉴 렌더링 
- */
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
 
-    // UI 전용 (데이터 로딩 없이 기본 UI 먼저 표시)
-    let adBtnState = { disabled: false, text: "📺 WATCH AD (+100 C)" };
+    // [수정] 버튼 텍스트 가독성 개선 및 300C 반영
+    let adBtnState = { disabled: false, text: "📺 WATCH AD (+300 C)" };
     
+    // (실제 DB 체크 로직이 필요하다면 여기에 추가)
+
     container.innerHTML = `
         <div class="menu-list" style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
-            <button id="ad-btn" class="main-btn" style="background: #8b5cf6; border: 1px dashed #c4b5fd;" 
-                onclick="handleWatchAd()">
+            <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">
                 ${adBtnState.text}
             </button>
-            <hr style="border-color: #334155; width: 100%; opacity: 0.5;">
             
-            <button class="main-btn" style="background: #10b981;" onclick="initSingleGame(1)">
-                <div style="font-size:1.1em;">EASY</div>
-                <div style="font-size:0.8em; opacity:0.8;">2/5 Match • 100 C</div>
+            <div class="divider"></div>
+            
+            <button class="main-btn easy-btn" onclick="initSingleGame(1)">
+                <div class="btn-title">EASY</div>
+                <div class="btn-desc">2/5 Match • 100 C</div>
             </button>
-            <button class="main-btn" style="background: #3b82f6;" onclick="initSingleGame(2)">
-                <div style="font-size:1.1em;">NORMAL</div>
-                <div style="font-size:0.8em; opacity:0.8;">4/10 Match • 200 C</div>
+            <button class="main-btn normal-btn" onclick="initSingleGame(2)">
+                <div class="btn-title">NORMAL</div>
+                <div class="btn-desc">4/10 Match • 200 C</div>
             </button>
-            <button class="main-btn" style="background: #ef4444;" onclick="initSingleGame(3)">
-                <div style="font-size:1.1em;">HARD</div>
-                <div style="font-size:0.8em; opacity:0.8;">6/20 Match • 500 C</div>
+            <button class="main-btn hard-btn" onclick="initSingleGame(3)">
+                <div class="btn-title">HARD</div>
+                <div class="btn-desc">6/20 Match • 500 C</div>
             </button>
         </div>`;
 }
 
-/** * [수정됨] export 추가 
- * 2. 광고 시청 함수
- */
 export async function handleWatchAd() {
     const btn = document.getElementById('ad-btn');
     if (!btn) return;
     
     btn.disabled = true;
-    btn.innerText = "🎬 PLAYING AD...";
+    btn.innerText = "🎬 LOADING...";
 
     setTimeout(async () => { 
         const db = window.lotGoDb;
@@ -85,7 +81,7 @@ export async function handleWatchAd() {
             let currentCount = (lastAdDate === today) ? (data.dailyAdCount || 0) : 0;
 
             if (currentCount >= AD_CONFIG.MAX_DAILY) {
-                alert("오늘 광고 시청 한도 초과!");
+                alert("오늘 시청 한도(10회)를 초과했습니다.");
                 renderSingleMenu(); 
                 return;
             }
@@ -97,29 +93,25 @@ export async function handleWatchAd() {
                 lastAdDate: today
             });
 
-            alert(`+${AD_CONFIG.REWARD} 코인 지급 완료!`);
+            alert(`광고 시청 완료! +${AD_CONFIG.REWARD} 코인 지급.`);
             renderSingleMenu(); 
         } catch (e) {
-            console.error("Ad Error", e);
-            alert("보상 지급 중 오류 발생");
+            console.error(e);
+            alert("오류가 발생했습니다.");
             btn.disabled = false;
-            btn.innerText = "📺 WATCH AD";
+            btn.innerText = "📺 WATCH AD (+300 C)";
         }
     }, 2000);
 }
 
-/** * [수정됨] export 추가
- * 3. 게임 초기화 
- */
 export async function initSingleGame(level) {
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
-
     const mode = SINGLE_MODES[level];
     const userDocRef = doc(db, "users", auth.currentUser.uid);
     const snap = await getDoc(userDocRef);
     
-    if ((snap.data().coins || 0) < mode.cost) return alert("Not enough coins!");
+    if ((snap.data().coins || 0) < mode.cost) return alert("코인이 부족합니다!");
 
     await updateDoc(userDocRef, { coins: increment(-mode.cost) });
     gameState = { selected: [], found: [], flips: 0, mode, isGameOver: false, level };
@@ -128,7 +120,6 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
-// 4. 번호 선택 화면 (내부 함수)
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -169,12 +160,9 @@ function renderStartButton(boardElement) {
     const btnContainer = document.createElement('div');
     btnContainer.className = "action-area";
     btnContainer.innerHTML = `
-        <button id="btn-start-game" class="neon-btn">
-            START GAME
-        </button>
+        <button id="btn-start-game" class="neon-btn">START GAME</button>
     `;
     boardElement.after(btnContainer);
-    
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
@@ -183,9 +171,6 @@ function calculateCurrentPrize() {
     return mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-/** * [수정됨] export 추가
- * 5. 게임 플레이 화면 
- */
 export function renderPlayPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -194,9 +179,9 @@ export function renderPlayPhase() {
     if (actionArea) actionArea.remove();
 
     header.innerHTML = `
-        <div class="prize-panel-wrapper" style="background: rgba(15, 23, 42, 0.8); border: 2px solid #6366f1; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);">
-            <div style="font-size: 12px; color: #94a3b8; letter-spacing: 2px; margin-bottom: 5px;">CURRENT PRIZE</div>
-            <div id="live-prize" class="prize-amount" style="font-size: 2.5rem; color: #fbbf24; font-weight: 900; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);">${gameState.mode.max.toLocaleString()}</div>
+        <div class="prize-panel-wrapper">
+            <div class="prize-label">CURRENT PRIZE</div>
+            <div id="live-prize" class="prize-amount">${gameState.mode.max.toLocaleString()}</div>
         </div>
         <div id="target-bar" class="target-container">
             ${gameState.selected.map(num => `<div id="target-${num}" class="card target-node">${num}</div>`).join('')}
@@ -262,7 +247,6 @@ async function handleGameWin() {
         resultTitle = "UNLUCKY! Too many cards flipped.";
         statusClass = "win-fail";
     }
-
     showResultButtons(resultTitle, prize, statusClass);
 }
 
@@ -278,7 +262,7 @@ function showResultButtons(message, prize, statusClass) {
     header.innerHTML = `
         <div class="result-container ${statusClass}">
             <h2 class="result-msg">${message}</h2>
-            <div class="final-prize">Total Received: ${prize.toLocaleString()} C</div>
+            <div class="final-prize">Received: ${prize.toLocaleString()} C</div>
         </div>`;
     const board = document.getElementById('game-board');
     board.innerHTML = `
