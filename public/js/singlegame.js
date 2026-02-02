@@ -41,13 +41,12 @@ export async function initSingleGame(level, auth, db) {
 }
 
 /**
- * 3. 숫자 선택 단계 (디자인 개편)
+ * 3. 숫자 선택 단계
  */
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
     
-    // 상단에 최소화된 로비 이동 링크 배치
     header.innerHTML = `
         <div class="game-meta">
             <span class="back-link" onclick="location.reload()">← LOBBY</span>
@@ -69,7 +68,6 @@ function renderSelectionPhase() {
             card.classList.add('selected');
             
             if (gameState.selected.length === gameState.mode.pick) {
-                // 기존 버튼 제거 후 깔끔한 START 버튼 생성
                 const existingBtn = document.querySelector('.action-area');
                 if (existingBtn) existingBtn.remove();
 
@@ -119,14 +117,13 @@ function calculateCurrentPrize() {
 }
 
 /**
- * 5. 게임 플레이 단계 (카드 뒤집기)
+ * 5. 게임 플레이 단계
  */
 function renderPlayPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
     const actionArea = document.querySelector('.action-area');
     
-    // 시작 버튼 영역 제거
     if (actionArea) actionArea.remove();
 
     header.innerHTML = `
@@ -174,17 +171,36 @@ function renderPlayPhase() {
 }
 
 /**
- * 6. 승리 및 정산
+ * 6. 승리 및 정산 (감정 텍스트 연출)
  */
 async function handleGameWin() {
     gameState.isGameOver = true;
     const prize = calculateCurrentPrize();
+    const cost = gameState.mode.cost;
 
     if (prize > 0) {
         const userDocRef = doc(window.lotGoDb, "users", window.lotGoAuth.currentUser.uid);
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
-    showResultButtons(`WINNER: ${prize.toLocaleString()} C`);
+
+    let resultTitle = "";
+    let statusClass = "";
+
+    if (prize > cost) {
+        resultTitle = `✨ BIG WIN! +${(prize - cost).toLocaleString()} C Profit ✨`;
+        statusClass = "win-gold";
+    } else if (prize === cost) {
+        resultTitle = "SAFE! You got your coins back.";
+        statusClass = "win-silver";
+    } else if (prize > 0 && prize < cost) {
+        resultTitle = `ALMOST! But you lost ${(cost - prize).toLocaleString()} C...`;
+        statusClass = "win-bronze";
+    } else {
+        resultTitle = "UNLUCKY! Zero prize on the last card.";
+        statusClass = "win-fail";
+    }
+
+    showResultButtons(resultTitle, prize, statusClass);
 }
 
 /**
@@ -192,15 +208,20 @@ async function handleGameWin() {
  */
 function handleGameOver() {
     gameState.isGameOver = true;
-    showResultButtons("GAME OVER");
+    showResultButtons("GAME OVER! Better luck next time.", 0, "win-fail");
 }
 
 /**
  * 8. 결과 버튼 표시
  */
-function showResultButtons(message) {
+function showResultButtons(message, prize, statusClass) {
     const header = document.getElementById('game-header');
-    header.innerHTML = `<h2 class="result-msg">${message}</h2>`;
+    header.innerHTML = `
+        <div class="result-container ${statusClass}">
+            <h2 class="result-msg">${message}</h2>
+            <div class="final-prize">Total Received: ${prize.toLocaleString()} C</div>
+        </div>
+    `;
     const board = document.getElementById('game-board');
     board.innerHTML = `
         <div class="result-actions">
