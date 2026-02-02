@@ -1,92 +1,96 @@
-cat <<EOF > public/js/game.js
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-export function initGameView(user, level) {
-    const config = {
-        1: { name: 'EASY', total: 4, pick: 2, cost: 100, max: 400, cols: 2, m: 2 },
-        2: { name: 'NORMAL', total: 10, pick: 4, cost: 200, max: 30000, cols: 5, m: 100 },
-        3: { name: 'HARD', total: 20, pick: 6, cost: 500, max: 12000000, cols: 5, m: 200 }
+const db = getDatabase();
+
+export const GAME_MODES = {
+    1: { name: 'EASY', total: 5, pick: 2, cost: 100, max: 400, cols: 2, bonusLimit: 4, bonus: 50 },
+    2: { name: 'NORMAL', total: 10, pick: 4, cost: 200, max: 30000, cols: 5, bonusLimit: 9, bonus: 100 },
+    3: { name: 'HARD', total: 20, pick: 6, cost: 500, max: 12000000, cols: 5, bonusLimit: 19, bonus: 200 }
+};
+
+let gameState = {
+    openCount: 0,
+    winningCards: [],
+    isFinished: false
+};
+
+export async function initGame(modeLevel, user) {
+    const mode = GAME_MODES[modeLevel];
+    
+    // 코인 차감 로직
+    const userRef = ref(db, `users/${user.uid}/coins`);
+    const snapshot = await get(userRef);
+    let currentCoins = snapshot.val() || 0;
+
+    if (currentCoins < mode.cost) {
+        alert("코인이 부족합니다!");
+        window.switchView('lobby-view');
+        return;
+    }
+    await set(userRef, currentCoins - mode.cost);
+
+    // 게임 판 초기화
+    gameState = {
+        openCount: 0,
+        winningCards: Array.from({length: mode.total}, (_, i) => i + 1)
+                           .sort(() => Math.random() - 0.5)
+                           .slice(0, mode.pick),
+        isFinished: false
     };
-    const cfg = config[level];
-    let picks = [], deck = [], opened = 0, active = false, currentCoins = 0;
 
-    const root = document.getElementById('app-viewport');
-    root.innerHTML = \`
-        <div class="app-container">
-            <div class="header" style="display:flex; justify-content:space-between; font-size:12px;">
-                <span id="exit-game" style="cursor:pointer; color:#6366f1;">[ EXIT ]</span>
-                <span>MODE: \${cfg.name}</span>
-            </div>
-            <div class="stat-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
-                <div class="stat-box" style="background:#f1f5f9; padding:10px; border-radius:10px; text-align:center;">
-                    <small>WALLET</small><div id="game-coins">---</div>
-                </div>
-                <div class="stat-box" style="background:#f1f5f9; padding:10px; border-radius:10px; text-align:center;">
-                    <small>PRIZE</small><div id="game-prize" style="color:#10b981; font-weight:bold;">\${cfg.max.toLocaleString()}</div>
-                </div>
-            </div>
-            <div id="game-guide" style="text-align:center; margin-bottom:10px; font-weight:bold; color:#6366f1;">SELECT \${cfg.pick} CARDS</div>
-            <div id="game-board" class="card-grid" style="grid-template-columns:repeat(\${cfg.cols}, 1fr);"></div>
-            <button id="start-btn">START MISSION (\${cfg.cost})</button>
-            <div id="game-controls" style="display:none; gap:10px; margin-top:10px;">
-                <button onclick="window.switchView('game', \${level})" style="flex:1;">RETRY</button>
-                <button onclick="window.switchView('lobby')" style="flex:1; background:#94a3b8;">LOBBY</button>
-            </div>
-        </div>
-    \`;
+    renderBoard(mode, user);
+}
 
-    const db = getDatabase();
-    onValue(ref(db, 'users/' + user.uid + '/coins'), s => {
-        currentCoins = s.val() || 0;
-        document.getElementById('game-coins').innerText = currentCoins.toLocaleString();
-    });
-
+function renderBoard(mode, user) {
     const board = document.getElementById('game-board');
-    for(let i=1; i<=cfg.total; i++) {
+    board.innerHTML = '';
+    board.style.display = 'grid';
+    board.style.gridTemplateColumns = `repeat(${mode.cols}, 1fr)`;
+    board.style.gap = '10px';
+
+    for (let i = 1; i <= mode.total; i++) {
         const card = document.createElement('div');
-        card.className = 'card'; card.innerText = i;
-        card.onclick = () => {
-            if(active) return;
-            if(picks.includes(i)) { picks = picks.filter(p => p !== i); card.classList.remove('selected'); }
-            else if(picks.length < cfg.pick) { picks.push(i); card.classList.add('selected'); }
-        };
+        card.className = 'card hidden';
+        card.innerText = '?';
+        card.onclick = () => handleCardClick(card, i, mode, user);
         board.appendChild(card);
     }
-
-    document.getElementById('exit-game').onclick = () => window.switchView('lobby');
-    document.getElementById('start-btn').onclick = async () => {
-        if(picks.length !== cfg.pick) return alert("Select " + cfg.pick + " cards!");
-        if(currentCoins < cfg.cost) return alert("Not enough coins!");
-        
-        active = true;
-        await set(ref(db, 'users/' + user.uid + '/coins'), currentCoins - cfg.cost);
-        document.getElementById('start-btn').style.display = 'none';
-        deck = Array.from({length: cfg.total}, (_, i) => i + 1).sort(() => Math.random() - 0.5);
-        
-        document.querySelectorAll('.card').forEach((c, i) => {
-            c.innerText = '?'; c.className = 'card hidden';
-            c.onclick = () => {
-                if(!c.classList.contains('hidden')) return;
-                opened++;
-                const val = deck[i];
-                c.innerText = val; c.className = 'card';
-                if(picks.includes(val)) c.classList.add('matched');
-                
-                let p = cfg.max;
-                if(opened >= cfg.total) p = 0;
-                else if(opened > cfg.pick) p = Math.max(0, cfg.max - (opened - cfg.pick) * (cfg.m * 100));
-                document.getElementById('game-prize').innerText = p.toLocaleString();
-
-                const matched = document.querySelectorAll('.matched').length;
-                if(matched === cfg.pick || opened === cfg.total) {
-                    setTimeout(async () => {
-                        alert(matched === cfg.pick ? "Mission Complete! Reward: " + p : "Mission Failed");
-                        await set(ref(db, 'users/' + user.uid + '/coins'), currentCoins + p);
-                        document.getElementById('game-controls').style.display = 'flex';
-                    }, 500);
-                }
-            };
-        });
-    };
 }
-EOF
+
+async function handleCardClick(el, num, mode, user) {
+    if (gameState.isFinished || !el.classList.contains('hidden')) return;
+
+    gameState.openCount++;
+    el.classList.remove('hidden');
+    el.classList.add('flipped');
+    el.innerText = num;
+
+    // 1. 당첨 시 (상금 감소 로직 적용)
+    if (gameState.winningCards.includes(num)) {
+        gameState.isFinished = true;
+        let prize = Math.floor(mode.max / gameState.openCount);
+        
+        // 마지막 카드일 경우 상금 0
+        if (gameState.openCount === mode.total) prize = 0;
+
+        alert(`${gameState.openCount}번째 당첨! 상금 ${prize} 지급!`);
+        await addCoins(user.uid, prize);
+        window.switchView('lobby-view');
+    } 
+    // 2. 보너스 체크 (당첨 안됐을 때 특정 횟수 오픈 시)
+    else if (gameState.openCount === mode.bonusLimit) {
+        alert(`보너스 달성! ${mode.bonus} 코인 지급!`);
+        await addCoins(user.uid, mode.bonus);
+    }
+    // 3. 꽝인데 마지막 카드인 경우
+    else if (gameState.openCount === mode.total) {
+        alert("게임 종료! 상금이 없습니다.");
+        window.switchView('lobby-view');
+    }
+}
+
+async function addCoins(uid, amount) {
+    const userRef = ref(db, `users/${uid}/coins`);
+    const snapshot = await get(userRef);
+    await set(userRef, (snapshot.val() || 0) + amount);
+}
