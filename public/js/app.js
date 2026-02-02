@@ -5,7 +5,7 @@ import { firebaseConfig } from "../firebase-config.js";
 
 // UI Modules
 import { renderBalance, switchTab } from "./home.js";
-import { renderSingleMenu } from "./singlegame.js";
+import { renderSingleMenu, initSingleGame } from "./singlegame.js"; // [수정] initSingleGame 추가
 import { renderProfile } from "./profile.js";
 import { renderShop } from "./shop.js";
 
@@ -28,6 +28,9 @@ window.switchView = (id) => {
 };
 
 window.switchTab = switchTab;
+
+// [추가] 싱글 게임 실행 함수를 전역에 바인딩
+window.initSingleGame = (level) => initSingleGame(level, auth, db);
 
 window.handleLogin = () => {
     const e = document.getElementById('email').value;
