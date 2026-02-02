@@ -1,20 +1,20 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// [수정] Firestore 라이브러리로 변경
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { firebaseConfig } from "../firebase-config.js";
 
 // UI Modules
 import { renderBalance, switchTab } from "./home.js";
-import { renderSingleMenu, initSingleGame } from "./singlegame.js";
-import { renderProfile } from "./profile.js";
-import { renderShop } from "./shop.js";
+// [중요] handleWatchAd를 import 목록에 추가해야 합니다.
+import { renderSingleMenu, initSingleGame, handleWatchAd } from "./singlegame.js";
+// import { renderProfile } from "./profile.js"; // 파일이 없다면 주석 처리
+// import { renderShop } from "./shop.js";       // 파일이 없다면 주석 처리
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app); // [수정] Firestore 초기화
+const db = getFirestore(app);
 
-// Global State (모듈들이 Firestore 인스턴스를 공유하도록 설정)
+// Global State (모듈들이 window를 통해 DB/Auth에 접근)
 window.lotGoAuth = auth;
 window.lotGoDb = db;
 
@@ -29,7 +29,11 @@ window.switchView = (id) => {
 };
 
 window.switchTab = switchTab;
-window.initSingleGame = (level) => initSingleGame(level, auth, db);
+
+// [수정] singlegame.js 함수들을 window에 직접 연결
+// (최신 singlegame.js는 내부에서 window.lotGoDb를 쓰므로 인자 전달 불필요)
+window.initSingleGame = initSingleGame; 
+window.handleWatchAd = handleWatchAd; // 광고 버튼 작동을 위해 필수
 
 /**
  * 로그인 처리
@@ -42,7 +46,7 @@ window.handleLogin = () => {
 };
 
 /**
- * 회원가입 처리 (Firestore에 초기 데이터 생성)
+ * 회원가입 처리
  */
 window.handleSignUp = () => {
     const e = document.getElementById('signup-email').value;
@@ -50,14 +54,18 @@ window.handleSignUp = () => {
     if(p.length < 6) return alert("Password should be at least 6 characters.");
 
     createUserWithEmailAndPassword(auth, e, p).then(async (res) => {
-        // [수정] Firestore 전용 setDoc 함수 사용
         await setDoc(doc(db, "users", res.user.uid), {
             email: e,
             coins: 1000,
             role: 'user',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            // [추천] 광고 시스템을 위한 초기 데이터 세팅
+            dailyAdCount: 0,
+            lastAdDate: "",
+            lastAdTime: 0
         });
         alert("Account created! 1,000 Coins rewarded.");
+        window.switchView('auth-view'); // 가입 후 로그인 화면으로 이동
     }).catch(err => alert("Signup Failed: " + err.message));
 };
 
@@ -68,22 +76,21 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         window.switchView('lobby-view');
         
-        // [수정] Firestore 실시간 문서 감시 (onSnapshot)
         const userDocRef = doc(db, "users", user.uid);
         onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const userData = docSnap.data();
                 renderBalance(userData.coins || 0);
             } else {
-                console.log("No user document found in Firestore.");
                 renderBalance(0);
             }
         });
 
-        // 나머지 UI 모듈 렌더링
+        // 게임 메뉴 렌더링
         renderSingleMenu();
-        renderShop();
-        renderProfile(user);
+        
+        // renderShop();    // shop.js가 준비되면 주석 해제
+        // renderProfile(user); // profile.js가 준비되면 주석 해제
     } else {
         window.switchView('auth-view');
     }
