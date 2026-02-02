@@ -3,16 +3,16 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { firebaseConfig } from "../firebase-config.js";
 
-// Import UI Modules
+// 모듈 불러오기
 import { renderBalance, switchTab } from "./home.js";
 import { renderSingleMenu } from "./singlegame.js";
+import { renderShop } from "./shop.js";
 import { renderProfile } from "./profile.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Globalize functions for HTML onclick
 window.switchTab = switchTab;
 
 onAuthStateChanged(auth, (user) => {
@@ -20,11 +20,12 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById('auth-view').style.display = 'none';
         document.getElementById('lobby-view').style.display = 'flex';
         
-        // Load initial UI
+        // 초기 UI 렌더링
         renderSingleMenu();
+        renderShop();
         renderProfile(user);
 
-        // Listen for balance updates
+        // 코인 실시간 동기화
         onValue(ref(db, `users/${user.uid}/coins`), (snap) => {
             renderBalance(snap.val() || 0);
         });
