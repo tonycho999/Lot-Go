@@ -132,7 +132,7 @@ window.handleWatchAd = async function() {
 /**
  * 2. 게임 시작 초기화
  */
-window.initSingleGame = async function(level) {
+export async function initSingleGame(level) {
     const mode = SINGLE_MODES[level];
     const userDocRef = doc(window.lotGoDb, "users", window.lotGoAuth.currentUser.uid);
     const snap = await getDoc(userDocRef);
@@ -219,7 +219,7 @@ function calculateCurrentPrize() {
 /**
  * 5. 게임 플레이 단계 (디자인 개선)
  */
-window.renderPlayPhase = function() {
+export function renderPlayPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
     const actionArea = document.querySelector('.action-area');
