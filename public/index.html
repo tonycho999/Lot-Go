@@ -1,16 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Numbers</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div id="app-viewport">
-        <div class="loading">Initializing System...</div>
+<div id="app-viewport">
+    <div id="auth-view" class="view-container" style="display:none;">
+        <h2>Celestial Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pw" placeholder="Password">
+        <button onclick="handleLogin()">Login</button>
     </div>
-    <script type="module" src="js/app.js"></script>
-</body>
-</html>
+
+    <div id="lobby-view" class="view-container" style="display:none;">
+        <h3>Welcome back!</h3>
+        <div class="coin-display">Balance: <span id="user-coins">0</span></div>
+        <button onclick="startSingleGame()" class="start-btn">Single Game Start</button>
+    </div>
+
+    <div id="game-view" class="view-container" style="display:none;">
+        <div class="game-header">
+            <button onclick="window.switchView('lobby-view')">Back to Lobby</button>
+        </div>
+        <div id="game-board">
+            </div>
+    </div>
+</div>
