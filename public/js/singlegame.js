@@ -1,4 +1,4 @@
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // 게임 난이도별 설정값
 export const SINGLE_MODES = {
@@ -8,15 +8,15 @@ export const SINGLE_MODES = {
 };
 
 let gameState = {
-    selected: [],   // 유저가 선택한 번호
-    found: [],      // 게임 중 찾아낸 번호
-    flips: 0,       // 뒤집은 횟수
-    mode: null,     // 현재 게임 모드
+    selected: [],
+    found: [],
+    flips: 0,
+    mode: null,
     isGameOver: false
 };
 
 /**
- * 1. 싱글 게임 메뉴 렌더링 (Lobby Tab)
+ * 1. 싱글 게임 메뉴 렌더링
  */
 export function renderSingleMenu() {
     const container = document.getElementById('single-tab');
@@ -32,34 +32,35 @@ export function renderSingleMenu() {
 }
 
 /**
- * 2. 게임 시작 초기화 (코인 차감 및 뷰 전환)
+ * 2. 게임 시작 초기화 (Firestore 코인 차감)
  */
 export async function initSingleGame(level, auth, db) {
     const mode = SINGLE_MODES[level];
     const user = auth.currentUser;
-    const userRef = ref(db, `users/${user.uid}/coins`);
+    const userDocRef = doc(db, "users", user.uid);
 
     try {
-        const snap = await get(userRef);
-        const currentCoins = snap.val() || 0;
+        const snap = await getDoc(userDocRef);
+        if (!snap.exists()) return alert("User data not found.");
+        
+        const currentCoins = snap.data().coins || 0;
 
         if (currentCoins < mode.cost) {
-            alert("Not enough coins! Watch an AD or check your balance.");
+            alert("Not enough coins!");
             return;
         }
 
-        // 코인 차감
-        await set(userRef, currentCoins - mode.cost);
+        // [수정] Firestore increment를 사용한 코인 차감
+        await updateDoc(userDocRef, {
+            coins: increment(-mode.cost)
+        });
         
-        // 게임 상태 초기화
         gameState = { selected: [], found: [], flips: 0, mode, isGameOver: false };
-
-        // 화면 전환
         window.switchView('game-view');
         renderSelectionPhase();
     } catch (err) {
-        console.error(err);
-        alert("Game initialization failed.");
+        console.error("Game Start Error:", err);
+        alert("Failed to start game.");
     }
 }
 
@@ -71,7 +72,7 @@ function renderSelectionPhase() {
     const board = document.getElementById('game-board');
 
     header.innerHTML = `<h3 style="color: #6366f1;">PICK ${gameState.mode.pick} NUMBERS</h3>`;
-    board.className = "card-grid grid-easy"; // 선택 화면은 5열 고정
+    board.className = "card-grid grid-easy";
     board.innerHTML = "";
 
     for (let i = 1; i <= gameState.mode.total; i++) {
@@ -84,7 +85,6 @@ function renderSelectionPhase() {
                 gameState.selected.push(i);
                 card.style.background = "#6366f1";
                 card.style.color = "white";
-                card.style.transform = "scale(0.95)";
                 
                 if (gameState.selected.length === gameState.mode.pick) {
                     setTimeout(renderPlayPhase, 600);
@@ -102,7 +102,6 @@ function renderPlayPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
 
-    // 상단 타겟 바 (유저가 고른 카드 표시)
     header.innerHTML = `
         <div id="target-bar" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 15px;">
             ${gameState.selected.map(num => `
@@ -113,7 +112,6 @@ function renderPlayPhase() {
         </div>
     `;
 
-    // 메인 게임 보드 (셔플된 카드)
     board.className = `card-grid ${gameState.mode.grid}`;
     board.innerHTML = "";
 
@@ -132,26 +130,21 @@ function renderPlayPhase() {
             card.className = "card flipped";
             card.innerText = num;
 
-            // 매칭 성공 시
             if (gameState.selected.includes(num)) {
                 gameState.found.push(num);
                 const targetEl = document.getElementById(`target-${num}`);
-                if (targetEl) targetEl.style.background = "#10b981"; // 초록색으로 변경
+                if (targetEl) targetEl.style.background = "#10b981";
 
-                // 모든 카드를 다 찾았을 때
                 if (gameState.found.length === gameState.mode.pick) {
                     gameState.isGameOver = true;
                     handleGameWin();
                 }
-            } 
-            // 매칭 실패 & 마지막 카드인 경우
-            else if (gameState.flips === gameState.mode.total) {
+            } else if (gameState.flips === gameState.mode.total) {
                 gameState.isGameOver = true;
-                alert("Game Over! All cards opened, no prize.");
+                alert("Game Over! All cards opened.");
                 window.switchView('lobby-view');
             }
             
-            // 보너스 체크 (당첨 안됐어도 특정 횟수 오픈 시)
             checkBonusReward();
         };
         board.appendChild(card);
@@ -159,29 +152,34 @@ function renderPlayPhase() {
 }
 
 /**
- * 5. 당첨 및 상금 정산
+ * 5. 당첨 및 상금 정산 (Firestore 코인 지급)
  */
 async function handleGameWin() {
     const { mode, flips } = gameState;
     const db = window.lotGoDb;
     const user = window.lotGoAuth.currentUser;
+    const userDocRef = doc(db, "users", user.uid);
 
-    // 상금 감쇄 공식: Max / 오픈 횟수 (마지막 카드 오픈 시 상금 0)
     let prize = (flips === mode.total) ? 0 : Math.floor(mode.max / flips);
 
     alert(`MATCH COMPLETE!\nFlips: ${flips}\nPrize: ${prize.toLocaleString()} COINS`);
 
     if (prize > 0) {
-        const userRef = ref(db, `users/${user.uid}/coins`);
-        const snap = await get(userRef);
-        await set(userRef, (snap.val() || 0) + prize);
+        try {
+            // [수정] Firestore increment를 사용한 상금 지급
+            await updateDoc(userDocRef, {
+                coins: increment(prize)
+            });
+        } catch (err) {
+            console.error("Prize payout error:", err);
+        }
     }
     
     window.switchView('lobby-view');
 }
 
 /**
- * 6. 보너스 보상 체크
+ * 6. 보너스 보상 체크 (Firestore 보너스 지급)
  */
 async function checkBonusReward() {
     if (gameState.flips === gameState.mode.bonusLimit) {
@@ -190,8 +188,14 @@ async function checkBonusReward() {
         
         const db = window.lotGoDb;
         const user = window.lotGoAuth.currentUser;
-        const userRef = ref(db, `users/${user.uid}/coins`);
-        const snap = await get(userRef);
-        await set(userRef, (snap.val() || 0) + bonus);
+        const userDocRef = doc(db, "users", user.uid);
+
+        try {
+            await updateDoc(userDocRef, {
+                coins: increment(bonus)
+            });
+        } catch (err) {
+            console.error("Bonus payout error:", err);
+        }
     }
 }
