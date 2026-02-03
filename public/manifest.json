@@ -1,12 +1,11 @@
 {
-  "name": "Lot-Go: Win Big!",
+  "name": "Lot-Go: Lotto Game",
   "short_name": "Lot-Go",
-  "description": "숫자 맞추기 싱글 플레이 게임",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#6366f1",
   "icons": [
     {
       "src": "images/logo.png",
