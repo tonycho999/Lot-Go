@@ -59,12 +59,10 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
-// [수정] 상단바는 항상 MAX PRIZE 고정
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     
-    // 오른쪽은 항상 MAX PRIZE 고정
     let prizeLabel = "MAX PRIZE";
     let prizeValue = gameState.mode.max.toLocaleString();
 
@@ -86,17 +84,15 @@ function updateTopBar() {
     if(backBtn) backBtn.onclick = goBackToLobby;
 }
 
-// [신규] 테이블 내부 상금 업데이트 함수
 function updateTablePrize() {
     const display = document.getElementById('table-current-prize');
     if (!display) return;
-
     let currentPrize = calculateCurrentPrize();
-    if (gameState.isGameOver) currentPrize = 0; // 게임 오버 시 0 처리 (또는 최종 상금)
-
+    if (gameState.isGameOver) currentPrize = 0; 
     display.innerText = currentPrize.toLocaleString();
 }
 
+// [수정] 번호 선택 화면 - Grid 클래스 동적 적용
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -108,7 +104,7 @@ function renderSelectionPhase() {
     board.innerHTML = `
         <div class="game-room-border section-selection">
             <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
-            <div class="card-grid grid-easy" id="selection-grid"></div>
+            <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
         </div>
     `;
 
@@ -153,12 +149,10 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// [수정] 게임 플레이 화면 (테이블 레이아웃 변경)
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
 
-    // 1. Current Prize, 2. Target, 3. Grid 순서 배치
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
             <div class="in-game-prize-container">
@@ -193,7 +187,6 @@ export function renderPlayPhase() {
             gameState.flips++;
             ballWrapper.classList.add('flipped'); 
             
-            // 상단바가 아닌 테이블 내부 상금 업데이트
             updateTablePrize();
 
             if (gameState.selected.includes(num)) {
@@ -234,7 +227,6 @@ function handleGameOver() {
 
 function showResultButtons(message, prize, statusClass) {
     const board = document.getElementById('game-board');
-    // 결과 화면
     board.innerHTML = `
         <div class="game-room-border section-result ${statusClass}" style="text-align:center;">
             <h2 class="result-msg">${message}</h2>
@@ -246,7 +238,7 @@ function showResultButtons(message, prize, statusClass) {
                 <button id="result-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
             </div>
         </div>`;
-    updateTopBar(); // 상단바는 Max Prize 유지
+    updateTopBar();
     const lobbyBtn = document.getElementById('result-lobby-btn');
     if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
 }
