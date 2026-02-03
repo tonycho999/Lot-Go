@@ -5,6 +5,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDoc
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // [1] 모듈 불러오기
+import { initLanguage } from './lang.js';
 import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
