@@ -63,8 +63,6 @@ const TickerManager = {
             const user = this.generateFakeUser();
             const prize = this.getRandomRealPrize();
             const isJackpot = prize >= 1000000;
-            
-            // 티커 메시지는 고유명사라 영어 유지
             let msg = `${user} won ${prize.toLocaleString()} C!`;
             if (isJackpot) msg = `🚨 JACKPOT!! ${user} hit ${prize.toLocaleString()} C! 🚨`;
             this.addMessage(msg, isJackpot);
@@ -120,42 +118,53 @@ function goBackToLobby() {
     renderSingleMenu();
 }
 
-// Render Menu (다국어 적용됨)
+// [핵심] 메뉴 렌더링 (에러 방지 추가)
 export async function renderSingleMenu() {
-    const container = document.getElementById('single-tab');
-    if (!container) return;
-    const t = window.t; // 언어 사용
-    
-    container.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
-            <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
-                <div class="ticker-container">
-                    <div id="ticker-bar" class="ticker-text">${t.ticker_welcome}</div>
+    try {
+        const container = document.getElementById('single-tab');
+        if (!container) return;
+        
+        const t = window.t; // 언어 설정 가져오기
+        if (!t) {
+            console.error("Language file not loaded.");
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
+                <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
+                    <div class="ticker-container">
+                        <div id="ticker-bar" class="ticker-text">${t.ticker_welcome}</div>
+                    </div>
+                    <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">${t.watch_ad}</button>
+                    <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
+                    
+                    <button class="main-btn easy-btn" onclick="initSingleGame(1)">
+                        <div class="btn-title">${t.single_menu_easy}</div>
+                        <div class="btn-desc">${t.single_desc_easy}</div>
+                    </button>
+                    <button class="main-btn normal-btn" onclick="initSingleGame(2)">
+                        <div class="btn-title">${t.single_menu_normal}</div>
+                        <div class="btn-desc">${t.single_desc_normal}</div>
+                    </button>
+                    <button class="main-btn hard-btn" onclick="initSingleGame(3)">
+                        <div class="btn-title">${t.single_menu_hard}</div>
+                        <div class="btn-desc">${t.single_desc_hard}</div>
+                    </button>
                 </div>
-                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">${t.watch_ad}</button>
-                <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
-                <button class="main-btn easy-btn" onclick="initSingleGame(1)">
-                    <div class="btn-title">${t.single_menu_easy}</div>
-                    <div class="btn-desc">${t.single_desc_easy}</div>
-                </button>
-                <button class="main-btn normal-btn" onclick="initSingleGame(2)">
-                    <div class="btn-title">${t.single_menu_normal}</div>
-                    <div class="btn-desc">${t.single_desc_normal}</div>
-                </button>
-                <button class="main-btn hard-btn" onclick="initSingleGame(3)">
-                    <div class="btn-title">${t.single_menu_hard}</div>
-                    <div class="btn-desc">${t.single_desc_hard}</div>
-                </button>
-            </div>
-        </div>`;
-    TickerManager.init();
+            </div>`;
+        
+        TickerManager.init();
+    } catch (err) {
+        console.error("renderSingleMenu Error:", err);
+    }
 }
 
 export async function handleWatchAd() { 
     alert(window.t.alert_ad_ready);
 }
 
-// [수정] XP 적립 로직 (Level > 1 일 때만 적립) + 다국어
+// 게임 시작 (XP 및 다국어 적용)
 export async function initSingleGame(level) {
     TickerManager.stop(); 
 
@@ -178,7 +187,7 @@ export async function initSingleGame(level) {
 
     let updates = { coins: increment(-mode.cost) };
 
-    // [핵심] 레벨이 1보다 클 때만 (즉, Lv 2 ~ 10) 경험치 획득 (Lv 1, 0은 제외)
+    // 레벨 2~10일 때만 XP 지급 (Lv 1, 0 제외)
     if (currentLevel > 1) {
         const xpGain = Math.floor(mode.cost * 0.1);
         updates.exp = increment(xpGain);
@@ -267,11 +276,10 @@ function renderSelectionPhase() {
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
-    // 언어별 어순 처리
     let titleHTML = "";
-    if (window.t === window.t.ko) { // 한국어
+    if (t === window.t.ko) { 
          titleHTML = `${t.pick_title} <span class="highlight">${gameState.mode.pick}</span>${t.pick_numbers}`;
-    } else { // 영어
+    } else {
          titleHTML = `${t.pick_title} <span class="highlight">${gameState.mode.pick}</span> ${t.pick_numbers}`;
     }
 
