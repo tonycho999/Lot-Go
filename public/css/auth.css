@@ -1,46 +1,117 @@
 /* =========================================
-   2. 로그인 & 타이틀 화면 (Auth)
+   2. 로그인/회원가입 (Auth) - 중앙 정렬 및 꽉 찬 화면
    ========================================= */
-.auth-mode { 
-    justify-content: center; 
-    padding: 20px; 
-    background: radial-gradient(circle at center, #3e2723 0%, #1a120b 100%); 
+
+/* 인증 화면 전체 컨테이너 */
+.auth-mode {
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    min-height: 100vh; /* 화면 전체 높이 차지 */
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 20px; /* 모바일 등 작은 화면에서 패딩 */
 }
 
-.auth-card { 
-    background: rgba(20, 10, 5, 0.9); 
-    border: 2px solid #8d6e63; 
-    border-radius: 24px; 
-    padding: 50px 30px; 
-    width: 100%; max-width: 420px; 
-    text-align: center; 
-    backdrop-filter: blur(10px); 
-    display: flex; flex-direction: column; align-items: center; 
-    animation: fadeInUp 0.8s ease-out;
+/* 인증 카드 박스 */
+.auth-card {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 450px; /* 최대 너비 제한 */
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    animation: fadeInDown 0.6s ease-out;
 }
 
-.logo-wrapper { 
-    width: 140px; height: 140px; 
-    margin: 0 auto 25px; 
-    border-radius: 50%; overflow: hidden; 
-    border: 4px solid #d4af37; background: #000; 
-}
-.game-logo { width: 100%; height: 100%; object-fit: cover; }
-
-.main-title { 
-    font-family: 'Cinzel', serif; 
-    font-size: 2.8rem; margin: 10px 0 5px; 
-    color: #d4af37; letter-spacing: 2px; 
-}
-.sub-title { color: #a1887f; font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 35px; }
-
-.neon-input { 
-    width: 100%; padding: 16px; 
-    background: #271c19; 
-    border: 1px solid #5d4037; border-radius: 8px; 
-    color: #efebe9; font-size: 1rem; text-align: center; 
-    margin-bottom: 15px; 
+/* 로고 래퍼 (상단 원형 로고) */
+.logo-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px; /* 아래 여백 */
 }
 
-.auth-actions { width: 100%; margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
-.text-btn { background: none; border: none; color: #a1887f; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+.game-logo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary);
+    box-shadow: 0 0 30px var(--neon-glow);
+}
+
+.logo-glow {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140px; height: 140px;
+    background: var(--primary);
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.4;
+    z-index: -1;
+}
+
+/* 타이틀 */
+.main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem; font-weight: 900; margin: 0;
+    background: linear-gradient(to right, #fff, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 2px;
+}
+
+.sub-title {
+    color: var(--text-muted);
+    font-size: 0.9rem; margin-top: 5px; letter-spacing: 4px;
+}
+
+/* 입력 필드 그룹 */
+.input-group { margin-bottom: 20px; width: 100%; }
+
+.neon-input {
+    width: 100%;
+    padding: 15px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid #334155;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+.neon-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--neon-glow);
+    outline: none;
+}
+
+/* 버튼 영역 */
+.auth-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; /* 버튼 영역 전체 너비 사용 */
+    margin-top: 30px; /* 입력 필드와 간격 */
+}
+
+/* 꽉 찬 버튼 (로그인, 가입) */
+.full-width { width: 100%; }
+
+.secondary { color: #a855f7; border-color: #a855f7; }
+.secondary:hover { background: #a855f7; color: #000; box-shadow: 0 0 10px #a855f7; }
+
+/* 텍스트 버튼 (뒤로가기 등) */
+.text-btn {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 0.9rem; cursor: pointer;
+    text-decoration: underline; margin-top: 10px;
+}
+
+/* 애니메이션 */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
