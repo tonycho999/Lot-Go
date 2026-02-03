@@ -168,9 +168,10 @@ export function renderPlayPhase() {
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
         ballWrapper.className = "ball-wrapper";
+        // [수정] ball-front의 '?' 제거
         ballWrapper.innerHTML = `
             <div class="ball-inner">
-                <div class="ball-face ball-front">?</div>
+                <div class="ball-face ball-front"></div>
                 <div class="ball-face ball-back"><span class="ball-number">${num}</span></div>
             </div>
         `;
