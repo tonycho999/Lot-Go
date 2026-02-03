@@ -4,7 +4,8 @@ import { doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstat
 export const SINGLE_MODES = {
     1: { 
         name: 'EASY', pick: 2, total: 5, cost: 100, max: 500, grid: 'grid-easy',
-        prizes: [500, 100],
+        // [수정] 상금 리스트 업데이트 (티커 표시용)
+        prizes: [500, 250, 50], 
         cssClass: 'easy-mode' 
     },
     2: { 
@@ -138,6 +139,22 @@ function updateTopBar() {
     document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
+// [상금 계산 로직 수정] EASY 모드 상금 규칙 적용
+function calculateCurrentPrize() {
+    const { mode, flips, level } = gameState;
+    
+    // [EASY 모드]
+    if (level === 1) { 
+        if (flips <= 2) return 500; // 1, 2번째: 500
+        if (flips === 3) return 250; // 3번째: 250
+        if (flips === 4) return 50;  // 4번째: 50
+        if (flips === 5) return 0;   // 5번째: 0 (꽝)
+    }
+    
+    // [NORMAL, HARD 모드] 테이블 참조
+    return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
+}
+
 // [E] 번호 선택 화면 그리기
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
@@ -147,7 +164,6 @@ function renderSelectionPhase() {
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
-    // 난이도 클래스 적용 및 텍스트 수정
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border ${gameState.mode.cssClass}">
@@ -164,7 +180,6 @@ function renderSelectionPhase() {
     for (let i = 1; i <= gameState.mode.total; i++) {
         const ball = document.createElement('div');
         ball.className = "lotto-ball";
-        // 공 내부에 흰색 원과 숫자 추가
         ball.innerHTML = `<div class="ball-number-bg">${i}</div>`;
         
         ball.onclick = () => {
@@ -189,7 +204,6 @@ export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
 
-    // 난이도에 맞는 CSS 클래스 추가
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border play-mode ${gameState.mode.cssClass}">
@@ -231,12 +245,8 @@ export function renderPlayPhase() {
             gameState.flips++;
             ballWrapper.classList.add('flipped'); 
             
-            let curPrize = 0;
-            if (gameState.mode.table && gameState.mode.table[gameState.flips] !== undefined) {
-                curPrize = gameState.mode.table[gameState.flips];
-            } else if (gameState.level === 1 && gameState.flips <= 2) {
-                curPrize = 500; 
-            }
+            // [수정] calculateCurrentPrize 함수 사용
+            let curPrize = calculateCurrentPrize();
             document.getElementById('table-current-prize').innerText = curPrize.toLocaleString();
 
             if (gameState.selected.includes(num)) {
