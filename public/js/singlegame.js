@@ -8,14 +8,16 @@ export const SINGLE_MODES = {
     },
     2: { 
         name: 'NORMAL', pick: 4, total: 10, cost: 200, max: 10000, grid: 'grid-normal',
-        table: { 4: 10000, 5: 2000, 6: 666, 7: 285, 8: 142, 9: 79, 10: 47 }
+        // [수정] 10장 오픈 시 상금 0
+        table: { 4: 10000, 5: 2000, 6: 666, 7: 285, 8: 142, 9: 79, 10: 0 }
     },
     3: { 
         name: 'HARD', pick: 6, total: 20, cost: 500, max: 10000000, grid: 'grid-hard',
+        // [수정] 20장 오픈 시 상금 0
         table: { 
             6: 10000000, 7: 1428570, 8: 357140, 9: 119040, 10: 47610, 
             11: 21640, 12: 10820, 13: 5820, 14: 3330, 15: 1990, 
-            16: 1249, 17: 808, 18: 539, 19: 369, 20: 258 
+            16: 1249, 17: 808, 18: 539, 19: 369, 20: 0 
         }
     }
 };
@@ -56,7 +58,7 @@ export async function handleWatchAd() {
 }
 
 /**
- * 2. 게임 초기화 (핵심: 코인 확인 버그 수정됨)
+ * 2. 게임 초기화
  */
 export async function initSingleGame(level) {
     const db = window.lotGoDb;
@@ -64,51 +66,51 @@ export async function initSingleGame(level) {
     const mode = SINGLE_MODES[level];
     const userDocRef = doc(db, "users", auth.currentUser.uid);
     
-    // [중요] 1. 먼저 DB에서 최신 코인 정보를 확실하게 가져옵니다 (동기 처리)
+    // 1. 먼저 DB에서 최신 코인 정보를 확실하게 가져옵니다 (동기 처리)
     const snap = await getDoc(userDocRef);
     
     if (!snap.exists()) return alert("User data not found.");
     
     const currentCoins = snap.data().coins || 0;
-    userCoins = currentCoins; // 로컬 변수 즉시 동기화
+    userCoins = currentCoins; 
 
-    // [중요] 2. 코인 부족 확인 (이제 정확한 잔액으로 비교합니다)
+    // 2. 코인 부족 확인
     if (currentCoins < mode.cost) {
         return alert(`Not enough coins! You have ${currentCoins.toLocaleString()} C, but need ${mode.cost} C.`);
     }
 
-    // [중요] 3. 코인 차감 실행
+    // 3. 코인 차감 실행
     await updateDoc(userDocRef, { coins: increment(-mode.cost) });
 
-    // [중요] 4. UI 갱신을 위한 실시간 리스너 연결 (게임 도중 코인 변화 감지)
+    // 4. UI 갱신을 위한 실시간 리스너 연결
     if (coinUnsub) coinUnsub(); 
     coinUnsub = onSnapshot(userDocRef, (docSnapshot) => {
         userCoins = docSnapshot.data().coins || 0;
         updateTopBar(); 
     });
 
-    // 5. 게임 상태 설정 및 화면 전환
+    // 5. 게임 상태 설정
     gameState = { selected: [], found: [], flips: 0, mode, isGameOver: false, level };
     window.switchView('game-view');
     renderSelectionPhase();
 }
 
 /**
- * 상단 정보바 업데이트 (코인 & 상금 표시)
+ * 상단 정보바 업데이트 (게임 종료 시 0 표시)
  */
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     
-    const currentPrize = calculateCurrentPrize();
-    
-    // 게임 시작 전(선택 단계)엔 MAX PRIZE, 게임 중엔 CURRENT PRIZE 표시
     let prizeLabel = "MAX PRIZE";
     let prizeValue = gameState.mode.max.toLocaleString();
 
-    if (document.querySelector('.play-mode')) {
+    if (gameState.isGameOver) {
         prizeLabel = "CURRENT PRIZE";
-        prizeValue = currentPrize.toLocaleString();
+        prizeValue = "0"; // 종료 시 상단바 0 표시
+    } else if (document.querySelector('.play-mode')) {
+        prizeLabel = "CURRENT PRIZE";
+        prizeValue = calculateCurrentPrize().toLocaleString();
     }
     
     topBar.innerHTML = `
@@ -131,7 +133,6 @@ function renderSelectionPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
     
-    // 헤더 설정: 로비 이동 버튼 + 상단바
     header.innerHTML = `
         <div class="game-meta" style="margin-bottom:10px;">
             <span class="back-link" onclick="location.reload()">← BACK TO LOBBY</span>
@@ -140,7 +141,6 @@ function renderSelectionPhase() {
     `;
     updateTopBar();
 
-    // 보드 설정: 테두리 + 선택 그리드
     board.innerHTML = `
         <h2 class="game-title" style="margin-bottom:20px;">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
         <div class="game-room-border section-selection">
@@ -159,7 +159,6 @@ function renderSelectionPhase() {
             gameState.selected.push(i);
             card.classList.add('selected');
             
-            // 정해진 개수만큼 선택하면 시작 버튼 표시
             if (gameState.selected.length === gameState.mode.pick) {
                 renderStartButton(board);
             }
@@ -168,7 +167,7 @@ function renderSelectionPhase() {
     }
 }
 
-// 시작 버튼 생성 (보드 아래)
+// 시작 버튼 생성
 function renderStartButton(boardElement) {
     if (document.getElementById('btn-start-game')) return;
     
@@ -181,22 +180,20 @@ function renderStartButton(boardElement) {
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
-// 상금 계산 로직
+// [수정] 상금 계산 로직
 function calculateCurrentPrize() {
     const { mode, flips, level } = gameState;
     
-    // 아직 뒤집지 않았으면 최대 상금 표시
     if (flips === 0) return mode.max;
 
-    // EASY 모드(2/5) 특수 로직: 2장까지는 감액 없음
+    // EASY 모드(2/5)
     if (level === 1) { 
         if (flips <= 2) return mode.max;
         if (flips === 3) return 166;
         if (flips === 4) return 83;
-        if (flips === 5) return 50;
+        if (flips === 5) return 0; // [수정] 5장 모두 뒤집으면 0원
     }
     
-    // NORMAL, HARD 모드는 테이블 참조
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
@@ -207,25 +204,21 @@ export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
 
-    // 플레이 화면 구성 (테두리 포함)
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
             <div id="target-bar" class="target-container" style="margin-bottom: 20px;">
                 ${gameState.selected.map(num => `<div id="target-${num}" class="card target-node">${num}</div>`).join('')}
             </div>
-            
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
         </div>
     `;
     updateTopBar(); 
 
     const playGrid = document.getElementById('play-grid');
-    // 카드 섞기
     const shuffled = Array.from({length: gameState.mode.total}, (_, i) => i + 1).sort(() => Math.random() - 0.5);
 
     shuffled.forEach(num => {
         const card = document.createElement('div');
-        // 3D 카드 구조 적용 (Flip 애니메이션용)
         card.className = "card card-3d";
         card.innerHTML = `
             <div class="card-inner">
@@ -238,20 +231,17 @@ export function renderPlayPhase() {
             if (gameState.isGameOver || card.classList.contains('flipped')) return;
             
             gameState.flips++;
-            card.classList.add('flipped'); // CSS 회전 효과 트리거
+            card.classList.add('flipped'); 
             
-            updateTopBar(); // 상금 업데이트
+            updateTopBar(); 
 
-            // 찾은 번호인지 확인
             if (gameState.selected.includes(num)) {
                 gameState.found.push(num);
                 const targetNode = document.getElementById(`target-${num}`);
                 if (targetNode) targetNode.classList.add('found');
                 
-                // 모두 찾으면 승리
                 if (gameState.found.length === gameState.mode.pick) handleGameWin();
             } else if (gameState.flips === gameState.mode.total) {
-                // 카드를 다 뒤집으면 게임 오버
                 handleGameOver();
             }
         };
@@ -290,12 +280,12 @@ async function handleGameWin() {
 // 게임 오버 처리
 function handleGameOver() {
     gameState.isGameOver = true;
-    const prize = calculateCurrentPrize();
+    const prize = calculateCurrentPrize(); // 여기서 0원이 리턴됨
     if (prize > 0) handleGameWin();
     else showResultButtons("GAME OVER!", 0, "win-fail");
 }
 
-// 결과 화면 표시 (테두리 내부에 표시)
+// 결과 화면 표시
 function showResultButtons(message, prize, statusClass) {
     const board = document.getElementById('game-board');
     
@@ -315,5 +305,6 @@ function showResultButtons(message, prize, statusClass) {
                 </button>
             </div>
         </div>`;
+    
     updateTopBar();
 }
