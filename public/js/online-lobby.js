@@ -1,258 +1,154 @@
-import { ref, set, push, onValue, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { initSelectionPhase } from './online-game.js';
+import { getDatabase, ref, update, onValue, set, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let currentRoomId = null;
-
-// [1] 온라인 로비 렌더링
-export function renderOnlineLobby() {
+// [1] 게임 선택 화면 진입 (번호 고르기)
+export function initSelectionPhase(roomId, roomData) {
     const container = document.getElementById('online-tab');
-    if (!container) return;
+    const t = window.t; // 언어 변수
 
+    // 내 상태 확인
+    const myUid = window.lotGoAuth.currentUser.uid;
+    const myData = roomData.players[myUid];
+
+    // 번호 선택 화면 UI
     container.innerHTML = `
-        <div class="online-container" style="max-width: 800px; margin: 0 auto; padding: 20px; color: #fff;">
-            <div class="lobby-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="font-family:'Orbitron'; color:#3b82f6;">ONLINE LOBBY</h2>
-                <button id="create-room-btn" class="neon-btn primary" style="font-size:0.9rem; padding:10px 20px;">+ CREATE ROOM</button>
-            </div>
-
-            <div class="game-room-border" style="min-height: 300px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="border-bottom:1px solid #334155; padding-bottom:10px;">AVAILABLE ROOMS</h3>
-                <div id="room-list" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-                    <div style="text-align:center; color:#64748b; padding:20px;">Loading rooms...</div>
-                </div>
-            </div>
-
-            <div class="chat-container game-room-border" style="height: 250px; padding: 15px; display:flex; flex-direction:column;">
-                <div id="chat-messages" style="flex:1; overflow-y:auto; margin-bottom:10px; font-size:0.9rem; color:#cbd5e1;"></div>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="chat-input" placeholder="Say hello..." class="neon-input" style="flex:1;">
-                    <button id="send-chat-btn" class="neon-btn secondary" style="padding:10px 20px;">SEND</button>
-                </div>
+        <div class="game-room-border" style="padding:20px; text-align:center;">
+            <h2 class="game-title" style="font-size:1.5rem;">ONLINE MATCH</h2>
+            <div style="color:#fbbf24; margin-bottom:10px;">ROOM #${roomId.substring(0,4)}</div>
+            
+            <div class="card-grid grid-normal" id="online-selection-grid" style="margin:20px auto;"></div>
+            
+            <div id="status-msg" style="height:20px; color:#94a3b8; margin-top:10px;">
+                ${myData.selectedNumbers ? 'WAITING FOR OTHERS...' : 'SELECT 4 NUMBERS'}
             </div>
         </div>
     `;
 
-    document.getElementById('create-room-btn').addEventListener('click', createRoom);
-    document.getElementById('send-chat-btn').addEventListener('click', sendChatMessage);
-    
-    listenToRooms();
-    listenToChat();
-}
+    // 1~10번 공 렌더링 (NORMAL 모드 기준)
+    const grid = document.getElementById('online-selection-grid');
+    const selected = [];
 
-// [2] 방 생성
-async function createRoom() {
-    const db = window.lotGoDb;
-    const rtdb = window.lotGoRtdb;
-    const auth = window.lotGoAuth;
-    const user = auth.currentUser;
-
-    if (!user) return alert("Login required.");
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-
-    if (userData.coins < 1000) return alert("Need 1,000 Coins to play Online.");
-
-    if (!confirm("Start Online Game? (Cost: 1,000 C)")) return;
-
-    // [수정] 레벨 1 이하는 XP 안 줌
-    let updates = { coins: increment(-1000) };
-    // userData.level이 없으면 초기값 10으로 간주
-    const currentLevel = userData.level !== undefined ? userData.level : 10;
-    
-    if (currentLevel > 1) {
-        updates.exp = increment(100);
-    }
-
-    await updateDoc(userRef, updates);
-
-    // RTDB 방 생성
-    const roomsRef = ref(rtdb, 'rooms');
-    const newRoomRef = push(roomsRef);
-    const roomId = newRoomRef.key;
-
-    const roomData = {
-        id: roomId,
-        host: user.uid,
-        status: 'waiting',
-        createdAt: Date.now(),
-        players: {
-            [user.uid]: {
-                email: user.email,
-                ready: true,
-                score: 0
-            }
-        },
-        mode: 'auto'
-    };
-
-    await set(newRoomRef, roomData);
-    enterGameRoom(roomId);
-}
-
-// [3] 방 참여
-window.joinRoom = async (roomId) => {
-    const db = window.lotGoDb;
-    const rtdb = window.lotGoRtdb;
-    const auth = window.lotGoAuth;
-    const user = auth.currentUser;
-
-    if (!user) return alert("Login required.");
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-
-    if (userData.coins < 1000) return alert("Need 1,000 Coins to play Online.");
-
-    if (!confirm("Join this game? (Cost: 1,000 C)")) return;
-
-    // [수정] 레벨 1 이하는 XP 안 줌
-    let updates = { coins: increment(-1000) };
-    const currentLevel = userData.level !== undefined ? userData.level : 10;
-
-    if (currentLevel > 1) {
-        updates.exp = increment(100);
-    }
-
-    await updateDoc(userRef, updates);
-
-    // RTDB 참가
-    const roomRef = ref(rtdb, `rooms/${roomId}/players/${user.uid}`);
-    await set(roomRef, {
-        email: user.email,
-        ready: false,
-        score: 0
-    });
-    
-    enterGameRoom(roomId);
-};
-
-// [4] 게임 대기실 입장
-function enterGameRoom(roomId) {
-    currentRoomId = roomId;
-    const container = document.getElementById('online-tab');
-    
-    container.innerHTML = `
-        <div class="game-room-border" style="text-align:center; padding:30px;">
-            <h2>GAME ROOM</h2>
-            <div id="room-status" style="margin-bottom:20px; color:#fbbf24;">WAITING FOR PLAYERS...</div>
-            <div id="players-list" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:30px;"></div>
-            
-            <button id="start-game-btn" class="neon-btn success" style="display:none;">START GAME</button>
-            <div id="ready-msg" style="color:#94a3b8;">Waiting for host to start...</div>
-        </div>
-    `;
-
-    const rtdb = window.lotGoRtdb;
-    const auth = window.lotGoAuth;
-    const roomRef = ref(rtdb, `rooms/${roomId}`);
-
-    onValue(roomRef, (snapshot) => {
-        const room = snapshot.val();
-        if (!room) return;
-
-        const pList = document.getElementById('players-list');
-        pList.innerHTML = Object.values(room.players).map(p => `
-            <div class="player-card" style="border:1px solid #334155; padding:10px; border-radius:10px; background:#1e293b;">
-                <div>${p.email.split('@')[0]}</div>
-                <div style="font-size:0.8rem; color:${p.ready ? '#4ade80' : '#94a3b8'}">${p.ready ? 'READY' : '...'}</div>
-            </div>
-        `).join('');
-
-        if (room.status === 'playing') {
-            initSelectionPhase(roomId, room);
-        }
-
-        if (room.host === auth.currentUser.uid) {
-            const startBtn = document.getElementById('start-game-btn');
-            const readyMsg = document.getElementById('ready-msg');
-            startBtn.style.display = 'inline-block';
-            readyMsg.style.display = 'none';
-            
-            startBtn.onclick = () => {
-                update(roomRef, { status: 'playing' });
+    for (let i = 1; i <= 10; i++) {
+        const ball = document.createElement('div');
+        ball.className = "lotto-ball selection-ball";
+        ball.innerHTML = `<div class="ball-number">${i}</div>`;
+        
+        // 이미 선택했으면 클릭 불가
+        if (myData.selectedNumbers) {
+            if (myData.selectedNumbers.includes(i)) ball.classList.add('selected');
+            ball.style.opacity = "0.7";
+            ball.style.pointerEvents = "none";
+        } else {
+            ball.onclick = () => {
+                if (selected.includes(i) || selected.length >= 4) return;
+                selected.push(i);
+                ball.classList.add('selected');
+                
+                if (selected.length === 4) {
+                    submitSelection(roomId, selected);
+                }
             };
         }
+        grid.appendChild(ball);
+    }
+
+    // 결과 대기 리스너 (게임 결과가 나오면 자동 전환)
+    const roomRef = ref(window.lotGoRtdb, `rooms/${roomId}`);
+    onValue(roomRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.status === 'ended' && data.winNumbers) {
+            showGameResult(roomId, data);
+        }
     });
 }
 
-// [5] 방 목록 리스너
-function listenToRooms() {
+// [2] 번호 선택 완료 처리
+function submitSelection(roomId, selectedNumbers) {
+    const uid = window.lotGoAuth.currentUser.uid;
     const rtdb = window.lotGoRtdb;
-    const roomsRef = ref(rtdb, 'rooms');
     
-    onValue(roomsRef, (snapshot) => {
-        const listEl = document.getElementById('room-list');
-        if (!listEl) return;
-        
-        const rooms = snapshot.val();
-        listEl.innerHTML = '';
+    // 내 선택 정보 저장
+    update(ref(rtdb, `rooms/${roomId}/players/${uid}`), {
+        selectedNumbers: selectedNumbers
+    });
 
-        if (!rooms) {
-            listEl.innerHTML = '<div style="color:#64748b; text-align:center;">No active rooms. Create one!</div>';
-            return;
+    document.getElementById('status-msg').innerText = "WAITING FOR RESULT...";
+    
+    // 호스트가 모든 플레이어 선택 완료 시 결과 생성 로직은 Cloud Functions나 호스트 클라이언트에서 처리
+    // (여기서는 간단히 호스트가 감지해서 결과 생성하는 로직 추가)
+    checkAllSelectedAndFinish(roomId);
+}
+
+// [3] (호스트용) 모두 선택했으면 결과 추첨
+async function checkAllSelectedAndFinish(roomId) {
+    const rtdb = window.lotGoRtdb;
+    const uid = window.lotGoAuth.currentUser.uid;
+    
+    // 데이터 가져오기
+    const roomSnap = await new Promise(resolve => onValue(ref(rtdb, `rooms/${roomId}`), resolve, {onlyOnce: true}));
+    const room = roomSnap.val();
+
+    if (room.host !== uid) return; // 호스트만 실행
+
+    const players = Object.values(room.players);
+    const allSelected = players.every(p => p.selectedNumbers);
+
+    if (allSelected && room.status !== 'ended') {
+        // 추첨 (1~10 중 4개)
+        const winNumbers = [];
+        while(winNumbers.length < 4) {
+            const n = Math.floor(Math.random() * 10) + 1;
+            if(!winNumbers.includes(n)) winNumbers.push(n);
         }
 
-        Object.values(rooms).forEach(room => {
-            if (room.status !== 'waiting') return;
-            
-            const div = document.createElement('div');
-            div.className = 'room-item';
-            div.style.cssText = "background:#1e293b; padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;";
-            div.innerHTML = `
-                <div>
-                    <span style="color:#fff; font-weight:bold;">Room #${room.id.substring(0,4)}</span>
-                    <span style="color:#94a3b8; font-size:0.9rem; margin-left:10px;">Players: ${Object.keys(room.players).length}</span>
-                </div>
-                <button class="neon-btn primary" style="padding:5px 15px; font-size:0.8rem;" onclick="joinRoom('${room.id}')">JOIN</button>
-            `;
-            listEl.appendChild(div);
+        // 상태 업데이트
+        update(ref(rtdb, `rooms/${roomId}`), {
+            status: 'ended',
+            winNumbers: winNumbers
         });
-    });
+    }
 }
 
-// [6] 채팅 리스너
-function listenToChat() {
-    const rtdb = window.lotGoRtdb;
-    const chatRef = ref(rtdb, 'lobby_chat');
+// [4] 결과 화면
+function showGameResult(roomId, roomData) {
+    const container = document.getElementById('online-tab');
+    const winNums = roomData.winNumbers;
+    const myUid = window.lotGoAuth.currentUser.uid;
+    const myData = roomData.players[myUid];
     
-    onValue(chatRef, (snapshot) => {
-        const chatBox = document.getElementById('chat-messages');
-        if (!chatBox) return;
+    // 내 맞춘 개수 확인
+    const matchCount = myData.selectedNumbers.filter(n => winNums.includes(n)).length;
+    let prize = 0;
+    
+    // 상금 테이블 (싱글 노말 기준 예시)
+    if (matchCount === 4) prize = 5000; // 1등 (간단히 설정)
+    else if (matchCount === 3) prize = 1000;
+    
+    // 상금 지급 (이미 받았는지 체크 필요하지만 생략)
+    if (prize > 0) {
+        const db = window.lotGoDb;
+        updateDoc(doc(db, "users", myUid), { coins: increment(prize) });
+    }
 
-        const msgs = snapshot.val();
-        if (!msgs) return;
-
-        const html = Object.values(msgs).slice(-20).map(m => `
-            <div style="margin-bottom:5px;">
-                <span style="color:#3b82f6; font-weight:bold;">${m.user}:</span> 
-                <span style="color:#e2e8f0;">${m.text}</span>
+    container.innerHTML = `
+        <div class="game-room-border" style="padding:20px; text-align:center;">
+            <h2 class="game-title">GAME RESULT</h2>
+            
+            <div style="margin:20px 0;">
+                <div style="color:#94a3b8; font-size:0.8rem;">WINNING NUMBERS</div>
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:5px;">
+                    ${winNums.map(n => `<div class="target-ball found">${n}</div>`).join('')}
+                </div>
             </div>
-        `).join('');
-        
-        chatBox.innerHTML = html;
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
-}
 
-function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text) return;
+            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px;">
+                <div style="color:#fff;">YOU MATCHED: <span style="color:#fbbf24; font-weight:bold;">${matchCount}</span></div>
+                <div style="font-size:1.5rem; font-weight:bold; color:${prize>0?'#4ade80':'#94a3b8'}; margin-top:5px;">
+                    ${prize > 0 ? `+${prize.toLocaleString()} COINS` : 'NO PRIZE'}
+                </div>
+            </div>
 
-    const rtdb = window.lotGoRtdb;
-    const auth = window.lotGoAuth;
-    const user = auth.currentUser;
-    const email = user.email.split('@')[0];
-
-    push(ref(rtdb, 'lobby_chat'), {
-        user: email,
-        text: text,
-        timestamp: Date.now()
-    });
-    
-    input.value = '';
+            <button class="neon-btn primary" onclick="window.switchTab('online')" style="margin-top:20px; width:100%;">BACK TO LOBBY</button>
+        </div>
+    `;
 }
