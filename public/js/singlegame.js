@@ -63,6 +63,8 @@ const TickerManager = {
             const user = this.generateFakeUser();
             const prize = this.getRandomRealPrize();
             const isJackpot = prize >= 1000000;
+            
+            // 티커 메시지는 고유명사라 영어 유지
             let msg = `${user} won ${prize.toLocaleString()} C!`;
             if (isJackpot) msg = `🚨 JACKPOT!! ${user} hit ${prize.toLocaleString()} C! 🚨`;
             this.addMessage(msg, isJackpot);
@@ -118,61 +120,65 @@ function goBackToLobby() {
     renderSingleMenu();
 }
 
-// Render Menu
+// Render Menu (다국어 적용됨)
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
+    const t = window.t; // 언어 사용
     
     container.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
             <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
                 <div class="ticker-container">
-                    <div id="ticker-bar" class="ticker-text">Welcome to Lot-Go! Win Big!</div>
+                    <div id="ticker-bar" class="ticker-text">${t.ticker_welcome}</div>
                 </div>
-                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">📺 WATCH AD (+300 C)</button>
+                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">${t.watch_ad}</button>
                 <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
                 <button class="main-btn easy-btn" onclick="initSingleGame(1)">
-                    <div class="btn-title">EASY</div>
-                    <div class="btn-desc">2/5 Match • 100 C</div>
+                    <div class="btn-title">${t.single_menu_easy}</div>
+                    <div class="btn-desc">${t.single_desc_easy}</div>
                 </button>
                 <button class="main-btn normal-btn" onclick="initSingleGame(2)">
-                    <div class="btn-title">NORMAL</div>
-                    <div class="btn-desc">4/10 Match • 200 C</div>
+                    <div class="btn-title">${t.single_menu_normal}</div>
+                    <div class="btn-desc">${t.single_desc_normal}</div>
                 </button>
                 <button class="main-btn hard-btn" onclick="initSingleGame(3)">
-                    <div class="btn-title">HARD</div>
-                    <div class="btn-desc">6/20 Match • 500 C</div>
+                    <div class="btn-title">${t.single_menu_hard}</div>
+                    <div class="btn-desc">${t.single_desc_hard}</div>
                 </button>
             </div>
         </div>`;
     TickerManager.init();
 }
 
-export async function handleWatchAd() { alert("광고 기능 준비 중입니다."); }
+export async function handleWatchAd() { 
+    alert(window.t.alert_ad_ready);
+}
 
-// [수정] XP 적립 로직 (Level > 1 일 때만 적립)
+// [수정] XP 적립 로직 (Level > 1 일 때만 적립) + 다국어
 export async function initSingleGame(level) {
     TickerManager.stop(); 
 
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
+    const t = window.t;
     const mode = SINGLE_MODES[level];
     const userDocRef = doc(db, "users", auth.currentUser.uid);
     
     const snap = await getDoc(userDocRef);
-    if (!snap.exists()) return alert("User data not found.");
+    if (!snap.exists()) return alert(t.alert_no_data);
     
     const userData = snap.data();
     const currentCoins = userData.coins || 0;
-    const currentLevel = userData.level || 10;
+    const currentLevel = userData.level !== undefined ? userData.level : 10;
     const myItems = userData.items || {};
     userCoins = currentCoins; 
 
-    if (currentCoins < mode.cost) return alert(`Not enough coins! Need ${mode.cost} C.`);
+    if (currentCoins < mode.cost) return alert(t.alert_no_coin);
 
     let updates = { coins: increment(-mode.cost) };
 
-    // 레벨이 1보다 클 때만 (즉, Lv 2 ~ 10) 경험치 획득
+    // [핵심] 레벨이 1보다 클 때만 (즉, Lv 2 ~ 10) 경험치 획득 (Lv 1, 0은 제외)
     if (currentLevel > 1) {
         const xpGain = Math.floor(mode.cost * 0.1);
         updates.exp = increment(xpGain);
@@ -180,7 +186,7 @@ export async function initSingleGame(level) {
 
     let useDouble = false;
     if (myItems['item_double'] > 0) {
-        if (confirm(`Use 'x2 Double Prize' item? (Owned: ${myItems['item_double']})`)) {
+        if (confirm(`${t.alert_use_double} (Owned: ${myItems['item_double']})`)) {
             useDouble = true;
             updates["items.item_double"] = increment(-1);
         }
@@ -207,20 +213,20 @@ export async function initSingleGame(level) {
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
+    const t = window.t;
     
-    let prizeLabel = "MAX PRIZE";
+    let prizeLabel = t.current_prize; 
     let prizeValue = gameState.mode.max.toLocaleString();
     if(gameState.activeDouble) {
-        prizeLabel = "MAX PRIZE (x2)";
         prizeValue = (gameState.mode.max * 2).toLocaleString();
     }
 
     topBar.innerHTML = `
         <div class="coin-info" style="display: flex; flex-direction: column; align-items: flex-start;">
             <div id="back-to-lobby-btn" style="cursor:pointer; margin-bottom: 5px; color: #ffca28; font-size: 0.8rem; font-weight: bold;">
-                ← BACK TO LOBBY
+                ← ${t.back_lobby}
             </div>
-            <div style="font-size:0.7rem; color:#94a3b8; letter-spacing:1px;">MY COINS</div>
+            <div style="font-size:0.7rem; color:#94a3b8; letter-spacing:1px;">${t.my_coins}</div>
             <div style="font-weight:bold; color:#e2e8f0; font-size: 1.2rem;">🪙 ${userCoins.toLocaleString()}</div>
         </div>
         <div class="prize-info" style="text-align: right;">
@@ -256,14 +262,23 @@ function calculateCurrentPrize() {
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
+    const t = window.t;
     
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
+    // 언어별 어순 처리
+    let titleHTML = "";
+    if (window.t === window.t.ko) { // 한국어
+         titleHTML = `${t.pick_title} <span class="highlight">${gameState.mode.pick}</span>${t.pick_numbers}`;
+    } else { // 영어
+         titleHTML = `${t.pick_title} <span class="highlight">${gameState.mode.pick}</span> ${t.pick_numbers}`;
+    }
+
     board.innerHTML = `
         <div class="game-room-border section-selection">
             <div class="board-header">
-                <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
+                <h2 class="game-title">${titleHTML}</h2>
             </div>
             <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
             <div class="board-footer" id="selection-footer"></div>
@@ -293,18 +308,19 @@ function renderStartButton() {
     const footer = document.getElementById('selection-footer');
     if (!footer || footer.innerHTML !== "") return; 
     
-    footer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
+    footer.innerHTML = `<button id="btn-start-game" class="neon-btn">${window.t.start_game}</button>`;
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
+    const t = window.t;
 
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
             <div class="board-header">
                 <div id="prize-container" class="in-game-prize-container">
-                    <div class="prize-label">CURRENT PRIZE</div>
+                    <div class="prize-label">${t.game_prize}</div>
                     <div id="table-current-prize" class="prize-value">
                         ${(gameState.activeDouble ? gameState.mode.max * 2 : gameState.mode.max).toLocaleString()}
                     </div>
@@ -369,11 +385,12 @@ async function handleGameWin() {
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
     
+    const t = window.t;
     let resultTitle = "", statusClass = "";
-    if (prize > cost) { resultTitle = `✨ BIG WIN!`; statusClass = "win-gold"; } 
-    else if (prize === cost) { resultTitle = "SAFE!"; statusClass = "win-silver"; } 
-    else if (prize > 0) { resultTitle = `ALMOST!`; statusClass = "win-bronze"; } 
-    else { resultTitle = "UNLUCKY!"; statusClass = "win-fail"; }
+    if (prize > cost) { resultTitle = t.big_win; statusClass = "win-gold"; } 
+    else if (prize === cost) { resultTitle = t.safe; statusClass = "win-silver"; } 
+    else if (prize > 0) { resultTitle = t.almost; statusClass = "win-bronze"; } 
+    else { resultTitle = t.unlucky; statusClass = "win-fail"; }
     
     showResultOnBoard(resultTitle, prize, statusClass);
 }
@@ -382,13 +399,16 @@ function handleGameOver() {
     gameState.isGameOver = true;
     let prize = calculateCurrentPrize();
     if (gameState.activeDouble) prize *= 2;
+    const t = window.t;
 
     if (prize > 0) handleGameWin();
-    else showResultOnBoard("GAME OVER!", 0, "win-fail");
+    else showResultOnBoard(t.game_over, 0, "win-fail");
 }
 
 function showResultOnBoard(message, prize, statusClass) {
     const prizeContainer = document.getElementById('prize-container');
+    const t = window.t;
+
     if (prizeContainer) {
         prizeContainer.innerHTML = `
             <div class="result-box ${statusClass}">
@@ -405,8 +425,8 @@ function showResultOnBoard(message, prize, statusClass) {
     if (footer) {
         footer.innerHTML = `
             <div class="result-actions" style="display: flex; gap: 20px; justify-content: center;">
-                <button class="neon-btn success" onclick="initSingleGame(${gameState.level})">🔄 REPLAY</button>
-                <button id="end-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
+                <button class="neon-btn success" onclick="initSingleGame(${gameState.level})">${t.replay}</button>
+                <button id="end-lobby-btn" class="neon-btn primary">${t.lobby_btn}</button>
             </div>
         `;
         
