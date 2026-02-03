@@ -1,17 +1,17 @@
 import { doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. 게임 모드 설정 (기존 유지)
+// 1. 게임 모드 설정
 export const SINGLE_MODES = {
     1: { 
         name: 'EASY', pick: 2, total: 5, cost: 100, max: 500, grid: 'grid-easy',
         prizes: [500, 100],
-        cssClass: 'easy-mode' // [NEW] 난이도별 CSS 클래스
+        cssClass: 'easy-mode' 
     },
     2: { 
         name: 'NORMAL', pick: 4, total: 10, cost: 200, max: 10000, grid: 'grid-normal', 
         table: { 4: 10000, 5: 2000, 6: 666, 7: 285, 8: 142, 9: 79, 10: 0 },
         prizes: [10000, 2000, 666, 285],
-        cssClass: 'normal-mode' // [NEW]
+        cssClass: 'normal-mode'
     },
     3: { 
         name: 'HARD', pick: 6, total: 20, cost: 500, max: 10000000, grid: 'grid-hard', 
@@ -21,7 +21,7 @@ export const SINGLE_MODES = {
             16: 1249, 17: 808, 18: 539, 19: 369, 20: 0 
         },
         prizes: [10000000, 1428570, 357140, 119040, 47610],
-        cssClass: 'hard-mode' // [NEW]
+        cssClass: 'hard-mode'
     }
 };
 
@@ -29,19 +29,71 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// ... (TickerManager, goBackToLobby, renderSingleMenu는 기존과 동일하므로 생략) ...
-// (필요하면 이전 코드에서 복사해서 사용하세요. 여기선 핵심 변경 부분만 보여드립니다.)
-const TickerManager = { stop: function() { } };
-function goBackToLobby() { if (coinUnsub) coinUnsub(); window.switchView('lobby-view'); renderSingleMenu(); }
-export async function renderSingleMenu() { /* 기존 renderSingleMenu 코드 유지 */ 
+// Ticker (전광판) 기능
+const TickerManager = {
+    timer: null,
+    start: function() {
+        this.loop();
+    },
+    loop: function() {
+        const tickerBar = document.getElementById('ticker-bar');
+        if (!tickerBar) return;
+        // 예시 텍스트 애니메이션 (필요시 기능 확장 가능)
+        // tickerBar.style.transform = ... 
+    },
+    stop: function() {
+        if(this.timer) clearTimeout(this.timer);
+    }
+};
+
+// [A] 로비로 돌아가기
+function goBackToLobby() {
+    if (coinUnsub) coinUnsub();
+    window.switchView('lobby-view');
+    renderSingleMenu();
+}
+
+// [B] 싱글 메뉴 렌더링 (이 부분이 누락되었었습니다)
+export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
     const t = window.t || {}; 
-    container.innerHTML = `... (기존 메뉴 HTML) ...`; // 지면상 생략, 이전 코드 사용
+
+    // ★ 여기에 메뉴 HTML을 꽉 채워넣었습니다.
+    container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
+            <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
+                <div class="ticker-container" style="background:black; border-top:2px solid #d4af37; border-bottom:2px solid #d4af37; padding:5px; margin-bottom:10px;">
+                    <div id="ticker-bar" style="color:#d4af37; font-family:'Orbitron'; text-align:center;">
+                        ${t.ticker_welcome || "Welcome to Lot-Go!"}
+                    </div>
+                </div>
+
+                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">
+                    ${t.watch_ad || "📺 WATCH AD (+300 C)"}
+                </button>
+                
+                <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
+
+                <button class="main-btn easy-btn" onclick="initSingleGame(1)">
+                    <div class="btn-title">${t.single_menu_easy || "EASY"}</div>
+                    <div class="btn-desc">${t.single_desc_easy || "2/5 Match"}</div>
+                </button>
+                <button class="main-btn normal-btn" onclick="initSingleGame(2)">
+                    <div class="btn-title">${t.single_menu_normal || "NORMAL"}</div>
+                    <div class="btn-desc">${t.single_desc_normal || "4/10 Match"}</div>
+                </button>
+                <button class="main-btn hard-btn" onclick="initSingleGame(3)">
+                    <div class="btn-title">${t.single_menu_hard || "HARD"}</div>
+                    <div class="btn-desc">${t.single_desc_hard || "6/20 Match"}</div>
+                </button>
+            </div>
+        </div>`;
+    
+    // TickerManager.start(); // 필요시 활성화
 }
 
-
-// [C] 게임 초기화 (비용 차감) - 기존 동일
+// [C] 게임 초기화 (비용 차감)
 export async function initSingleGame(level) {
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
@@ -74,7 +126,7 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
-// [D] 상단바 업데이트 (HTML 구조 변경)
+// [D] 상단바 업데이트
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
@@ -101,7 +153,7 @@ function updateTopBar() {
     document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
-// [E] 번호 선택 화면 그리기 (난이도 클래스 적용 & 공 디자인 변경)
+// [E] 번호 선택 화면 그리기
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -110,7 +162,7 @@ function renderSelectionPhase() {
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
-    // [NEW] 난이도에 맞는 CSS 클래스 추가 (${gameState.mode.cssClass})
+    // 난이도 클래스 적용
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border ${gameState.mode.cssClass}">
@@ -127,7 +179,6 @@ function renderSelectionPhase() {
     for (let i = 1; i <= gameState.mode.total; i++) {
         const ball = document.createElement('div');
         ball.className = "lotto-ball";
-        // [NEW] 공 내부에 흰색 원과 숫자 추가
         ball.innerHTML = `<div class="ball-number-bg">${i}</div>`;
         
         ball.onclick = () => {
@@ -147,12 +198,11 @@ function renderStartButton() {
     document.getElementById('btn-start-game').onclick = renderPlayPhase;
 }
 
-// [F] 플레이 화면 그리기 (난이도 클래스 적용 & 공 디자인 변경)
+// [F] 플레이 화면 그리기
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
 
-    // [NEW] 난이도에 맞는 CSS 클래스 추가
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border play-mode ${gameState.mode.cssClass}">
@@ -215,7 +265,7 @@ export function renderPlayPhase() {
     });
 }
 
-// [G] 게임 종료 처리 - 기존 동일
+// [G] 게임 종료 처리
 async function handleGameWin(prize) {
     gameState.isGameOver = true;
     const t = window.t || {};
@@ -244,6 +294,6 @@ async function handleGameWin(prize) {
     }
 }
 
-// Window 객체에 함수 등록 - 기존 동일
+// Window 객체에 함수 등록
 window.initSingleGame = initSingleGame;
 window.handleWatchAd = () => alert("Ad Coming Soon");
