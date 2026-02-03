@@ -296,7 +296,7 @@ body {
     padding: 30px; 
     box-shadow: 0 0 40px rgba(255, 215, 0, 0.25), inset 0 0 50px rgba(0,0,0,0.6);
     
-    /* [핵심] 넓이 대폭 확장 */
+    /* [핵심] 넓이 대폭 확장 (1600px) */
     width: 95%;
     max-width: 1600px; 
     margin: 0 auto;
@@ -315,120 +315,11 @@ body {
 
 /* 카드 기본 스타일 */
 .card { 
-    aspect-ratio: 3/4; /* 실제 카드 비율에 가깝게 변경 (취향따라 1/1 가능) */
+    aspect-ratio: 3/4; /* 실제 카드 비율에 가깝게 변경 */
     border-radius: 18px; 
     display: flex; align-items: center; justify-content: center;
     
     /* [핵심] 화면 크기에 따라 폰트 크기 자동 조절 (최소 1.5rem ~ 최대 4rem) */
     font-size: clamp(1.5rem, 4vw, 4rem); 
     
-    font-weight: 800; cursor: pointer;
-    font-family: 'Orbitron', sans-serif;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-}
-
-.card.selection-card {
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    border: 3px solid #334155; 
-    color: #94a3b8;
-}
-.card.selection-card:hover {
-    border-color: #ffd700;
-    color: #ffd700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-    transform: translateY(-5px);
-}
-.card.selected { 
-    background: linear-gradient(145deg, #ffd700, #b8860b);
-    border: 3px solid #ffff00;
-    color: #000;
-    text-shadow: none;
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); 
-}
-
-/* 3D 카드 관련 */
-.card-3d {
-    perspective: 1200px;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-.card-inner {
-    position: relative;
-    width: 100%; height: 100%;
-    text-align: center;
-    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-    transform-style: preserve-3d;
-}
-.card.flipped .card-inner { transform: rotateY(180deg); }
-
-/* 카드 앞/뒷면 공통 */
-.card-face {
-    position: absolute; width: 100%; height: 100%;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 18px; 
-    font-weight: 900; 
-    font-family: 'Orbitron', sans-serif;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.1);
-    border: 4px solid; /* 테두리 더 두껍게 */
-}
-
-/* 카드 뒷면 (물음표) - 금색 */
-.card-front { 
-    background: linear-gradient(135deg, #800000 0%, #a00000 50%, #800000 100%);
-    background-image: 
-        linear-gradient(135deg, #800000 0%, #a00000 50%, #800000 100%),
-        repeating-linear-gradient(45deg, rgba(255,215,0,0.1) 0px, rgba(255,215,0,0.1) 10px, transparent 10px, transparent 20px);
-    
-    color: #ffd700; 
-    border-color: #ffd700; 
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-}
-
-/* 카드 앞면 (숫자) - 파란색 네온 */
-.card-back { 
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: #fff; 
-    transform: rotateY(180deg); 
-    border-color: #38bdf8; 
-    text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
-}
-
-/* 타겟 번호 바 */
-.target-container { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; }
-.target-node { 
-    width: 60px; height: 60px; 
-    background: #1e293b; border: 2px solid #334155; border-radius: 12px; 
-    display: flex; align-items: center; justify-content: center; 
-    font-weight: 800; font-size: 1.5rem; color: #64748b;
-    font-family: 'Orbitron', sans-serif;
-}
-.target-node.found { 
-    background: linear-gradient(145deg, #10b981, #059669); 
-    color: white; border-color: #34d399;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); 
-}
-
-.action-area, .result-actions { display: flex; justify-content: center; width: 100%; gap: 15px; }
-.result-msg { font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 15px; font-weight: 900; font-family: 'Orbitron'; }
-.win-gold .result-msg { color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-.win-fail .result-msg { color: #ff0055; text-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
-
-/* =========================================
-   6. 애니메이션 정의
-   ========================================= */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.2; }
-    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-}
+    font-weight: 800;
