@@ -8,17 +8,22 @@ export async function renderProfile(user) {
 
     try {
         const db = window.lotGoDb;
-        
-        // Firestore에서 유저 데이터 가져오기
         const userDocRef = doc(db, "users", user.uid);
         const snapshot = await getDoc(userDocRef);
-        
-        // 데이터가 없어도 에러 안 나게 기본값 설정
         const userData = snapshot.exists() ? snapshot.data() : {};
         
         const isAdmin = userData.role === 'admin'; 
         const photoURL = userData.photoURL || 'images/default-profile.png'; 
         const items = userData.items || {}; 
+        const username = userData.username || user.email.split('@')[0];
+        
+        // [NEW] 레퍼럴 정보
+        const myCode = userData.myReferralCode || 'UNKNOWN';
+        const refCount = userData.referralCount || 0;
+
+        // [NEW] 레벨 계산 (예시: 기본 1레벨, 5명마다 +1레벨)
+        // 0~4명: Lv.1 / 5~9명: Lv.2 / 10~14명: Lv.3 ...
+        const userLevel = 1 + Math.floor(refCount / 5);
 
         container.innerHTML = `
             <div class="profile-container">
@@ -28,8 +33,21 @@ export async function renderProfile(user) {
                         <label for="img-upload" class="camera-icon">📸</label>
                         <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)">
                     </div>
-                    <h3 class="user-email">${user.email}</h3>
+                    
+                    <h3 class="user-email" style="color:#fbbf24; font-size:1.5rem; margin-bottom:5px;">${username}</h3>
+                    <div style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">
+                        LEVEL <span style="color:#fff; font-weight:bold; font-size:1.1rem;">${userLevel}</span>
+                        <span style="font-size:0.8rem; color:#64748b;">(Refs: ${refCount})</span>
+                    </div>
                     ${isAdmin ? '<span class="admin-badge">[ADMIN ACCOUNT]</span>' : ''}
+
+                    <div style="background:#1e293b; padding:10px; border-radius:8px; margin-top:15px; border:1px solid #334155;">
+                        <div style="font-size:0.8rem; color:#94a3b8;">MY REFERRAL CODE</div>
+                        <div style="font-size:1.2rem; font-weight:bold; color:#3b82f6; letter-spacing:2px; margin-top:5px; cursor:pointer;" 
+                             onclick="navigator.clipboard.writeText('${myCode}'); alert('Copied!');">
+                            ${myCode} 📋
+                        </div>
+                    </div>
                 </div>
 
                 <div class="section-box item-section">
@@ -59,7 +77,7 @@ export async function renderProfile(user) {
     }
 }
 
-// [2] 이미지 업로드
+// ... 아래 uploadProfileImg, sendCoinGift, handleLogout 함수는 기존 그대로 유지 ...
 window.uploadProfileImg = async (input) => {
     const file = input.files[0];
     if (!file) return;
@@ -83,7 +101,6 @@ window.uploadProfileImg = async (input) => {
     }
 };
 
-// [3] 선물하기
 window.sendCoinGift = async (isAdmin) => {
     const recipientEmail = document.getElementById('recipient-email').value.trim();
     const amount = parseInt(document.getElementById('gift-amount').value);
@@ -128,7 +145,6 @@ window.sendCoinGift = async (isAdmin) => {
     }
 };
 
-// [4] 로그아웃
 window.handleLogout = () => {
     if (confirm("Do you want to logout?")) {
         window.lotGoAuth.signOut().then(() => {
