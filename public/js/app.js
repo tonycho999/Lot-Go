@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// [수정] getDoc 추가됨
+import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // [1] 모듈 불러오기
@@ -46,7 +47,7 @@ window.handleLogin = async () => {
     }
 };
 
-// [4] 회원가입 처리 (초기 레벨 10 설정)
+// [4] 회원가입 처리
 window.handleSignUp = async () => {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-username').value.trim();
@@ -63,11 +64,12 @@ window.handleSignUp = async () => {
     try {
         const usersRef = collection(db, "users");
 
-        // 중복 및 레퍼럴 확인
+        // 중복 체크
         const userCheckQ = query(usersRef, where("username", "==", username));
         const userCheckSnap = await getDocs(userCheckQ);
         if (!userCheckSnap.empty) return alert("Username already exists.");
 
+        // 추천인 코드 확인
         let referrerUid = null;
         if (referralInput !== "ADMIN") {
             const refCheckQ = query(usersRef, where("myReferralCode", "==", referralInput));
@@ -80,15 +82,15 @@ window.handleSignUp = async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
         const user = userCredential.user;
         
-        // [수정] 초기 데이터 설정
+        // 초기 데이터 (레벨 10 시작)
         await setDoc(doc(db, "users", user.uid), {
             email: user.email,
             username: username,         
             coins: 3000,
             exp: 0,
-            level: 10, // [NEW] 초기 레벨 10 (운영자 0, 고수 1)
+            level: 10, // 초기 레벨
             createdAt: new Date(),
-            role: 'user', // 운영자는 DB에서 수동으로 'admin' 변경
+            role: 'user',
             photoURL: 'https://via.placeholder.com/150',
             items: {},
             frames: [],
@@ -97,12 +99,30 @@ window.handleSignUp = async () => {
             referralCount: 0                
         });
 
+        // [수정] 추천인 보상 지급 (레벨 확인 후 XP 지급 여부 결정)
         if (referrerUid) {
             const referrerRef = doc(db, "users", referrerUid);
-            await updateDoc(referrerRef, {
-                referralCount: increment(1),
-                exp: increment(1000) 
-            });
+            const refSnap = await getDoc(referrerRef);
+            
+            if (refSnap.exists()) {
+                const refData = refSnap.data();
+                // 레벨 데이터가 없으면 10으로 간주
+                const refLevel = refData.level !== undefined ? refData.level : 10; 
+                // 운영자(0) 인지 확인 (role이 admin이면 level은 0이어야 함)
+                const refRole = refData.role || 'user';
+
+                let updates = {
+                    referralCount: increment(1) // 추천 수는 무조건 증가
+                };
+
+                // XP 지급 조건: 레벨이 1보다 크고, 운영자가 아닐 때 (즉, Lv 2~10)
+                // Lv 1(GOD)과 Lv 0(Admin)은 XP 증가 안 함
+                if (refLevel > 1 && refRole !== 'admin') {
+                    updates.exp = increment(1000);
+                }
+
+                await updateDoc(referrerRef, updates);
+            }
         }
         
         alert(`Welcome, ${username}! You received +3,000 Coins!`);
@@ -156,6 +176,7 @@ onAuthStateChanged(auth, (user) => {
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
+            
             const balanceEl = document.getElementById('balance-container');
             if (balanceEl) {
                 balanceEl.innerHTML = `
@@ -167,6 +188,7 @@ onAuthStateChanged(auth, (user) => {
                     </div>
                 `;
             }
+            
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
