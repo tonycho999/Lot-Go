@@ -210,7 +210,13 @@
     background: radial-gradient(circle at 30% 30%, #66bb6a, #2e7d32); 
     border-color: #a5d6a7; transform: scale(1.1); 
 }
-
+/* 잭팟 메시지 스타일 (붉은색 + 금색 빛) */
+.ticker-jackpot {
+    color: #ff5252;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ffff00;
+    font-size: 1.1rem; /* 약간 더 크게 */
+    letter-spacing: 1px;
+}
 /* 버튼 스타일 */
 .neon-btn { 
     padding: 18px 50px; border-radius: 50px; font-size: 1.4rem; 
