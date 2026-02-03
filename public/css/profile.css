@@ -1,134 +1,137 @@
-/* =========================================
-   5. 프로필 화면 (profile.css)
-   ========================================= */
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-.profile-container {
-    padding: 30px 20px;
-    width: 100%; max-width: 500px;
-    margin: 0 auto;
-    color: #e2e8f0;
-    animation: fadeInUp 0.5s ease-out;
-}
+/**
+ * 1. 프로필 메인 렌더링
+ */
+export async function renderProfile(user) {
+    const container = document.getElementById('profile-tab');
+    if (!container) return; // 에러 방지
 
-/* 프로필 헤더 */
-.profile-header {
-    text-align: center;
-    margin-bottom: 40px;
-    background: rgba(30, 41, 59, 0.6);
-    padding: 30px;
-    border-radius: 24px;
-    border: 1px solid #334155;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
+    const db = window.lotGoDb;
+    
+    // 유저 데이터 가져오기
+    const snapshot = await get(ref(db, `users/${user.uid}`));
+    const userData = snapshot.val() || {};
+    const isAdmin = userData.role === 'admin'; 
+    const photoURL = userData.photoURL || 'https://via.placeholder.com/150'; // 기본 이미지 URL 수정 가능
+    const items = userData.items || {}; 
 
-.profile-img-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 120px; height: 120px;
-    margin-bottom: 15px;
-}
+    // [수정] 인라인 스타일 제거 -> CSS 클래스 사용
+    container.innerHTML = `
+        <div class="profile-container">
+            
+            <div class="profile-header">
+                <div class="profile-img-wrapper">
+                    <img id="profile-img" src="${photoURL}" alt="Profile">
+                    <label for="img-upload" class="camera-icon">📸</label>
+                    <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)">
+                </div>
+                <h3 class="user-email">${user.email}</h3>
+                ${isAdmin ? '<span class="admin-badge">[ADMIN ACCOUNT]</span>' : ''}
+            </div>
 
-#profile-img {
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    border: 4px solid #6366f1;
-    object-fit: cover;
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-}
+            <div class="section-box item-section">
+                <h4 class="section-title">MY ITEMS</h4>
+                <div id="my-items-list">
+                    ${Object.keys(items).length > 0 
+                        ? Object.entries(items).map(([id, qty]) => `<div class="item-tag">${id} x${qty}</div>`).join('') 
+                        : '<span class="empty-msg">No items owned.</span>'}
+                </div>
+            </div>
 
-.camera-icon {
-    position: absolute; bottom: 5px; right: 5px;
-    background: #6366f1; color: white;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    border: 2px solid #1e293b;
-    transition: 0.2s;
-}
-.camera-icon:hover { transform: scale(1.1); background: #4f46e5; }
+            <div class="section-box gift-section">
+                <h4 class="section-title">GIFT COINS</h4>
+                <div class="gift-form">
+                    <input type="email" id="recipient-email" class="gift-input" placeholder="Recipient Email">
+                    <input type="number" id="gift-amount" class="gift-input" placeholder="Min. 100,000 COINS">
+                    <button class="gift-btn" onclick="sendCoinGift(${isAdmin})">SEND GIFT 🎁</button>
+                </div>
+            </div>
 
-.user-email {
-    font-family: 'Cinzel', serif;
-    font-size: 1.2rem; margin: 0;
-    color: #fff;
-    letter-spacing: 1px;
-}
-
-.admin-badge {
-    display: inline-block;
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    margin-top: 5px;
-    border: 1px solid rgba(239, 68, 68, 0.5);
+            <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+        </div>
+    `;
 }
 
-/* 섹션 공통 */
-.section-box {
-    background: rgba(30, 41, 59, 0.6);
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 20px;
-    border: 1px solid #334155;
-}
+/**
+ * 2. 프로필 이미지 업로드
+ */
+window.uploadProfileImg = async (input) => {
+    const file = input.files[0];
+    if (!file) return;
 
-.section-title {
-    margin: 0 0 15px 0;
-    font-size: 0.9rem;
-    color: #94a3b8;
-    letter-spacing: 1px;
-    border-bottom: 1px solid #334155;
-    padding-bottom: 10px;
-}
+    const auth = window.lotGoAuth;
+    const db = window.lotGoDb;
+    const storage = getStorage(); 
+    const fileRef = sRef(storage, `profiles/${auth.currentUser.uid}`);
 
-/* 아이템 리스트 */
-#my-items-list {
-    display: flex; gap: 10px; flex-wrap: wrap;
-}
-.item-tag {
-    background: #334155;
-    color: #e2e8f0;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    border: 1px solid #475569;
-}
-.empty-msg { font-size: 0.9rem; color: #64748b; font-style: italic; }
+    try {
+        alert("Uploading...");
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+        
+        await update(ref(db, `users/${auth.currentUser.uid}`), { photoURL: url });
+        document.getElementById('profile-img').src = url;
+        alert("Photo updated!");
+    } catch (err) {
+        console.error(err);
+        alert("Upload failed.");
+    }
+};
 
-/* 선물하기 폼 */
-.gift-form { display: flex; flex-direction: column; gap: 12px; }
-.gift-input {
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: white;
-    padding: 14px;
-    border-radius: 8px;
-    font-family: 'Exo 2', sans-serif;
-}
-.gift-input:focus { outline: none; border-color: #10b981; }
+/**
+ * 3. 코인 선물하기 로직
+ */
+window.sendCoinGift = async (isAdmin) => {
+    const recipientEmail = document.getElementById('recipient-email').value.trim();
+    const amount = parseInt(document.getElementById('gift-amount').value);
+    const db = window.lotGoDb;
+    const senderUid = window.lotGoAuth.currentUser.uid;
 
-.gift-btn {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white; border: none;
-    padding: 14px; border-radius: 8px;
-    font-weight: 800; cursor: pointer;
-    transition: 0.2s;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-}
-.gift-btn:hover { transform: translateY(-2px); }
+    if (!recipientEmail || isNaN(amount)) return alert("Fill all fields.");
+    if (!isAdmin && amount < 100000) return alert("Minimum gift amount is 100,000 COINS.");
 
-/* 로그아웃 버튼 */
-.logout-btn {
-    width: 100%; margin-top: 20px;
-    background: transparent;
-    border: 2px solid #ef4444;
-    color: #ef4444;
-    padding: 14px; border-radius: 12px;
-    cursor: pointer; font-weight: bold;
-    transition: 0.2s;
+    try {
+        // 발신자 확인
+        const senderSnap = await get(ref(db, `users/${senderUid}`));
+        const senderCoins = senderSnap.val().coins || 0;
+        if (!isAdmin && senderCoins < amount) return alert("Insufficient balance.");
+
+        // 수신자 찾기
+        const usersSnap = await get(ref(db, `users`));
+        let recipientUid = null;
+        usersSnap.forEach((child) => {
+            if (child.val().email === recipientEmail) recipientUid = child.key;
+        });
+
+        if (!recipientUid) return alert("User not found.");
+        if (recipientUid === senderUid) return alert("You cannot gift yourself.");
+
+        // 코인 이동
+        if (!isAdmin) {
+            await set(ref(db, `users/${senderUid}/coins`), senderCoins - amount);
+        }
+
+        const recipientSnap = await get(ref(db, `users/${recipientUid}/coins`));
+        const recipientCoins = recipientSnap.val() || 0;
+        await set(ref(db, `users/${recipientUid}/coins`), recipientCoins + amount);
+
+        alert(`Successfully gifted ${amount.toLocaleString()} coins!`);
+        location.reload();
+    } catch (err) {
+        console.error(err);
+        alert("Transaction failed.");
+    }
+};
+
+/**
+ * 4. 로그아웃 (window 객체에 할당하여 HTML에서 호출 가능하게 함)
+ */
+window.handleLogout = () => {
+    if (confirm("Do you want to logout?")) {
+        window.lotGoAuth.signOut().then(() => {
+            window.location.reload();
+        });
+    }
 }
-.logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
