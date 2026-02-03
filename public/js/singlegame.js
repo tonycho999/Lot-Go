@@ -63,7 +63,6 @@ function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     
-    // 상단바는 항상 MAX PRIZE 표시 (고정)
     let prizeLabel = "MAX PRIZE";
     let prizeValue = gameState.mode.max.toLocaleString();
 
@@ -85,7 +84,6 @@ function updateTopBar() {
     if(backBtn) backBtn.onclick = goBackToLobby;
 }
 
-// 테이블 내부 상금 업데이트
 function updateTablePrize() {
     const display = document.getElementById('table-current-prize');
     if (!display) return;
@@ -93,23 +91,15 @@ function updateTablePrize() {
     display.innerText = currentPrize.toLocaleString();
 }
 
-// [수정] 상금 계산 로직 개선
 function calculateCurrentPrize() {
     const { mode, flips, level } = gameState;
-    
-    // 1. 아직 최소 선택 개수(pick)만큼 뒤집지 않았다면 MAX 상금 유지
     if (flips < mode.pick) return mode.max;
-
-    // 2. EASY 모드 예외 처리
     if (level === 1) { 
-        // 2장 찾기 게임: 2장까지는 MAX, 3장부터 감액
         if (flips <= 2) return mode.max;
         if (flips === 3) return 166;
         if (flips === 4) return 83;
         if (flips === 5) return 0; 
     }
-    
-    // 3. NORMAL / HARD 모드는 테이블 참조
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
@@ -121,10 +111,11 @@ function renderSelectionPhase() {
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
+    // [수정] Grid 클래스를 동적으로 적용하여 공 크기 제어
     board.innerHTML = `
         <div class="game-room-border section-selection">
             <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
-            <div class="card-grid grid-easy" id="selection-grid"></div>
+            <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
         </div>
     `;
 
@@ -132,7 +123,8 @@ function renderSelectionPhase() {
     for (let i = 1; i <= gameState.mode.total; i++) {
         const ball = document.createElement('div');
         ball.className = "lotto-ball selection-ball";
-        ball.innerHTML = `<div class="ball-content">${i}</div>`;
+        // [수정] 흰색 원과 숫자 포함
+        ball.innerHTML = `<div class="ball-number">${i}</div>`;
         
         ball.onclick = () => {
             if (gameState.selected.includes(i) || gameState.selected.length >= gameState.mode.pick) return;
@@ -152,6 +144,7 @@ function renderStartButton(boardElement) {
     const selectionSection = document.querySelector('.section-selection');
     const btnContainer = document.createElement('div');
     btnContainer.className = "action-area";
+    // [수정] START GAME 버튼 잘 보이게 (CSS에서 색상 처리함)
     btnContainer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
     selectionSection.appendChild(btnContainer); 
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
@@ -185,10 +178,11 @@ export function renderPlayPhase() {
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
         ballWrapper.className = "ball-wrapper";
+        // [수정] ball-front: 빈 공, ball-back: 숫자 공 (디자인 통일)
         ballWrapper.innerHTML = `
             <div class="ball-inner">
-                <div class="ball-face ball-front">&nbsp;</div>
-                <div class="ball-face ball-back"><span class="ball-number">${num}</span></div>
+                <div class="ball-face ball-front"></div>
+                <div class="ball-face ball-back"><div class="ball-number">${num}</div></div>
             </div>
         `;
         
@@ -235,9 +229,7 @@ function handleGameOver() {
     else showResultOnBoard("GAME OVER!", 0, "win-fail");
 }
 
-// [수정] 결과 화면 처리 (보드 유지, 상단 교체, 하단 버튼 추가)
 function showResultOnBoard(message, prize, statusClass) {
-    // 1. 상단 Current Prize 영역을 결과 메시지로 교체
     const prizeContainer = document.getElementById('prize-container');
     if (prizeContainer) {
         prizeContainer.innerHTML = `
@@ -246,30 +238,24 @@ function showResultOnBoard(message, prize, statusClass) {
                 <div class="final-prize">Total: <span class="highlight">${prize.toLocaleString()} C</span></div>
             </div>
         `;
-        // 스타일 변경 (테두리 등 제거하고 메시지 강조)
         prizeContainer.style.background = "transparent";
         prizeContainer.style.border = "none";
         prizeContainer.style.boxShadow = "none";
     }
 
-    // 2. 하단에 버튼 추가
     const actionContainer = document.getElementById('end-game-actions');
     if (actionContainer) {
         actionContainer.innerHTML = `
             <div class="result-actions" style="display: flex; gap: 20px; justify-content: center;">
-                <button class="neon-btn success" onclick="initSingleGame(${gameState.level})">🔄 REPLAY</button>
+                <button class="neon-btn success">🔄 REPLAY</button>
                 <button id="end-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
             </div>
         `;
         
-        // 함수 바인딩
         const lobbyBtn = document.getElementById('end-lobby-btn');
         const replayBtn = actionContainer.querySelector('.success');
         
         if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
-        // initSingleGame은 전역 함수가 아니므로 window 객체를 통하거나 모듈 함수 직접 호출 필요
-        // 여기서는 onclick 속성 대신 addEventListener 사용 권장하지만 기존 구조 유지를 위해
-        // 모듈 내부 함수 호출 방식 유지 (HTML onclick="initSingleGame"은 작동 안 할 수 있음)
         if(replayBtn) replayBtn.onclick = () => initSingleGame(gameState.level);
     }
 }
