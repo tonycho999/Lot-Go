@@ -1,5 +1,5 @@
 /* =========================================
-   1. Base Settings & Fonts
+   1. 기본 설정 & 폰트
    ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Orbitron:wght@700;900&display=swap');
 
@@ -7,7 +7,7 @@
 
 body { 
     margin: 0; 
-    /* Deep Night Sky / Cyberpunk Casino Background */
+    /* 깊은 밤하늘/사이버펑크 카지노 배경 */
     background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     color: #e2e8f0; 
     font-family: 'Exo 2', sans-serif; 
@@ -15,7 +15,7 @@ body {
     min-height: 100vh;
 }
 
-/* View Container Common */
+/* 뷰 컨테이너 공통 */
 .view-container { 
     display: flex; 
     flex-direction: column; 
@@ -25,7 +25,7 @@ body {
 }
 
 /* =========================================
-   2. Login & Title Screen (Auth View)
+   2. 로그인 & 타이틀 화면 (Auth View)
    ========================================= */
 .auth-mode {
     justify-content: center;
@@ -125,7 +125,7 @@ body {
 }
 
 /* =========================================
-   3. Lobby & Navigation (Lobby View)
+   3. 로비 & 네비게이션 (Lobby View)
    ========================================= */
 #lobby-view {
     justify-content: flex-start;
@@ -136,7 +136,7 @@ body {
     overflow: hidden;
 }
 
-/* Tab System */
+/* 탭 시스템 */
 .tab-system {
     width: 100%;
     flex: 1;
@@ -156,7 +156,7 @@ body {
     animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Bottom Navigation */
+/* 하단 네비게이션 */
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0;
@@ -195,7 +195,7 @@ body {
 }
 
 /* =========================================
-   4. Game Menu & Button Styles
+   4. 게임 메뉴 & 버튼 스타일
    ========================================= */
 .menu-list { width: 100%; display: flex; flex-direction: column; gap: 15px; }
 
@@ -212,14 +212,14 @@ body {
 .btn-title { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
 .btn-desc { font-size: 0.9rem; margin-top: 4px; opacity: 0.9; font-weight: 400; }
 
-/* Ad Button */
+/* 광고 버튼 */
 .ad-btn-style {
     background: linear-gradient(45deg, #6d28d9, #8b5cf6);
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
     font-size: 1.1rem;
 }
 
-/* Difficulty Buttons */
+/* 난이도 버튼 */
 .easy-btn { background: linear-gradient(to right, #059669, #10b981); }
 .normal-btn { background: linear-gradient(to right, #2563eb, #3b82f6); }
 .hard-btn { background: linear-gradient(to right, #dc2626, #ef4444); }
@@ -231,7 +231,7 @@ body {
     width: 100%;
 }
 
-/* Neon Button Common */
+/* 네온 버튼 공통 */
 .neon-btn {
     padding: 16px 40px; border-radius: 12px; border: none; font-family: 'Exo 2';
     font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1rem;
@@ -255,12 +255,13 @@ body {
 }
 
 /* =========================================
-   5. [UPDATED] Single Game (Casino Style Layout)
+   5. [수정됨] 싱글 게임 (와이드 레이아웃 적용)
    ========================================= */
 
-/* Game Title */
+/* 게임 타이틀 */
 .game-title { 
-    font-size: 2.5rem; margin: 10px 0 25px; 
+    font-size: clamp(2rem, 4vw, 3.5rem); /* 반응형 폰트 */
+    margin: 10px 0 25px; 
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
     font-weight: 900; 
     text-align: center;
@@ -268,81 +269,87 @@ body {
 }
 .highlight { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
 
-/* Top Info Bar (Widened & Centered) */
+/* 상단 정보바 (화면 꽉 차게) */
 .game-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(20, 20, 40, 0.95);
-    border: 2px solid #ffd700; /* Gold Border */
-    padding: 20px 30px; 
+    border: 2px solid #ffd700; 
+    padding: 20px 40px; 
     border-radius: 20px;
     margin-bottom: 25px;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
     
-    width: 100%;
-    max-width: 800px; /* Increased Width */
+    /* [핵심] 넓이 대폭 확장 */
+    width: 95%; 
+    max-width: 1600px; 
     margin-left: auto;
     margin-right: auto;
 }
 
-/* Game Board Container (Casino Table Feel) */
+/* 게임 룸 컨테이너 (화면 꽉 차게) */
 .game-room-border {
-    border: 3px solid #ffd700; /* Gold Border */
-    background: rgba(10, 10, 30, 0.8);
+    border: 4px solid #ffd700; 
+    background: rgba(10, 10, 30, 0.85);
     border-radius: 30px;
-    padding: 40px; 
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), inset 0 0 50px rgba(0,0,0,0.5);
+    padding: 30px; 
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.25), inset 0 0 50px rgba(0,0,0,0.6);
     
-    width: 100%;
-    max-width: 800px; /* Increased Width for larger cards */
+    /* [핵심] 넓이 대폭 확장 */
+    width: 95%;
+    max-width: 1600px; 
     margin: 0 auto;
 }
 
-/* Card Grid */
+/* 카드 그리드 */
 .card-grid { 
     display: grid; 
-    gap: 20px; /* Increased Gap */
+    gap: 20px; 
     width: 100%; 
     justify-content: center; 
-    margin-top: 20px; 
-}
-.grid-easy, .grid-normal, .grid-hard { 
+    margin-top: 25px; 
+    /* 화면 크기에 따라 카드 크기 자동 조절 */
     grid-template-columns: repeat(5, 1fr); 
 }
 
-/* Selection Phase Cards */
+/* 카드 기본 스타일 */
 .card { 
-    aspect-ratio: 1; 
-    border-radius: 16px; 
+    aspect-ratio: 3/4; /* 실제 카드 비율에 가깝게 변경 (취향따라 1/1 가능) */
+    border-radius: 18px; 
     display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; 
+    
+    /* [핵심] 화면 크기에 따라 폰트 크기 자동 조절 (최소 1.5rem ~ 최대 4rem) */
+    font-size: clamp(1.5rem, 4vw, 4rem); 
+    
     font-weight: 800; cursor: pointer;
     font-family: 'Orbitron', sans-serif;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
 }
+
 .card.selection-card {
     background: linear-gradient(145deg, #1e293b, #0f172a);
-    border: 2px solid #334155; 
+    border: 3px solid #334155; 
     color: #94a3b8;
 }
 .card.selection-card:hover {
     border-color: #ffd700;
     color: #ffd700;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    transform: translateY(-5px);
 }
 .card.selected { 
     background: linear-gradient(145deg, #ffd700, #b8860b);
-    border: 2px solid #ffff00;
+    border: 3px solid #ffff00;
     color: #000;
     text-shadow: none;
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); 
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); 
 }
 
-/* 3D Card Mechanics */
+/* 3D 카드 관련 */
 .card-3d {
-    perspective: 1000px;
+    perspective: 1200px;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -356,40 +363,40 @@ body {
 }
 .card.flipped .card-inner { transform: rotateY(180deg); }
 
-/* Card Face Styles (Front & Back) */
+/* 카드 앞/뒷면 공통 */
 .card-face {
     position: absolute; width: 100%; height: 100%;
     -webkit-backface-visibility: hidden; backface-visibility: hidden;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 16px; 
+    border-radius: 18px; 
     font-weight: 900; 
-    font-size: 2.5rem; /* Large Numbers */
     font-family: 'Orbitron', sans-serif;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 0 15px rgba(255,255,255,0.1);
-    border: 3px solid;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.1);
+    border: 4px solid; /* 테두리 더 두껍게 */
 }
 
-/* Hidden Side (Question Mark) - Casino Chip Style */
+/* 카드 뒷면 (물음표) - 금색 */
 .card-front { 
     background: linear-gradient(135deg, #800000 0%, #a00000 50%, #800000 100%);
     background-image: 
         linear-gradient(135deg, #800000 0%, #a00000 50%, #800000 100%),
         repeating-linear-gradient(45deg, rgba(255,215,0,0.1) 0px, rgba(255,215,0,0.1) 10px, transparent 10px, transparent 20px);
+    
     color: #ffd700; 
     border-color: #ffd700; 
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
 }
 
-/* Revealed Side (Number) - Neon Style */
+/* 카드 앞면 (숫자) - 파란색 네온 */
 .card-back { 
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     color: #fff; 
     transform: rotateY(180deg); 
     border-color: #38bdf8; 
-    text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
 }
 
-/* Target Number Bar */
+/* 타겟 번호 바 */
 .target-container { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; }
 .target-node { 
     width: 60px; height: 60px; 
@@ -405,12 +412,12 @@ body {
 }
 
 .action-area, .result-actions { display: flex; justify-content: center; width: 100%; gap: 15px; }
-.result-msg { font-size: 2.5rem; margin-bottom: 15px; font-weight: 900; font-family: 'Orbitron'; }
+.result-msg { font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 15px; font-weight: 900; font-family: 'Orbitron'; }
 .win-gold .result-msg { color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
 .win-fail .result-msg { color: #ff0055; text-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
 
 /* =========================================
-   6. Animations
+   6. 애니메이션 정의
    ========================================= */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
