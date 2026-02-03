@@ -1,0 +1,119 @@
+/* =========================================
+   7. 온라인 모드 (online.css)
+   ========================================= */
+
+/* 로비 레이아웃 (3단) */
+.lobby-container {
+    display: flex;
+    gap: 10px;
+    height: 70vh;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 왼쪽: 방 목록 */
+.room-list-section {
+    flex: 2;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow-y: auto;
+    padding: 10px;
+}
+.room-item {
+    background: #1e293b;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #475569;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.room-item:hover { background: #334155; border-color: #3b82f6; }
+.room-info h4 { margin: 0; color: #f1f5f9; font-size: 1rem; }
+.room-info p { margin: 5px 0 0; font-size: 0.8rem; color: #94a3b8; }
+
+/* 가운데: 채팅 */
+.chat-section {
+    flex: 2;
+    display: flex; flex-direction: column;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid #334155;
+    border-radius: 12px;
+}
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    font-size: 0.9rem;
+}
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #334155;
+}
+.chat-msg { margin-bottom: 5px; }
+.chat-msg .user { font-weight: bold; color: #3b82f6; }
+
+/* 오른쪽: 접속 유저 */
+.user-list-section {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 10px;
+    overflow-y: auto;
+}
+.online-user {
+    padding: 5px; font-size: 0.9rem; color: #cbd5e1;
+    border-bottom: 1px solid #334155;
+}
+
+/* 하단: 방 만들기 버튼 */
+.lobby-actions {
+    width: 100%; text-align: right; margin-top: 10px;
+}
+
+/* 팝업 (모달) */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: #1e293b;
+    padding: 30px; border-radius: 20px;
+    border: 2px solid #3b82f6;
+    width: 90%; max-width: 500px;
+    color: white;
+}
+
+/* 대기방 */
+.waiting-room {
+    text-align: center; padding: 20px;
+}
+.player-slot {
+    display: inline-block; width: 100px; margin: 10px;
+    text-align: center;
+}
+.player-avatar {
+    width: 60px; height: 60px; border-radius: 50%; border: 3px solid #475569;
+}
+.player-ready { border-color: #10b981; box-shadow: 0 0 15px #10b981; }
+
+/* 인게임 */
+.online-game-board {
+    display: flex; flex-direction: column; gap: 20px;
+    align-items: center;
+}
+.opponent-area {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.opponent-card {
+    background: #0f172a; padding: 10px; border-radius: 10px; text-align: center;
+    border: 1px solid #334155; width: 80px;
+}
+.match-count { font-size: 1.5rem; font-weight: bold; color: #fbbf24; }
