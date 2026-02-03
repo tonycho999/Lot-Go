@@ -27,7 +27,7 @@ let userCoins = 0;
 let coinUnsub = null;
 
 // ==============================================
-// 티커(Ticker) 시스템
+// 티커(Ticker) 시스템 - 개선된 버전
 // ==============================================
 const TickerManager = {
     queue: [],
@@ -57,7 +57,8 @@ const TickerManager = {
     },
 
     loopFakeMessages: function() {
-        const randomTime = Math.floor(Math.random() * (20000 - 5000 + 1)) + 5000;
+        // [수정] 5초 ~ 30초 사이 랜덤 (기존 20초 -> 30초로 변경)
+        const randomTime = Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000;
         
         this.timer = setTimeout(() => {
             if (!document.getElementById('ticker-bar')) return;
@@ -85,25 +86,42 @@ const TickerManager = {
         if (this.isAnimating || this.queue.length === 0) return;
         
         const tickerBar = document.getElementById('ticker-bar');
-        if (!tickerBar) return;
+        const container = document.querySelector('.ticker-container');
+        if (!tickerBar || !container) return;
 
         this.isAnimating = true;
         const item = this.queue.shift();
         
+        // 텍스트 및 스타일 설정
         tickerBar.innerText = item.text;
         tickerBar.className = 'ticker-text'; 
         if (item.isJackpot) tickerBar.classList.add('ticker-jackpot');
 
-        tickerBar.classList.remove('ticker-anim');
-        void tickerBar.offsetWidth; 
-        tickerBar.classList.add('ticker-anim');
+        // [중요] 애니메이션 로직 변경 (Web Animations API 사용)
+        // 기존 CSS 클래스 방식은 텍스트 길이에 따라 중간에 멈출 수 있음.
+        // JS로 정확한 거리를 계산해서 이동시킵니다.
+        
+        // 1. 시작 위치 초기화 (오른쪽 끝)
+        // CSS에서 left: 100%로 되어있으므로 translateX(0)이면 컨테이너 바로 바깥 오른쪽에 위치함.
+        
+        // 2. 이동해야 할 거리 계산 (컨테이너 너비 + 텍스트 너비 + 여유공간)
+        const distance = container.offsetWidth + tickerBar.offsetWidth + 50;
+        
+        // 3. 애니메이션 실행
+        const animation = tickerBar.animate([
+            { transform: 'translateX(0)' }, 
+            { transform: `translateX(-${distance}px)` }
+        ], {
+            duration: 10000, // 10초 동안 이동 (속도 조절 가능)
+            easing: 'linear',
+            fill: 'forwards'
+        });
 
-        const onEnd = () => {
+        // 4. 종료 후 처리
+        animation.onfinish = () => {
             this.isAnimating = false;
-            tickerBar.removeEventListener('animationend', onEnd);
-            this.playNext();
+            this.playNext(); // 다음 메시지 재생
         };
-        tickerBar.addEventListener('animationend', onEnd);
     },
     
     stop: function() {
