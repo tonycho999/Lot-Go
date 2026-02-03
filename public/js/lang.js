@@ -34,6 +34,15 @@ export const DICTIONARY = {
         lobby_btn: "🏠 LOBBY",
         back_lobby: "BACK TO LOBBY",
         my_coins: "MY COINS",
+        // [Shop] - (콤마 주의!)
+        shop_title: "ITEM SHOP",
+        item_double_name: "x2 Double Ticket",
+        item_double_desc: "Doubles the prize for one game.",
+        buy_btn: "BUY",
+        owned: "Owned",
+        cost: "Cost",
+        buy_confirm: "Buy this item for",
+        buy_success: "Purchase successful!",
         // [Profile]
         level_guide_btn: "❓ LEVEL GUIDE",
         my_items: "MY ITEMS",
@@ -60,14 +69,6 @@ export const DICTIONARY = {
         alert_gift_min: "Minimum transfer amount is",
         alert_gift_confirm: "Send",
         alert_gift_success: "Successfully sent"
-        shop_title: "ITEM SHOP",
-        item_double_name: "x2 Double Ticket",
-        item_double_desc: "Doubles the prize for one game.",
-        buy_btn: "BUY",
-        owned: "Owned",
-        cost: "Cost",
-        buy_confirm: "Buy this item for",
-        buy_success: "Purchase successful!"
     },
     ko: {
         // [공통]
@@ -104,6 +105,15 @@ export const DICTIONARY = {
         lobby_btn: "🏠 로비로",
         back_lobby: "로비로 돌아가기",
         my_coins: "내 코인",
+        // [상점]
+        shop_title: "아이템 상점",
+        item_double_name: "x2배 당첨 티켓",
+        item_double_desc: "한 게임의 당첨금을 2배로 만듭니다.",
+        buy_btn: "구매하기",
+        owned: "보유량",
+        cost: "가격",
+        buy_confirm: "이 아이템을 구매하시겠습니까? 가격:",
+        buy_success: "구매 성공!",
         // [프로필]
         level_guide_btn: "❓ 레벨 가이드",
         my_items: "내 아이템",
@@ -130,14 +140,6 @@ export const DICTIONARY = {
         alert_gift_min: "최소 송금 금액은",
         alert_gift_confirm: "보내시겠습니까?",
         alert_gift_success: "전송 성공!"
-        shop_title: "아이템 상점",
-        item_double_name: "x2배 당첨 티켓",
-        item_double_desc: "한 게임의 당첨금을 2배로 만듭니다.",
-        buy_btn: "구매하기",
-        owned: "보유량",
-        cost: "가격",
-        buy_confirm: "이 아이템을 구매하시겠습니까? 가격:",
-        buy_success: "구매 성공!"
     }
 };
 
