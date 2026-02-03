@@ -22,7 +22,7 @@
     
     width: 95%; max-width: 1600px;
     min-width: 1000px; 
-    min-height: 800px; /* 전체 높이 넉넉하게 확보 */
+    min-height: 700px; /* 전체 높이 넉넉하게 확보 */
     height: auto;      
     
     margin: 0 auto 30px auto; 
