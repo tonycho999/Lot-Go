@@ -63,6 +63,7 @@ function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     
+    // 상단바는 항상 MAX PRIZE 표시 (고정)
     let prizeLabel = "MAX PRIZE";
     let prizeValue = gameState.mode.max.toLocaleString();
 
@@ -84,15 +85,34 @@ function updateTopBar() {
     if(backBtn) backBtn.onclick = goBackToLobby;
 }
 
+// 테이블 내부 상금 업데이트
 function updateTablePrize() {
     const display = document.getElementById('table-current-prize');
     if (!display) return;
     let currentPrize = calculateCurrentPrize();
-    if (gameState.isGameOver) currentPrize = 0; 
     display.innerText = currentPrize.toLocaleString();
 }
 
-// [수정] 번호 선택 화면 - Grid 클래스 동적 적용
+// [수정] 상금 계산 로직 개선
+function calculateCurrentPrize() {
+    const { mode, flips, level } = gameState;
+    
+    // 1. 아직 최소 선택 개수(pick)만큼 뒤집지 않았다면 MAX 상금 유지
+    if (flips < mode.pick) return mode.max;
+
+    // 2. EASY 모드 예외 처리
+    if (level === 1) { 
+        // 2장 찾기 게임: 2장까지는 MAX, 3장부터 감액
+        if (flips <= 2) return mode.max;
+        if (flips === 3) return 166;
+        if (flips === 4) return 83;
+        if (flips === 5) return 0; 
+    }
+    
+    // 3. NORMAL / HARD 모드는 테이블 참조
+    return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
+}
+
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -104,7 +124,7 @@ function renderSelectionPhase() {
     board.innerHTML = `
         <div class="game-room-border section-selection">
             <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
-            <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
+            <div class="card-grid grid-easy" id="selection-grid"></div>
         </div>
     `;
 
@@ -137,25 +157,13 @@ function renderStartButton(boardElement) {
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
-function calculateCurrentPrize() {
-    const { mode, flips, level } = gameState;
-    if (flips === 0) return mode.max;
-    if (level === 1) { 
-        if (flips <= 2) return mode.max;
-        if (flips === 3) return 166;
-        if (flips === 4) return 83;
-        if (flips === 5) return 0; 
-    }
-    return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
-}
-
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
 
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
-            <div class="in-game-prize-container">
+            <div id="prize-container" class="in-game-prize-container">
                 <div class="prize-label">CURRENT PRIZE</div>
                 <div id="table-current-prize" class="prize-value">${gameState.mode.max.toLocaleString()}</div>
             </div>
@@ -165,6 +173,8 @@ export function renderPlayPhase() {
             </div>
 
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
+            
+            <div id="end-game-actions" style="width: 100%; margin-top: 30px;"></div>
         </div>
     `;
     updateTopBar(); 
@@ -215,30 +225,51 @@ async function handleGameWin() {
     else if (prize === cost) { resultTitle = "SAFE!"; statusClass = "win-silver"; } 
     else if (prize > 0) { resultTitle = `ALMOST!`; statusClass = "win-bronze"; } 
     else { resultTitle = "UNLUCKY!"; statusClass = "win-fail"; }
-    showResultButtons(resultTitle, prize, statusClass);
+    showResultOnBoard(resultTitle, prize, statusClass);
 }
 
 function handleGameOver() {
     gameState.isGameOver = true;
     const prize = calculateCurrentPrize();
     if (prize > 0) handleGameWin();
-    else showResultButtons("GAME OVER!", 0, "win-fail");
+    else showResultOnBoard("GAME OVER!", 0, "win-fail");
 }
 
-function showResultButtons(message, prize, statusClass) {
-    const board = document.getElementById('game-board');
-    board.innerHTML = `
-        <div class="game-room-border section-result ${statusClass}" style="text-align:center;">
-            <h2 class="result-msg">${message}</h2>
-            <div class="final-prize" style="font-size: 1.5rem; margin-bottom: 30px; color: #cbd5e1;">
-                Total Received: <span class="highlight">${prize.toLocaleString()} C</span>
+// [수정] 결과 화면 처리 (보드 유지, 상단 교체, 하단 버튼 추가)
+function showResultOnBoard(message, prize, statusClass) {
+    // 1. 상단 Current Prize 영역을 결과 메시지로 교체
+    const prizeContainer = document.getElementById('prize-container');
+    if (prizeContainer) {
+        prizeContainer.innerHTML = `
+            <div class="result-box ${statusClass}">
+                <div class="result-msg" style="margin-bottom: 5px;">${message}</div>
+                <div class="final-prize">Total: <span class="highlight">${prize.toLocaleString()} C</span></div>
             </div>
+        `;
+        // 스타일 변경 (테두리 등 제거하고 메시지 강조)
+        prizeContainer.style.background = "transparent";
+        prizeContainer.style.border = "none";
+        prizeContainer.style.boxShadow = "none";
+    }
+
+    // 2. 하단에 버튼 추가
+    const actionContainer = document.getElementById('end-game-actions');
+    if (actionContainer) {
+        actionContainer.innerHTML = `
             <div class="result-actions" style="display: flex; gap: 20px; justify-content: center;">
                 <button class="neon-btn success" onclick="initSingleGame(${gameState.level})">🔄 REPLAY</button>
-                <button id="result-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
+                <button id="end-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
             </div>
-        </div>`;
-    updateTopBar();
-    const lobbyBtn = document.getElementById('result-lobby-btn');
-    if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
+        `;
+        
+        // 함수 바인딩
+        const lobbyBtn = document.getElementById('end-lobby-btn');
+        const replayBtn = actionContainer.querySelector('.success');
+        
+        if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
+        // initSingleGame은 전역 함수가 아니므로 window 객체를 통하거나 모듈 함수 직접 호출 필요
+        // 여기서는 onclick 속성 대신 addEventListener 사용 권장하지만 기존 구조 유지를 위해
+        // 모듈 내부 함수 호출 방식 유지 (HTML onclick="initSingleGame"은 작동 안 할 수 있음)
+        if(replayBtn) replayBtn.onclick = () => initSingleGame(gameState.level);
+    }
 }
