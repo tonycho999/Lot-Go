@@ -1,0 +1,31 @@
+/* =========================================
+   1. 공통 설정 (폰트, 배경, 애니메이션)
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body { 
+    margin: 0; 
+    /* 공통 배경 */
+    background: radial-gradient(circle at center, #2b1d16 0%, #0f0805 100%);
+    color: #e2e8f0; 
+    font-family: 'Exo 2', sans-serif; 
+    overflow-x: hidden; 
+    min-height: 100vh;
+}
+
+.view-container { 
+    display: flex; flex-direction: column; align-items: center; 
+    min-height: 100vh; width: 100%;
+}
+
+/* 애니메이션 정의 */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
