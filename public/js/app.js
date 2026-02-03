@@ -1,16 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// [수정] getDoc 추가됨
 import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // [1] 모듈 불러오기
-import { initLanguage } from './lang.js';
 import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
 import { renderShop } from './shop.js';
 import { renderOnlineLobby } from './online-lobby.js';
+import { initLanguage } from './lang.js';
 
 // [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
@@ -22,7 +21,73 @@ window.lotGoAuth = auth;
 window.lotGoDb = db;
 window.lotGoRtdb = rtdb;
 
-// [3] 로그인 처리
+// [3] 언어 설정 및 로그인 화면 번역 실행
+window.t = initLanguage();
+renderAuthScreens(); // [NEW] 앱 시작하자마자 로그인 화면 번역
+
+function renderAuthScreens() {
+    const t = window.t;
+    // 1. 로그인 화면 텍스트 교체
+    const authView = document.getElementById('auth-view');
+    if (authView) {
+        authView.innerHTML = `
+            <div class="auth-card">
+                <div class="logo-wrapper">
+                    <img src="images/logo.png" alt="Lot-Go Logo" class="game-logo">
+                    <div class="logo-glow"></div>
+                </div>
+                
+                <h1 class="main-title">LOT-GO</h1>
+                <p class="sub-title">${t.login_subtitle}</p>
+
+                <div class="input-group">
+                    <input type="text" id="login-username" placeholder="${t.ph_username}" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-pw" placeholder="${t.ph_password}" class="neon-input">
+                </div>
+
+                <div class="auth-actions">
+                    <button onclick="handleLogin()" class="neon-btn primary full-width">${t.btn_login}</button>
+                    <button onclick="switchView('signup-view')" class="neon-btn secondary full-width">${t.btn_create_acc}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. 회원가입 화면 텍스트 교체
+    const signupView = document.getElementById('signup-view');
+    if (signupView) {
+        signupView.innerHTML = `
+            <div class="auth-card" style="max-width:400px;"> 
+                <h2 class="game-title" style="margin-bottom: 20px;">${t.join_title}</h2>
+                
+                <div class="input-group">
+                    <input type="email" id="signup-email" placeholder="${t.ph_email}" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="signup-username" placeholder="${t.ph_username_unique}" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="signup-pw" placeholder="${t.ph_password_min}" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="signup-pw-confirm" placeholder="${t.ph_password_confirm}" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="signup-referral" placeholder="${t.ph_referral}" class="neon-input">
+                </div>
+                
+                <div class="auth-actions">
+                    <button onclick="handleSignUp()" class="neon-btn success full-width">${t.btn_signup}</button>
+                    <button onclick="switchView('auth-view')" class="text-btn">${t.btn_back_login}</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// [4] 로그인 처리
 window.handleLogin = async () => {
     const username = document.getElementById('login-username').value.trim();
     const pw = document.getElementById('login-pw').value;
@@ -34,9 +99,7 @@ window.handleLogin = async () => {
         const q = query(usersRef, where("username", "==", username));
         const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-            return alert("Username not found.");
-        }
+        if (querySnapshot.empty) return alert("Username not found.");
 
         const userDoc = querySnapshot.docs[0].data();
         const email = userDoc.email;
@@ -48,7 +111,7 @@ window.handleLogin = async () => {
     }
 };
 
-// [4] 회원가입 처리
+// [5] 회원가입 처리
 window.handleSignUp = async () => {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-username').value.trim();
@@ -64,13 +127,10 @@ window.handleSignUp = async () => {
 
     try {
         const usersRef = collection(db, "users");
-
-        // 중복 체크
         const userCheckQ = query(usersRef, where("username", "==", username));
         const userCheckSnap = await getDocs(userCheckQ);
         if (!userCheckSnap.empty) return alert("Username already exists.");
 
-        // 추천인 코드 확인
         let referrerUid = null;
         if (referralInput !== "ADMIN") {
             const refCheckQ = query(usersRef, where("myReferralCode", "==", referralInput));
@@ -83,13 +143,12 @@ window.handleSignUp = async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
         const user = userCredential.user;
         
-        // 초기 데이터 (레벨 10 시작)
         await setDoc(doc(db, "users", user.uid), {
             email: user.email,
             username: username,         
             coins: 3000,
             exp: 0,
-            level: 10, // 초기 레벨
+            level: 10,
             createdAt: new Date(),
             role: 'user',
             photoURL: 'https://via.placeholder.com/150',
@@ -100,28 +159,17 @@ window.handleSignUp = async () => {
             referralCount: 0                
         });
 
-        // [수정] 추천인 보상 지급 (레벨 확인 후 XP 지급 여부 결정)
         if (referrerUid) {
             const referrerRef = doc(db, "users", referrerUid);
             const refSnap = await getDoc(referrerRef);
-            
             if (refSnap.exists()) {
                 const refData = refSnap.data();
-                // 레벨 데이터가 없으면 10으로 간주
-                const refLevel = refData.level !== undefined ? refData.level : 10; 
-                // 운영자(0) 인지 확인 (role이 admin이면 level은 0이어야 함)
+                const refLevel = refData.level !== undefined ? refData.level : 10;
                 const refRole = refData.role || 'user';
-
-                let updates = {
-                    referralCount: increment(1) // 추천 수는 무조건 증가
-                };
-
-                // XP 지급 조건: 레벨이 1보다 크고, 운영자가 아닐 때 (즉, Lv 2~10)
-                // Lv 1(GOD)과 Lv 0(Admin)은 XP 증가 안 함
+                let updates = { referralCount: increment(1) };
                 if (refLevel > 1 && refRole !== 'admin') {
                     updates.exp = increment(1000);
                 }
-
                 await updateDoc(referrerRef, updates);
             }
         }
@@ -177,19 +225,19 @@ onAuthStateChanged(auth, (user) => {
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
-            
+            const t = window.t; // 언어 사용
+
             const balanceEl = document.getElementById('balance-container');
             if (balanceEl) {
                 balanceEl.innerHTML = `
                     <div style="background:linear-gradient(to right, #1e293b, #0f172a); padding:15px; text-align:center; border-bottom:1px solid #334155;">
                         <div style="font-size:0.8rem; color:#94a3b8; letter-spacing:1px; margin-bottom:5px;">CURRENT BALANCE</div>
                         <div style="font-size:1.8rem; font-weight:900; color:#fff; font-family:'Orbitron', sans-serif;">
-                            ${coins.toLocaleString()} <span style="font-size:0.9rem; color:#3b82f6;">COINS</span>
+                            ${coins.toLocaleString()} <span style="font-size:0.9rem; color:#3b82f6;">${t.coins}</span>
                         </div>
                     </div>
                 `;
             }
-            
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
