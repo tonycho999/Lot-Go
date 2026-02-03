@@ -1,0 +1,39 @@
+/* =========================================
+   3. 로비 & 네비게이션
+   ========================================= */
+#lobby-view { justify-content: flex-start; padding: 20px; padding-bottom: 90px; }
+
+.tab-system { width: 100%; flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+
+.menu-list { width: 100%; display: flex; flex-direction: column; gap: 15px; max-width: 600px; }
+
+/* 메인 메뉴 버튼들 */
+.main-btn { 
+    width: 100%; padding: 18px; 
+    border-radius: 12px; border: none; 
+    color: white; font-weight: 700; 
+    display: flex; flex-direction: column; align-items: center; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.btn-title { font-family: 'Cinzel', serif; font-size: 1.4rem; }
+.btn-desc { font-size: 0.9rem; margin-top: 4px; opacity: 0.9; }
+
+/* 버튼 색상 */
+.ad-btn-style { background: linear-gradient(45deg, #5e35b1, #4527a0); }
+.easy-btn { background: linear-gradient(to right, #2e7d32, #1b5e20); }
+.normal-btn { background: linear-gradient(to right, #1565c0, #0d47a1); }
+.hard-btn { background: linear-gradient(to right, #c62828, #b71c1c); }
+
+.divider { height: 1px; background: linear-gradient(to right, transparent, #5d4037, transparent); margin: 10px 0; width: 100%; }
+
+/* 하단 네비게이션 */
+.bottom-nav { 
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; 
+    background: #1a120b; border-top: 2px solid #5d4037; 
+    display: flex; justify-content: space-around; align-items: center; 
+    z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.6);
+}
+.bottom-nav button { background: none; border: none; color: #8d6e63; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.nav-icon { font-size: 1.5rem; }
+.bottom-nav button:hover, .bottom-nav button.active { color: #d4af37; transform: translateY(-3px); }
