@@ -1,31 +1,82 @@
 /* =========================================
-   1. 공통 설정 (폰트, 배경, 애니메이션)
+   [공통] 폰트, 배경, 네비게이션, 버튼
    ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+    --bg-dark: #0f172a;
+    --bg-panel: #1e293b;
+    --primary: #3b82f6;
+    --accent: #f59e0b;
+    --text-main: #f8fafc;
+}
 
-body { 
-    margin: 0; 
-    /* 공통 배경 */
-    background: radial-gradient(circle at center, #2b1d16 0%, #0f0805 100%);
-    color: #e2e8f0; 
-    font-family: 'Exo 2', sans-serif; 
-    overflow-x: hidden; 
+body {
+    margin: 0; padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Exo 2', sans-serif;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: 70px; /* 하단 탭 공간 확보 */
+}
+
+#app {
+    width: 100%;
     min-height: 100vh;
+    display: flex; flex-direction: column;
 }
 
-.view-container { 
-    display: flex; flex-direction: column; align-items: center; 
-    min-height: 100vh; width: 100%;
+/* 네온 버튼 (공통) */
+.neon-btn {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    text-shadow: 0 0 5px var(--primary);
+    box-shadow: 0 0 5px var(--primary);
+    border-radius: 5px;
+    width: 100%;
 }
+.neon-btn:hover { background: var(--primary); color: #000; }
+.neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
+.neon-btn.success { color: #10b981; border-color: #10b981; box-shadow: 0 0 5px #10b981; }
 
-/* 애니메이션 정의 */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* 메인 메뉴 버튼 (Easy, Normal, Hard) */
+.main-btn {
+    width: 100%; padding: 20px; margin-bottom: 10px;
+    border: none; border-radius: 12px;
+    cursor: pointer; text-align: left;
+    position: relative; overflow: hidden;
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.main-btn:active { transform: scale(0.98); }
+.easy-btn { background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; }
+.normal-btn { background: linear-gradient(135deg, #8b5cf6, #5b21b6); color: white; }
+.hard-btn { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; }
+.ad-btn-style { background: linear-gradient(135deg, #10b981, #047857); color: white; text-align: center; }
+
+.btn-title { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 900; margin-bottom: 5px; }
+.btn-desc { font-size: 0.85rem; opacity: 0.8; }
+
+/* 하단 네비게이션 바 (필수) */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #334155;
+    display: flex; justify-content: space-around;
+    padding: 10px 0; z-index: 100;
 }
+.nav-item {
+    background: none; border: none;
+    color: #64748b; font-size: 0.7rem;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; flex: 1;
+}
+.nav-item.active { color: var(--accent); }
+.nav-icon { font-size: 1.4rem; }
