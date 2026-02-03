@@ -8,6 +8,7 @@ import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
 import { renderShop } from './shop.js';
+import { renderOnlineLobby } from './online-lobby.js'; // [추가] 온라인 모듈
 
 // [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
@@ -110,15 +111,16 @@ window.switchTab = async (tabName) => {
 
     // 5. 탭별 렌더링 함수 실행
     if (tabName === 'single') {
-        // 싱글 게임 메뉴
         renderSingleMenu();
     } 
+    else if (tabName === 'online') {
+        // [추가] 온라인 로비 렌더링
+        renderOnlineLobby();
+    }
     else if (tabName === 'shop') {
-        // 상점 (유저 정보 필요 - 잔액 표시 등)
         await renderShop(user);
     } 
     else if (tabName === 'profile') {
-        // 프로필 (유저 정보 필요)
         await renderProfile(user);
     }
 };
@@ -130,7 +132,6 @@ onAuthStateChanged(auth, (user) => {
         window.switchView('lobby-view');
         
         // 실시간 코인 업데이트 (상단 밸런스 바)
-        // 로비 상단에 잔액을 보여주는 리스너 등록
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
@@ -147,10 +148,10 @@ onAuthStateChanged(auth, (user) => {
                 `;
             }
 
-            // [추가] 상점이나 프로필이 열려있다면 해당 화면의 정보도 갱신
-            // (간단하게 현재 활성화된 탭을 확인해서 재렌더링 할 수도 있음)
+            // 상점, 프로필, 온라인 로비 등이 열려있다면 정보 갱신
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
+            const activeOnline = document.getElementById('online-tab');
             
             if (activeShop && activeShop.style.display === 'block') {
                 renderShop(user);
@@ -158,6 +159,7 @@ onAuthStateChanged(auth, (user) => {
             if (activeProfile && activeProfile.style.display === 'block') {
                 renderProfile(user);
             }
+            // 온라인 로비는 실시간성이 강해서 굳이 여기서 재렌더링 안해도 됨 (채팅 등은 별도 리스너가 있음)
         });
 
     } else {
