@@ -11,53 +11,131 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
+// ==============================================
+// [NEW] 실시간 당첨자 티커(Ticker) 시스템
+// ==============================================
+const TickerManager = {
+    queue: [],         // 메시지 대기열
+    isAnimating: false,
+    timer: null,
+
+    // 초기화 및 가짜 메시지 루프 시작
+    init: function() {
+        if(this.timer) clearTimeout(this.timer);
+        this.queue = [];
+        this.isAnimating = false;
+        this.loopFakeMessages(); // 가짜 메시지 생성 시작
+    },
+
+    // 5초 ~ 60초 간격으로 가짜 메시지 추가
+    loopFakeMessages: function() {
+        const randomTime = Math.floor(Math.random() * (60000 - 5000 + 1)) + 5000;
+        
+        this.timer = setTimeout(() => {
+            // 현재 싱글 메뉴 화면이 아니면 중단
+            if (!document.getElementById('ticker-bar')) return;
+
+            // 가짜 유저 생성
+            const fakeUser = `User${Math.floor(Math.random()*9000)+1000}`;
+            const fakePrize = [10000, 50000, 100000, 1000000, 5000000][Math.floor(Math.random()*5)];
+            
+            this.addMessage(`${fakeUser} won ${fakePrize.toLocaleString()} C! Congratulations! 🎉`);
+            
+            this.loopFakeMessages(); // 재귀 호출
+        }, randomTime);
+    },
+
+    // 메시지를 큐에 추가하고 애니메이션 시도
+    addMessage: function(msg) {
+        this.queue.push(msg);
+        this.playNext();
+    },
+
+    // 큐에서 꺼내서 보여주기
+    playNext: function() {
+        if (this.isAnimating || this.queue.length === 0) return;
+        
+        const tickerBar = document.getElementById('ticker-bar');
+        if (!tickerBar) return;
+
+        this.isAnimating = true;
+        const msg = this.queue.shift(); // 대기열에서 첫번째 꺼냄
+        
+        tickerBar.innerText = msg;
+        
+        // 애니메이션 클래스 리셋 (재생을 위해)
+        tickerBar.classList.remove('ticker-anim');
+        void tickerBar.offsetWidth; // 리플로우 강제 (애니메이션 재시작 트릭)
+        tickerBar.classList.add('ticker-anim');
+
+        // 애니메이션이 끝나면 다음 메시지 재생
+        // (CSS duration 8s와 맞춤)
+        const onEnd = () => {
+            this.isAnimating = false;
+            tickerBar.removeEventListener('animationend', onEnd);
+            this.playNext(); // 다음 것 있으면 재생
+        };
+        tickerBar.addEventListener('animationend', onEnd);
+    },
+    
+    // 메뉴 나갈 때 정리
+    stop: function() {
+        if(this.timer) clearTimeout(this.timer);
+        this.queue = [];
+        this.isAnimating = false;
+    }
+};
+
 function goBackToLobby() {
+    TickerManager.stop(); // 티커 중지
     if (coinUnsub) coinUnsub();
     window.switchView('lobby-view');
     renderSingleMenu();
 }
 
-// [수정] 메뉴 화면 중앙 정렬 적용
+// [수정] 메뉴 화면에 티커 바 추가
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
     
     container.innerHTML = `
-        <div class="menu-list" style="
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            padding: 40px 20px; 
-            align-items: center; /* 가로 중앙 정렬 */
-            justify-content: center; /* 세로 중앙 정렬 */
-            height: 100%; 
-            max-width: 600px; /* 버튼들이 너무 넓어지지 않게 제한 */
-            margin: 0 auto; /* 화면 전체 중앙 위치 */
-        ">
-            <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()" style="width: 100%;">📺 WATCH AD (+300 C)</button>
-            
-            <div class="divider" style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
-            
-            <button class="main-btn easy-btn" onclick="initSingleGame(1)" style="width: 100%;">
-                <div class="btn-title">EASY</div>
-                <div class="btn-desc">2/5 Match • 100 C</div>
-            </button>
-            
-            <button class="main-btn normal-btn" onclick="initSingleGame(2)" style="width: 100%;">
-                <div class="btn-title">NORMAL</div>
-                <div class="btn-desc">4/10 Match • 200 C</div>
-            </button>
-            
-            <button class="main-btn hard-btn" onclick="initSingleGame(3)" style="width: 100%;">
-                <div class="btn-title">HARD</div>
-                <div class="btn-desc">6/20 Match • 500 C</div>
-            </button>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
+            <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
+                
+                <div class="ticker-container">
+                    <div id="ticker-bar" class="ticker-text">Welcome to Lot-Go! Win Big!</div>
+                </div>
+
+                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">📺 WATCH AD (+300 C)</button>
+                
+                <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
+                
+                <button class="main-btn easy-btn" onclick="initSingleGame(1)">
+                    <div class="btn-title">EASY</div>
+                    <div class="btn-desc">2/5 Match • 100 C</div>
+                </button>
+                
+                <button class="main-btn normal-btn" onclick="initSingleGame(2)">
+                    <div class="btn-title">NORMAL</div>
+                    <div class="btn-desc">4/10 Match • 200 C</div>
+                </button>
+                
+                <button class="main-btn hard-btn" onclick="initSingleGame(3)">
+                    <div class="btn-title">HARD</div>
+                    <div class="btn-desc">6/20 Match • 500 C</div>
+                </button>
+            </div>
         </div>`;
+
+    // 티커 시스템 가동
+    TickerManager.init();
 }
 
 export async function handleWatchAd() { alert("광고 기능 준비 중입니다."); }
 
 export async function initSingleGame(level) {
+    TickerManager.stop(); // 게임 들어가면 티커 중지
+
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
     const mode = SINGLE_MODES[level];
@@ -128,7 +206,6 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// [수정] 선택 단계 (Header/Grid/Footer 구조 적용)
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -141,9 +218,7 @@ function renderSelectionPhase() {
             <div class="board-header">
                 <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
             </div>
-
             <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
-
             <div class="board-footer" id="selection-footer"></div>
         </div>
     `;
@@ -169,13 +244,12 @@ function renderSelectionPhase() {
 
 function renderStartButton() {
     const footer = document.getElementById('selection-footer');
-    if (!footer || footer.innerHTML !== "") return; // 중복 방지
+    if (!footer || footer.innerHTML !== "") return; 
     
     footer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
-// [수정] 플레이 단계 (동일한 Header/Grid/Footer 구조 유지)
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
 
@@ -190,9 +264,7 @@ export function renderPlayPhase() {
                     ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
                 </div>
             </div>
-
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
-            
             <div class="board-footer" id="play-footer"></div>
         </div>
     `;
@@ -235,6 +307,16 @@ async function handleGameWin() {
     gameState.isGameOver = true;
     const prize = calculateCurrentPrize();
     const cost = gameState.mode.cost;
+    
+    // [수정] 진짜 유저가 10,000 이상 당첨되면 티커에 추가
+    if (prize >= 10000) {
+        const email = window.lotGoAuth.currentUser.email.split('@')[0];
+        // 티커는 싱글메뉴 화면에 있으므로, 즉시 보이는건 아니고
+        // 나중에 게임 끝나고 로비 갔을 때 큐에 쌓여서 보이게 처리할 수도 있고,
+        // 여기서는 그냥 로직만 넣어둡니다 (현재 게임화면에선 티커가 안보임)
+        TickerManager.addMessage(`User ${email} won ${prize.toLocaleString()} C! REAL WINNER! 🏆`);
+    }
+
     if (prize > 0) {
         const userDocRef = doc(window.lotGoDb, "users", window.lotGoAuth.currentUser.uid);
         await updateDoc(userDocRef, { coins: increment(prize) });
