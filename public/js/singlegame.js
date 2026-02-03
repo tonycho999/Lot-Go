@@ -27,7 +27,7 @@ let userCoins = 0;
 let coinUnsub = null;
 
 // ==============================================
-// 티커(Ticker) 시스템 - 개선된 버전
+// 티커(Ticker) 시스템
 // ==============================================
 const TickerManager = {
     queue: [],
@@ -43,10 +43,24 @@ const TickerManager = {
         return `${adj}${noun}${num}`;
     },
 
+    // [수정] 10,000 코인 이상의 상금만 뽑기
     getRandomRealPrize: function() {
-        const modeKey = Math.random() > 0.5 ? 2 : 3; 
-        const prizes = SINGLE_MODES[modeKey].prizes;
-        return prizes[Math.floor(Math.random() * prizes.length)];
+        let validPrizes = [];
+
+        // Normal 모드에서 10,000 이상만 추출
+        if (SINGLE_MODES[2].prizes) {
+            validPrizes = validPrizes.concat(SINGLE_MODES[2].prizes.filter(p => p >= 10000));
+        }
+
+        // Hard 모드에서 10,000 이상만 추출 (전부 해당됨)
+        if (SINGLE_MODES[3].prizes) {
+            validPrizes = validPrizes.concat(SINGLE_MODES[3].prizes.filter(p => p >= 10000));
+        }
+
+        // 안전장치 (혹시 비어있으면 기본값)
+        if (validPrizes.length === 0) return 10000;
+
+        return validPrizes[Math.floor(Math.random() * validPrizes.length)];
     },
 
     init: function() {
@@ -57,14 +71,13 @@ const TickerManager = {
     },
 
     loopFakeMessages: function() {
-        // [수정] 5초 ~ 30초 사이 랜덤 (기존 20초 -> 30초로 변경)
         const randomTime = Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000;
         
         this.timer = setTimeout(() => {
             if (!document.getElementById('ticker-bar')) return;
 
             const user = this.generateFakeUser();
-            const prize = this.getRandomRealPrize();
+            const prize = this.getRandomRealPrize(); // 10,000 이상만 나옴
             const isJackpot = prize >= 1000000;
             
             let msg = `${user} won ${prize.toLocaleString()} C!`;
@@ -92,35 +105,25 @@ const TickerManager = {
         this.isAnimating = true;
         const item = this.queue.shift();
         
-        // 텍스트 및 스타일 설정
         tickerBar.innerText = item.text;
         tickerBar.className = 'ticker-text'; 
         if (item.isJackpot) tickerBar.classList.add('ticker-jackpot');
 
-        // [중요] 애니메이션 로직 변경 (Web Animations API 사용)
-        // 기존 CSS 클래스 방식은 텍스트 길이에 따라 중간에 멈출 수 있음.
-        // JS로 정확한 거리를 계산해서 이동시킵니다.
-        
-        // 1. 시작 위치 초기화 (오른쪽 끝)
-        // CSS에서 left: 100%로 되어있으므로 translateX(0)이면 컨테이너 바로 바깥 오른쪽에 위치함.
-        
-        // 2. 이동해야 할 거리 계산 (컨테이너 너비 + 텍스트 너비 + 여유공간)
+        // Web Animations API로 끊김 없이 이동
         const distance = container.offsetWidth + tickerBar.offsetWidth + 50;
         
-        // 3. 애니메이션 실행
         const animation = tickerBar.animate([
             { transform: 'translateX(0)' }, 
             { transform: `translateX(-${distance}px)` }
         ], {
-            duration: 10000, // 10초 동안 이동 (속도 조절 가능)
+            duration: 10000, 
             easing: 'linear',
             fill: 'forwards'
         });
 
-        // 4. 종료 후 처리
         animation.onfinish = () => {
             this.isAnimating = false;
-            this.playNext(); // 다음 메시지 재생
+            this.playNext();
         };
     },
     
@@ -273,7 +276,7 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// [1] 번호 선택 화면 (Header / Grid / Footer 높이 고정)
+// [1] 번호 선택 화면
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -318,7 +321,7 @@ function renderStartButton() {
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
-// [2] 게임 플레이 화면 (Header / Grid / Footer 높이 고정)
+// [2] 게임 플레이 화면
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
 
