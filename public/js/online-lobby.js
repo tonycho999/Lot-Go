@@ -33,16 +33,14 @@ export function renderOnlineLobby() {
         </div>
     `;
 
-    // 이벤트 리스너 연결
     document.getElementById('create-room-btn').addEventListener('click', createRoom);
     document.getElementById('send-chat-btn').addEventListener('click', sendChatMessage);
     
-    // 방 목록 & 채팅 리스너 시작
     listenToRooms();
     listenToChat();
 }
 
-// [2] 방 생성 (비용 1000 C + 경험치 100 XP)
+// [2] 방 생성
 async function createRoom() {
     const db = window.lotGoDb;
     const rtdb = window.lotGoRtdb;
@@ -51,18 +49,24 @@ async function createRoom() {
 
     if (!user) return alert("Login required.");
 
-    // 코인 확인 및 차감
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
-    if (userSnap.data().coins < 1000) return alert("Need 1,000 Coins to play Online.");
+    const userData = userSnap.data();
+
+    if (userData.coins < 1000) return alert("Need 1,000 Coins to play Online.");
 
     if (!confirm("Start Online Game? (Cost: 1,000 C)")) return;
 
-    // [수정] 코인 차감 및 XP 지급 (100xp)
-    await updateDoc(userRef, { 
-        coins: increment(-1000),
-        exp: increment(100) 
-    });
+    // [수정] 레벨 1 이하는 XP 안 줌
+    let updates = { coins: increment(-1000) };
+    // userData.level이 없으면 초기값 10으로 간주
+    const currentLevel = userData.level !== undefined ? userData.level : 10;
+    
+    if (currentLevel > 1) {
+        updates.exp = increment(100);
+    }
+
+    await updateDoc(userRef, updates);
 
     // RTDB 방 생성
     const roomsRef = ref(rtdb, 'rooms');
@@ -72,23 +76,23 @@ async function createRoom() {
     const roomData = {
         id: roomId,
         host: user.uid,
-        status: 'waiting', // waiting -> playing -> ended
+        status: 'waiting',
         createdAt: Date.now(),
         players: {
             [user.uid]: {
                 email: user.email,
-                ready: true, // 방장은 자동 레디
+                ready: true,
                 score: 0
             }
         },
-        mode: 'auto' // 자동 추첨 모드
+        mode: 'auto'
     };
 
     await set(newRoomRef, roomData);
     enterGameRoom(roomId);
 }
 
-// [3] 방 참여 (비용 1000 C + 경험치 100 XP)
+// [3] 방 참여
 window.joinRoom = async (roomId) => {
     const db = window.lotGoDb;
     const rtdb = window.lotGoRtdb;
@@ -97,20 +101,25 @@ window.joinRoom = async (roomId) => {
 
     if (!user) return alert("Login required.");
 
-    // 코인 확인
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
-    if (userSnap.data().coins < 1000) return alert("Need 1,000 Coins to play Online.");
+    const userData = userSnap.data();
+
+    if (userData.coins < 1000) return alert("Need 1,000 Coins to play Online.");
 
     if (!confirm("Join this game? (Cost: 1,000 C)")) return;
 
-    // [수정] 코인 차감 및 XP 지급 (100xp)
-    await updateDoc(userRef, { 
-        coins: increment(-1000),
-        exp: increment(100)
-    });
+    // [수정] 레벨 1 이하는 XP 안 줌
+    let updates = { coins: increment(-1000) };
+    const currentLevel = userData.level !== undefined ? userData.level : 10;
 
-    // RTDB 참가 처리
+    if (currentLevel > 1) {
+        updates.exp = increment(100);
+    }
+
+    await updateDoc(userRef, updates);
+
+    // RTDB 참가
     const roomRef = ref(rtdb, `rooms/${roomId}/players/${user.uid}`);
     await set(roomRef, {
         email: user.email,
@@ -126,7 +135,6 @@ function enterGameRoom(roomId) {
     currentRoomId = roomId;
     const container = document.getElementById('online-tab');
     
-    // 대기실 UI 렌더링 (간단 버전)
     container.innerHTML = `
         <div class="game-room-border" style="text-align:center; padding:30px;">
             <h2>GAME ROOM</h2>
@@ -144,9 +152,8 @@ function enterGameRoom(roomId) {
 
     onValue(roomRef, (snapshot) => {
         const room = snapshot.val();
-        if (!room) return; // 방이 삭제됨
+        if (!room) return;
 
-        // 플레이어 목록 표시
         const pList = document.getElementById('players-list');
         pList.innerHTML = Object.values(room.players).map(p => `
             <div class="player-card" style="border:1px solid #334155; padding:10px; border-radius:10px; background:#1e293b;">
@@ -155,12 +162,10 @@ function enterGameRoom(roomId) {
             </div>
         `).join('');
 
-        // 게임 시작 감지
         if (room.status === 'playing') {
-            initSelectionPhase(roomId, room); // 게임 화면으로 전환 (online-game.js)
+            initSelectionPhase(roomId, room);
         }
 
-        // 방장에게만 시작 버튼 표시
         if (room.host === auth.currentUser.uid) {
             const startBtn = document.getElementById('start-game-btn');
             const readyMsg = document.getElementById('ready-msg');
@@ -192,7 +197,7 @@ function listenToRooms() {
         }
 
         Object.values(rooms).forEach(room => {
-            if (room.status !== 'waiting') return; // 대기중인 방만 표시
+            if (room.status !== 'waiting') return;
             
             const div = document.createElement('div');
             div.className = 'room-item';
@@ -221,7 +226,6 @@ function listenToChat() {
         const msgs = snapshot.val();
         if (!msgs) return;
 
-        // 최근 50개만 표시 등 로직 추가 가능
         const html = Object.values(msgs).slice(-20).map(m => `
             <div style="margin-bottom:5px;">
                 <span style="color:#3b82f6; font-weight:bold;">${m.user}:</span> 
@@ -234,7 +238,6 @@ function listenToChat() {
     });
 }
 
-// [7] 채팅 보내기
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
