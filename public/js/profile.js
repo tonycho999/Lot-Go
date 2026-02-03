@@ -1,5 +1,6 @@
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { doc, getDoc, updateDoc, collection, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// [수정] query, where 추가 (Username 검색용)
+import { doc, getDoc, updateDoc, collection, getDocs, runTransaction, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // [레벨 테이블 (10 -> 1 역순)]
 const LEVEL_TABLE = [
@@ -94,7 +95,7 @@ export async function renderProfile(user) {
                             <span style="color:${lvInfo.color}; font-weight:bold; font-size:1.1rem; text-shadow:0 0 10px ${lvInfo.color};">
                                 Lv.${currentLevel} ${lvInfo.title}
                             </span>
-                            <button class="guide-btn" onclick="openLevelGuide()">❓ GUIDE</button>
+                            <button class="guide-btn" onclick="openLevelGuide()">❓ LEVEL GUIDE</button>
                         </div>
                         <div style="text-align:right; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">${lvInfo.label}</div>
                         
@@ -137,7 +138,7 @@ export async function renderProfile(user) {
                 <div class="section-box gift-section">
                     <h4 class="section-title">GIFT COINS (Fee: ${feePercent}%)</h4>
                     <div class="gift-form">
-                        <input type="email" id="recipient-email" class="gift-input" placeholder="Recipient Email">
+                        <input type="text" id="recipient-username" class="gift-input" placeholder="Recipient Username">
                         <input type="number" id="gift-amount" class="gift-input" placeholder="Min. ${minAmount.toLocaleString()} COINS">
                         <div style="font-size:0.8rem; color:#94a3b8; margin-top:5px; text-align:right;">
                             Est. Fee: <span id="est-fee" style="color:#ef4444;">0</span> C
@@ -149,7 +150,7 @@ export async function renderProfile(user) {
                 <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
             </div>
 
-            <div id="level-guide-modal" class="modal-overlay">
+            <div id="level-guide-modal" class="modal-overlay" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-title">LEVEL & XP SYSTEM</div>
                     
@@ -216,14 +217,16 @@ window.closeLevelGuide = () => {
     if (modal) modal.style.display = 'none';
 };
 
+// [수정] Username 기반 송금 로직
 window.sendCoinGift = async (currentLevel) => {
-    const recipientEmail = document.getElementById('recipient-email').value.trim();
+    // ID 변경됨: recipient-username
+    const targetUsername = document.getElementById('recipient-username').value.trim();
     const amount = parseInt(document.getElementById('gift-amount').value);
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
     const senderUid = auth.currentUser.uid;
 
-    if (!recipientEmail || isNaN(amount)) return alert("Fill all fields.");
+    if (!targetUsername || isNaN(amount)) return alert("Fill all fields.");
 
     let feePercent = currentLevel;
     let minAmount = 50000 + (currentLevel * 5000);
@@ -235,21 +238,27 @@ window.sendCoinGift = async (currentLevel) => {
     const totalDeduct = amount + fee;
 
     try {
-        if (!confirm(`Send ${amount.toLocaleString()} C?\nFee: ${fee.toLocaleString()} C\nTotal: ${totalDeduct.toLocaleString()} C deducted.`)) return;
+        if (!confirm(`Send ${amount.toLocaleString()} C to '${targetUsername}'?\nFee: ${fee.toLocaleString()} C\nTotal: ${totalDeduct.toLocaleString()} C deducted.`)) return;
 
-        const usersSnap = await getDocs(collection(db, "users"));
-        let recipientUid = null;
-        usersSnap.forEach((doc) => {
-            if (doc.data().email === recipientEmail) recipientUid = doc.id;
-        });
+        // [수정] Username으로 유저 찾기 (query 사용)
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", targetUsername));
+        const querySnapshot = await getDocs(q);
 
-        if (!recipientUid) return alert("User not found.");
+        if (querySnapshot.empty) {
+            return alert("User not found (Check Username).");
+        }
+
+        const recipientDocSnapshot = querySnapshot.docs[0];
+        const recipientUid = recipientDocSnapshot.id;
+
         if (recipientUid === senderUid) return alert("Cannot gift yourself.");
 
         await runTransaction(db, async (transaction) => {
             const senderDoc = await transaction.get(doc(db, "users", senderUid));
             const recipientDoc = await transaction.get(doc(db, "users", recipientUid));
-            if (!senderDoc.exists() || !recipientDoc.exists()) throw "User error";
+            
+            if (!senderDoc.exists() || !recipientDoc.exists()) throw "User data error";
             
             const sCoins = senderDoc.data().coins || 0;
             const rCoins = recipientDoc.data().coins || 0;
@@ -259,7 +268,8 @@ window.sendCoinGift = async (currentLevel) => {
             transaction.update(doc(db, "users", senderUid), { coins: sCoins - totalDeduct });
             transaction.update(doc(db, "users", recipientUid), { coins: rCoins + amount });
         });
-        alert(`Sent ${amount.toLocaleString()} C!`);
+        
+        alert(`Successfully sent ${amount.toLocaleString()} C to ${targetUsername}!`);
         renderProfile(auth.currentUser);
     } catch (err) { console.error(err); alert("Failed: " + err); }
 };
