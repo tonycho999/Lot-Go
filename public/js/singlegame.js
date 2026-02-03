@@ -17,16 +17,41 @@ function goBackToLobby() {
     renderSingleMenu();
 }
 
+// [수정] 메뉴 화면 중앙 정렬 적용
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
+    
     container.innerHTML = `
-        <div class="menu-list" style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
-            <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">📺 WATCH AD (+300 C)</button>
-            <div class="divider"></div>
-            <button class="main-btn easy-btn" onclick="initSingleGame(1)"><div class="btn-title">EASY</div><div class="btn-desc">2/5 Match • 100 C</div></button>
-            <button class="main-btn normal-btn" onclick="initSingleGame(2)"><div class="btn-title">NORMAL</div><div class="btn-desc">4/10 Match • 200 C</div></button>
-            <button class="main-btn hard-btn" onclick="initSingleGame(3)"><div class="btn-title">HARD</div><div class="btn-desc">6/20 Match • 500 C</div></button>
+        <div class="menu-list" style="
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            padding: 40px 20px; 
+            align-items: center; /* 가로 중앙 정렬 */
+            justify-content: center; /* 세로 중앙 정렬 */
+            height: 100%; 
+            max-width: 600px; /* 버튼들이 너무 넓어지지 않게 제한 */
+            margin: 0 auto; /* 화면 전체 중앙 위치 */
+        ">
+            <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()" style="width: 100%;">📺 WATCH AD (+300 C)</button>
+            
+            <div class="divider" style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+            
+            <button class="main-btn easy-btn" onclick="initSingleGame(1)" style="width: 100%;">
+                <div class="btn-title">EASY</div>
+                <div class="btn-desc">2/5 Match • 100 C</div>
+            </button>
+            
+            <button class="main-btn normal-btn" onclick="initSingleGame(2)" style="width: 100%;">
+                <div class="btn-title">NORMAL</div>
+                <div class="btn-desc">4/10 Match • 200 C</div>
+            </button>
+            
+            <button class="main-btn hard-btn" onclick="initSingleGame(3)" style="width: 100%;">
+                <div class="btn-title">HARD</div>
+                <div class="btn-desc">6/20 Match • 500 C</div>
+            </button>
         </div>`;
 }
 
@@ -230,7 +255,6 @@ function handleGameOver() {
 }
 
 function showResultOnBoard(message, prize, statusClass) {
-    // 상단 상금 표시 영역을 결과 메시지로 변경
     const prizeContainer = document.getElementById('prize-container');
     if (prizeContainer) {
         prizeContainer.innerHTML = `
@@ -244,7 +268,6 @@ function showResultOnBoard(message, prize, statusClass) {
         prizeContainer.style.boxShadow = "none";
     }
 
-    // 하단 푸터에 버튼 추가
     const footer = document.getElementById('play-footer');
     if (footer) {
         footer.innerHTML = `
