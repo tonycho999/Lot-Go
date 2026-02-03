@@ -4,8 +4,7 @@ import { doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstat
 export const SINGLE_MODES = {
     1: { 
         name: 'EASY', pick: 2, total: 5, cost: 100, max: 500, grid: 'grid-easy',
-        // [수정] 상금 리스트 업데이트 (티커 표시용)
-        prizes: [500, 250, 50], 
+        prizes: [500, 250, 50],
         cssClass: 'easy-mode' 
     },
     2: { 
@@ -30,19 +29,14 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// Ticker (전광판) 기능
-const TickerManager = {
-    stop: function() { }
-};
+const TickerManager = { stop: function() { } };
 
-// [A] 로비로 돌아가기
 function goBackToLobby() {
     if (coinUnsub) coinUnsub();
     window.switchView('lobby-view');
     renderSingleMenu();
 }
 
-// [B] 싱글 메뉴 렌더링
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
@@ -56,13 +50,8 @@ export async function renderSingleMenu() {
                         ${t.ticker_welcome || "Welcome to Lot-Go!"}
                     </div>
                 </div>
-
-                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">
-                    ${t.watch_ad || "📺 WATCH AD (+300 C)"}
-                </button>
-                
+                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">${t.watch_ad || "📺 WATCH AD (+300 C)"}</button>
                 <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
-
                 <button class="main-btn easy-btn" onclick="initSingleGame(1)">
                     <div class="btn-title">${t.single_menu_easy || "EASY"}</div>
                     <div class="btn-desc">${t.single_desc_easy || "2/5 Match"}</div>
@@ -79,7 +68,6 @@ export async function renderSingleMenu() {
         </div>`;
 }
 
-// [C] 게임 초기화 (비용 차감)
 export async function initSingleGame(level) {
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
@@ -112,7 +100,6 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
-// [D] 상단바 업데이트
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
@@ -139,27 +126,24 @@ function updateTopBar() {
     document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
-// [상금 계산 로직 수정] EASY 모드 상금 규칙 적용
 function calculateCurrentPrize() {
     const { mode, flips, level } = gameState;
-    
-    // [EASY 모드]
     if (level === 1) { 
-        if (flips <= 2) return 500; // 1, 2번째: 500
-        if (flips === 3) return 250; // 3번째: 250
-        if (flips === 4) return 50;  // 4번째: 50
-        if (flips === 5) return 0;   // 5번째: 0 (꽝)
+        if (flips <= 2) return 500;
+        if (flips === 3) return 250;
+        if (flips === 4) return 50;
+        if (flips === 5) return 0;
     }
-    
-    // [NORMAL, HARD 모드] 테이블 참조
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// [E] 번호 선택 화면 그리기
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
     const t = window.t || {};
+    
+    // [중요] 기존 레이아웃 방해 클래스 제거
+    board.className = ''; 
     
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
@@ -199,10 +183,11 @@ function renderStartButton() {
     document.getElementById('btn-start-game').onclick = renderPlayPhase;
 }
 
-// [F] 플레이 화면 그리기
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
+
+    board.className = ''; 
 
     board.innerHTML = `
         <div class="game-view-container">
@@ -245,7 +230,6 @@ export function renderPlayPhase() {
             gameState.flips++;
             ballWrapper.classList.add('flipped'); 
             
-            // [수정] calculateCurrentPrize 함수 사용
             let curPrize = calculateCurrentPrize();
             document.getElementById('table-current-prize').innerText = curPrize.toLocaleString();
 
@@ -262,7 +246,6 @@ export function renderPlayPhase() {
     });
 }
 
-// [G] 게임 종료 처리
 async function handleGameWin(prize) {
     gameState.isGameOver = true;
     const t = window.t || {};
@@ -291,6 +274,5 @@ async function handleGameWin(prize) {
     }
 }
 
-// Window 객체에 함수 등록
 window.initSingleGame = initSingleGame;
 window.handleWatchAd = () => alert("Ad Coming Soon");
