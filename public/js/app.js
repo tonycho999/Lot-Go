@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // [1] 모듈 불러오기
@@ -8,7 +8,7 @@ import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
 import { renderShop } from './shop.js';
-import { renderOnlineLobby } from './online-lobby.js'; // [추가] 온라인 모듈
+import { renderOnlineLobby } from './online-lobby.js';
 
 // [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
@@ -16,122 +16,162 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-// [3] 전역 변수 설정 (다른 모듈에서 접근 가능하게)
 window.lotGoAuth = auth;
 window.lotGoDb = db;
 window.lotGoRtdb = rtdb;
 
-// [4] 로그인 처리
+// [3] 로그인 처리 (Username -> Email 조회 -> Auth 로그인)
 window.handleLogin = async () => {
-    const email = document.getElementById('email').value;
-    const pw = document.getElementById('pw').value;
+    const username = document.getElementById('login-username').value.trim();
+    const pw = document.getElementById('login-pw').value;
     
-    if (!email || !pw) return alert("Please enter email and password.");
+    if (!username || !pw) return alert("Please enter username and password.");
 
     try {
+        // 1. Username으로 Email 찾기
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", username));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return alert("Username not found.");
+        }
+
+        const userDoc = querySnapshot.docs[0].data();
+        const email = userDoc.email;
+
+        // 2. 찾은 Email로 로그인
         await signInWithEmailAndPassword(auth, email, pw);
-        // 로그인 성공 시 onAuthStateChanged가 자동으로 처리함
+        // onAuthStateChanged가 처리함
     } catch (e) {
         console.error(e);
         alert("Login failed: " + e.message);
     }
 };
 
-// [5] 회원가입 처리
+// [4] 회원가입 처리 (필드 검증 및 레퍼럴 로직)
 window.handleSignUp = async () => {
-    const email = document.getElementById('signup-email').value;
+    const email = document.getElementById('signup-email').value.trim();
+    const username = document.getElementById('signup-username').value.trim();
     const pw = document.getElementById('signup-pw').value;
+    const pwConfirm = document.getElementById('signup-pw-confirm').value;
+    const referralInput = document.getElementById('signup-referral').value.trim();
 
-    if (!email || !pw) return alert("Please fill in all fields.");
+    // 1. 기본 유효성 검사
+    if (!email || !username || !pw || !pwConfirm || !referralInput) {
+        return alert("Please fill in all fields.");
+    }
+    if (pw !== pwConfirm) return alert("Passwords do not match.");
     if (pw.length < 6) return alert("Password must be at least 6 characters.");
 
     try {
+        const usersRef = collection(db, "users");
+
+        // 2. Username 중복 확인
+        const userCheckQ = query(usersRef, where("username", "==", username));
+        const userCheckSnap = await getDocs(userCheckQ);
+        if (!userCheckSnap.empty) return alert("Username already exists. Choose another.");
+
+        // 3. Referral Code 유효성 확인
+        let referrerUid = null;
+        
+        // **[중요]** 최초 가입자를 위해 'ADMIN' 코드는 무조건 통과시킴
+        if (referralInput !== "ADMIN") {
+            const refCheckQ = query(usersRef, where("myReferralCode", "==", referralInput));
+            const refCheckSnap = await getDocs(refCheckQ);
+            
+            if (refCheckSnap.empty) {
+                return alert("Invalid Referral Code. You cannot sign up without a valid code.");
+            }
+            referrerUid = refCheckSnap.docs[0].id; // 추천인 UID 저장
+        }
+
+        // 4. 내 Referral Code 생성 (랜덤 8자리)
+        const myReferralCode = generateReferralCode();
+
+        // 5. Firebase Auth 유저 생성
         const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
         const user = userCredential.user;
         
-        // Firestore에 초기 유저 데이터 생성
+        // 6. Firestore에 데이터 저장 (코인 3000으로 변경됨)
         await setDoc(doc(db, "users", user.uid), {
             email: user.email,
-            coins: 1000, // 가입 보너스
+            username: username,         
+            coins: 3000,                    // [수정] 가입 보너스 3000C
             createdAt: new Date(),
             role: 'user',
             photoURL: 'https://via.placeholder.com/150',
-            items: {} // 아이템 인벤토리 초기화
+            items: {},
+            myReferralCode: myReferralCode, 
+            referredBy: referralInput,      
+            referralCount: 0                
         });
+
+        // 7. 추천인의 카운트 증가 (ADMIN이 아닐 경우)
+        if (referrerUid) {
+            const referrerRef = doc(db, "users", referrerUid);
+            await updateDoc(referrerRef, {
+                referralCount: increment(1)
+            });
+        }
         
-        alert("Welcome! You received +1,000 Coins bonus.");
-        window.switchView('auth-view'); // 로그인 화면으로 이동
+        alert(`Welcome, ${username}! You received +3,000 Coins!`); // 메시지 수정됨
+        window.switchView('auth-view'); 
+
     } catch (e) {
         console.error(e);
         alert("Signup failed: " + e.message);
     }
 };
 
-// [6] 화면 전환 (로그인 <-> 회원가입 <-> 로비 <-> 게임)
+// 랜덤 코드 생성 함수 (영문+숫자 8자리)
+function generateReferralCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// [5] 화면 전환
 window.switchView = (viewId) => {
-    // 모든 뷰 숨기기
     document.querySelectorAll('.view-container').forEach(el => el.style.display = 'none');
-    
-    // 타겟 뷰 보이기
     const target = document.getElementById(viewId);
     if (target) {
-        // 게임 뷰나 Auth 뷰는 flex, 로비는 block 등 상황에 맞게 표시
         if (viewId === 'game-view' || viewId === 'auth-view' || viewId === 'signup-view') {
             target.style.display = 'flex';
         } else {
             target.style.display = 'block';
         }
-        
-        // 로비로 돌아올 때 기본 탭(싱글)으로 초기화
-        if (viewId === 'lobby-view') {
-            window.switchTab('single');
-        }
+        if (viewId === 'lobby-view') window.switchTab('single');
     }
 };
 
-// [7] 탭 전환 (싱글 / 온라인 / 상점 / 프로필)
+// [6] 탭 전환
 window.switchTab = async (tabName) => {
-    // 1. 모든 탭 컨텐츠 숨기기
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    
-    // 2. 선택된 탭 보이기
     const targetTab = document.getElementById(`${tabName}-tab`);
-    if (targetTab) {
-        targetTab.style.display = 'block';
-    }
+    if (targetTab) targetTab.style.display = 'block';
 
-    // 3. 하단 네비게이션 버튼 활성화 스타일 변경
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
     const navBtn = document.getElementById(`nav-${tabName}`);
     if (navBtn) navBtn.classList.add('active');
 
-    // 4. 로그인된 유저 정보 가져오기
     const user = auth.currentUser;
     if (!user) return; 
 
-    // 5. 탭별 렌더링 함수 실행
-    if (tabName === 'single') {
-        renderSingleMenu();
-    } 
-    else if (tabName === 'online') {
-        // [추가] 온라인 로비 렌더링
-        renderOnlineLobby();
-    }
-    else if (tabName === 'shop') {
-        await renderShop(user);
-    } 
-    else if (tabName === 'profile') {
-        await renderProfile(user);
-    }
+    if (tabName === 'single') renderSingleMenu();
+    else if (tabName === 'online') renderOnlineLobby();
+    else if (tabName === 'shop') await renderShop(user);
+    else if (tabName === 'profile') await renderProfile(user);
 };
 
-// [8] 인증 상태 감지 및 초기화 (앱 시작점)
+// [7] Auth 상태 감지
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // 로그인 상태 -> 로비로 이동
         window.switchView('lobby-view');
         
-        // 실시간 코인 업데이트 (상단 밸런스 바)
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
@@ -147,23 +187,13 @@ onAuthStateChanged(auth, (user) => {
                     </div>
                 `;
             }
-
-            // 상점, 프로필, 온라인 로비 등이 열려있다면 정보 갱신
+            
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
-            const activeOnline = document.getElementById('online-tab');
-            
-            if (activeShop && activeShop.style.display === 'block') {
-                renderShop(user);
-            }
-            if (activeProfile && activeProfile.style.display === 'block') {
-                renderProfile(user);
-            }
-            // 온라인 로비는 실시간성이 강해서 굳이 여기서 재렌더링 안해도 됨 (채팅 등은 별도 리스너가 있음)
+            if (activeShop && activeShop.style.display === 'block') renderShop(user);
+            if (activeProfile && activeProfile.style.display === 'block') renderProfile(user);
         });
-
     } else {
-        // 로그아웃 상태 -> 로그인 화면으로 이동
         window.switchView('auth-view');
     }
 });
