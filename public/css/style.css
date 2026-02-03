@@ -1,18 +1,18 @@
-/* [수정 2] 상단바 스타일 (코인 왼쪽, 상금 오른쪽) */
+/* [수정] 상단바 스타일 (코인 왼쪽, 상금 오른쪽) */
 .game-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(15, 23, 42, 0.9);
-    border-bottom: 2px solid #334155;
-    padding: 15px 20px;
+    border: 1px solid #334155;
+    padding: 10px 20px;
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 .highlight { color: #fbbf24; font-weight: 800; }
 
-/* [수정 3] 게임 룸 테두리 */
+/* [수정] 게임 룸 테두리 */
 .game-room-border {
     border: 2px solid #4ecca3;
     background: rgba(15, 23, 42, 0.5);
@@ -24,10 +24,10 @@
     margin: 0 auto;
 }
 
-/* [수정 5] 3D 카드 플립 효과 & 숫자 반전 방지 */
+/* [수정] 3D 카드 플립 & 숫자 반전 방지 */
 .card-3d {
     perspective: 1000px; /* 3D 효과 깊이 */
-    background: transparent !important; /* 내부 card-inner가 배경 담당 */
+    background: transparent !important;
     border: none !important;
 }
 
@@ -66,15 +66,15 @@
     border: 1px solid #334155;
 }
 
-/* 카드 뒷면 (숫자) - 반전되어 보이지 않게 처리 */
+/* 카드 뒷면 (숫자) - 핵심: 미리 180도 돌려놓아야 뒤집었을 때 정방향 */
 .card-back {
     background: #4f46e5;
     color: white;
-    transform: rotateY(180deg); /* 미리 뒤집어 놓음 */
+    transform: rotateY(180deg); 
     border: 1px solid #6366f1;
 }
 
-/* [수정 4, 7] 버튼 컨테이너 정리 */
+/* 버튼 컨테이너 정리 */
 .action-area, .result-actions {
     display: flex;
     justify-content: center;
