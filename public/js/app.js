@@ -5,10 +5,11 @@ import { firebaseConfig } from "../firebase-config.js";
 
 // UI Modules
 import { renderBalance, switchTab } from "./home.js";
-// [중요] handleWatchAd 포함하여 가져오기
 import { renderSingleMenu, initSingleGame, handleWatchAd } from "./singlegame.js";
-import { renderProfile } from "./profile.js"; // 파일 있으면 주석 해제
-import { renderShop } from "./shop.js";       // 파일 있으면 주석 해제
+
+// [선택] 아직 파일이 없으면 에러가 날 수 있으므로 주석 유지 권장
+// import { renderProfile } from "./profile.js"; 
+// import { renderShop } from "./shop.js";      
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -19,9 +20,10 @@ window.lotGoAuth = auth;
 window.lotGoDb = db;
 
 /**
- * 전역 함수 바인딩 (HTML onclick 이벤트용)
+ * 전역 함수 바인딩
  */
 window.switchView = (id) => {
+    // 게임 뷰로 이동할 때나 로비로 갈 때 불필요한 요소 정리
     ['auth-view', 'signup-view', 'lobby-view', 'game-view'].forEach(v => {
         const el = document.getElementById(v);
         if (el) el.style.display = (v === id) ? 'flex' : 'none';
@@ -29,8 +31,6 @@ window.switchView = (id) => {
 };
 
 window.switchTab = switchTab;
-
-// [수정 완료] 대소문자 오타 수정 (initsingleGame -> initSingleGame)
 window.initSingleGame = initSingleGame; 
 window.handleWatchAd = handleWatchAd; 
 
@@ -44,7 +44,8 @@ window.handleLogin = () => {
     
     signInWithEmailAndPassword(auth, e, p)
         .then(() => {
-            // 로그인 성공 시 onAuthStateChanged가 처리함
+            // 성공 시 onAuthStateChanged가 자동 감지
+            console.log("Login Success");
         })
         .catch(err => alert("Login Failed: " + err.message));
 };
@@ -63,18 +64,17 @@ window.handleSignUp = () => {
             coins: 1000,
             role: 'user',
             createdAt: new Date().toISOString(),
-            // 광고 시스템 초기 데이터
             dailyAdCount: 0,
             lastAdDate: "",
             lastAdTime: 0
         });
         alert("Account created! 1,000 Coins rewarded.");
-        // window.switchView('auth-view'); // 필요 시 로그인 화면으로 이동
+        window.switchView('lobby-view'); // 가입 즉시 로비로 이동
     }).catch(err => alert("Signup Failed: " + err.message));
 };
 
 /**
- * 로그아웃 처리 (필요시 HTML에 버튼 추가: onclick="handleLogout()")
+ * 로그아웃 처리
  */
 window.handleLogout = () => {
     signOut(auth).then(() => {
@@ -84,28 +84,33 @@ window.handleLogout = () => {
 };
 
 /**
- * 실시간 유저 상태 및 코인 감시
+ * 앱 초기화 및 상태 감지
  */
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        window.switchView('lobby-view');
-        
-        const userDocRef = doc(db, "users", user.uid);
-        onSnapshot(userDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                renderBalance(userData.coins || 0);
-            } else {
-                renderBalance(0);
-            }
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            window.switchView('lobby-view');
+            
+            // 실시간 코인 업데이트
+            const userDocRef = doc(db, "users", user.uid);
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    renderBalance(userData.coins || 0);
+                } else {
+                    // 문서가 없는 경우 (예외 처리)
+                    renderBalance(0);
+                }
+            });
 
-        // 게임 메뉴 렌더링
-        renderSingleMenu();
-        
-        // renderShop(); 
-        // renderProfile(user); 
-    } else {
-        window.switchView('auth-view');
-    }
+            // 로비 UI 초기화
+            renderSingleMenu();
+            
+            // 파일이 생성된 후 주석 해제하여 사용
+            // if (typeof renderShop === 'function') renderShop();
+            // if (typeof renderProfile === 'function') renderProfile(user); 
+        } else {
+            window.switchView('auth-view');
+        }
+    });
 });
