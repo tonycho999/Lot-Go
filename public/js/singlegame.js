@@ -11,7 +11,6 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// 로비로 돌아가는 함수
 function goBackToLobby() {
     if (coinUnsub) coinUnsub();
     window.switchView('lobby-view');
@@ -89,7 +88,8 @@ function updateTopBar() {
         </div>
     `;
     
-    document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
+    const backBtn = document.getElementById('back-to-lobby-btn');
+    if(backBtn) backBtn.onclick = goBackToLobby;
 }
 
 function renderSelectionPhase() {
@@ -168,7 +168,6 @@ export function renderPlayPhase() {
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
         ballWrapper.className = "ball-wrapper";
-        // [수정] 숫자를 span.ball-number로 감싸서 흰색 원 안에 넣음
         ballWrapper.innerHTML = `
             <div class="ball-inner">
                 <div class="ball-face ball-front">?</div>
@@ -232,5 +231,6 @@ function showResultButtons(message, prize, statusClass) {
             </div>
         </div>`;
     updateTopBar();
-    document.getElementById('result-lobby-btn').onclick = goBackToLobby;
+    const lobbyBtn = document.getElementById('result-lobby-btn');
+    if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
 }
