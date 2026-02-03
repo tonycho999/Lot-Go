@@ -16,6 +16,7 @@
     min-height: calc(100vh - 70px); /* 하단 네비게이션 높이 제외 */
     padding: 20px;
     box-sizing: border-box;
+    width: 100%; /* 컨테이너 너비 100% */
 }
 
 /* 게임 보드 박스 (카지노 테이블 디자인) */
@@ -24,18 +25,20 @@
         radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 100%),
         linear-gradient(135deg, #0a5c36 0%, #074d2e 100%); /* 펠트 느낌 */
     border: 5px solid var(--gold-accent);
-    border-radius: 30px;
-    padding: 25px;
+    border-radius: 50px; /* 더 둥글게 */
+    padding: 40px; /* 내부 여백 증가 */
     margin: 0 auto; /* 중앙 정렬 */
-    width: 100%;
-    max-width: 550px; /* 너무 넓어지지 않게 */
+    width: 95%; /* 모바일에서도 꽉 차게 */
+    max-width: 1000px; /* [수정] 테이블 최대 너비 대폭 증가 */
+    min-height: 400px; /* [수정] 최소 높이 추가로 웅장하게 */
     box-shadow: 
         inset 0 0 50px rgba(0,0,0,0.5), /* 내부 그림자 */
-        0 10px 30px rgba(0,0,0,0.5), /* 외부 그림자 */
-        0 0 0 2px #8c7853; /* 바깥쪽 얇은 금색 선 */
+        0 20px 40px rgba(0,0,0,0.5), /* 외부 그림자 더 강하게 */
+        0 0 0 3px #8c7853; /* 바깥쪽 얇은 금색 선 */
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center; /* 내부 컨텐츠도 수직 중앙 정렬 */
     position: relative;
     overflow: hidden;
 }
@@ -54,14 +57,15 @@
     font-family: 'Orbitron', sans-serif;
     color: var(--gold-accent);
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
+    margin-bottom: 30px; /* 여백 증가 */
+    font-size: 2rem; /* 폰트 크기 증가 */
     letter-spacing: 2px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     z-index: 1;
 }
 .highlight { color: #fff; font-weight: bold; }
 
+/* ... (이하 상단 정보창, 그리드, 로또 공 디자인 등은 기존과 동일) ... */
 /* -----------------------------------------
    [상단 정보창] 코인 & 당첨금
    ----------------------------------------- */
@@ -109,10 +113,10 @@
    ----------------------------------------- */
 .card-grid {
     display: grid;
-    gap: 12px;
+    gap: 15px; /* 간격 증가 */
     justify-content: center;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 20px;
     z-index: 1;
 }
 .grid-easy, .grid-normal, .grid-hard { grid-template-columns: repeat(5, 1fr); }
@@ -203,24 +207,24 @@
    ----------------------------------------- */
 /* Easy 모드 (가장 큼) */
 .easy-mode .lotto-ball, .easy-mode .ball-wrapper { 
-    width: 75px; height: 75px; 
+    width: 90px; height: 90px; /* 크기 증가 */
 }
-.easy-mode .ball-number-bg { font-size: 1.5rem; }
-.easy-mode .ball-front::after { font-size: 2rem; }
+.easy-mode .ball-number-bg { font-size: 1.8rem; }
+.easy-mode .ball-front::after { font-size: 2.5rem; }
 
 /* Normal 모드 (중간) */
 .normal-mode .lotto-ball, .normal-mode .ball-wrapper { 
-    width: 60px; height: 60px; 
+    width: 75px; height: 75px; /* 크기 증가 */
 }
-.normal-mode .ball-number-bg { font-size: 1.2rem; }
-.normal-mode .ball-front::after { font-size: 1.6rem; }
+.normal-mode .ball-number-bg { font-size: 1.5rem; }
+.normal-mode .ball-front::after { font-size: 2rem; }
 
 /* Hard 모드 (가장 작음) */
 .hard-mode .lotto-ball, .hard-mode .ball-wrapper { 
-    width: 45px; height: 45px; 
+    width: 60px; height: 60px; /* 크기 증가 */
 }
-.hard-mode .ball-number-bg { font-size: 0.9rem; }
-.hard-mode .ball-front::after { font-size: 1.2rem; }
+.hard-mode .ball-number-bg { font-size: 1.2rem; }
+.hard-mode .ball-front::after { font-size: 1.6rem; }
 
 
 /* -----------------------------------------
@@ -244,13 +248,14 @@
    [📱 모바일 반응형]
    ----------------------------------------- */
 @media (max-width: 600px) {
-    .game-room-border { width: 95%; padding: 15px; }
-    .card-grid { gap: 8px; }
+    .game-room-border { width: 95%; padding: 20px; min-height: 300px; }
+    .card-grid { gap: 10px; }
+    .game-title { font-size: 1.5rem; margin-bottom: 20px; }
     
     /* 모바일 공 크기 (화면 비율로 재조정) */
-    .easy-mode .lotto-ball, .easy-mode .ball-wrapper { width: 17vw; height: 17vw; max-width: 75px; max-height: 75px; }
-    .normal-mode .lotto-ball, .normal-mode .ball-wrapper { width: 14vw; height: 14vw; max-width: 60px; max-height: 60px; }
-    .hard-mode .lotto-ball, .hard-mode .ball-wrapper { width: 11vw; height: 11vw; max-width: 45px; max-height: 45px; }
+    .easy-mode .lotto-ball, .easy-mode .ball-wrapper { width: 18vw; height: 18vw; max-width: 80px; max-height: 80px; }
+    .normal-mode .lotto-ball, .normal-mode .ball-wrapper { width: 15vw; height: 15vw; max-width: 65px; max-height: 65px; }
+    .hard-mode .lotto-ball, .hard-mode .ball-wrapper { width: 12vw; height: 12vw; max-width: 50px; max-height: 50px; }
 
     /* Hard 모드 4열로 변경 */
     .grid-hard { grid-template-columns: repeat(4, 1fr); }
