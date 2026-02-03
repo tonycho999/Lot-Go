@@ -1,7 +1,7 @@
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { doc, getDoc, updateDoc, collection, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// [레벨 테이블 (역순 10 -> 1)]
+// [레벨 테이블 (10 -> 1 역순)]
 const LEVEL_TABLE = [
     { lv: 10, reqExp: 0, title: "ROOKIE", color: "#a1a1aa" },
     { lv: 9, reqExp: 2000, title: "BRONZE", color: "#cd7f32" },
@@ -15,10 +15,21 @@ const LEVEL_TABLE = [
     { lv: 1, reqExp: 500000, title: "GOD", color: "#ffffff" }
 ];
 
-// 레벨 계산 함수
+// 레벨 정보 계산 함수
 function getLevelInfo(exp, role) {
-    if (role === 'admin') return { lv: 0, title: "OPERATOR", color: "#ef4444", percent: 100, label: "ADMIN" };
+    // 1. 운영자 (Level 0)
+    if (role === 'admin') {
+        return { lv: 0, title: "OPERATOR", color: "#ef4444", percent: 100, label: "MAX LEVEL" };
+    }
 
+    // 2. 레벨 1 (GOD) 체크: 경험치가 500,000 이상이면 MAX 처리
+    if (exp >= LEVEL_TABLE[9].reqExp) {
+        return { 
+            lv: 1, title: "GOD", color: "#ffffff", percent: 100, label: "MAX LEVEL" 
+        };
+    }
+
+    // 3. 나머지 레벨 (10 ~ 2) 계산
     for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
         if (exp >= LEVEL_TABLE[i].reqExp) {
             const cur = LEVEL_TABLE[i]; 
@@ -35,6 +46,7 @@ function getLevelInfo(exp, role) {
             return { lv: cur.lv, title: cur.title, color: cur.color, percent, label };
         }
     }
+    // 기본값 (Lv 10)
     return { lv: 10, title: "ROOKIE", color: "#a1a1aa", percent: 0, label: "0 / 2,000 XP" };
 }
 
@@ -62,7 +74,7 @@ export async function renderProfile(user) {
         const lvInfo = getLevelInfo(myExp, role);
         const currentLevel = lvInfo.lv;
 
-        // 송금 수수료 계산
+        // 송금 수수료 및 최소 금액 계산
         let feePercent = (currentLevel === 0) ? 0 : currentLevel;
         let minAmount = (currentLevel === 0) ? 1 : 50000 + (currentLevel * 5000);
 
@@ -104,7 +116,15 @@ export async function renderProfile(user) {
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="section-box">
+                    <h4 class="section-title">PROFILE FRAMES</h4>
+                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:5px;">
+                        <div class="frame-selector" onclick="equipFrame('')" style="border:2px dashed #555;">🚫</div>
+                        ${(userData.frames || []).map(frameId => `<div class="frame-selector ${frameId}" onclick="equipFrame('${frameId}')"></div>`).join('')}
+                    </div>
+                </div>
+
                 <div class="section-box item-section">
                     <h4 class="section-title">MY ITEMS</h4>
                     <div id="my-items-list">
@@ -131,41 +151,28 @@ export async function renderProfile(user) {
 
             <div id="level-guide-modal" class="modal-overlay">
                 <div class="modal-content">
-                    <h2 class="modal-title">LEVEL SYSTEM</h2>
+                    <div class="modal-title">LEVEL & XP SYSTEM</div>
                     
                     <div class="modal-section">
-                        <div class="modal-subtitle">📈 HOW TO GAIN XP</div>
-                        <div class="xp-info-box">
-                            <span>Invite Friend (Referral)</span>
-                            <span class="highlight-xp">+1,000 XP</span>
-                        </div>
-                        <div class="xp-info-box">
-                            <span>Play Game (Spend Coins)</span>
-                            <span class="highlight-xp">10% of Cost</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:#64748b; margin-top:5px;">
-                            * e.g. Easy Mode (100C) = +10 XP
-                        </div>
+                        <div class="modal-subtitle">📈 HOW TO GET XP</div>
+                        <div class="xp-row"><span>Invite Friend (Referral)</span><span class="xp-val">+1,000 XP</span></div>
+                        <div class="xp-row"><span>Play Game</span><span class="xp-val">10% of Cost</span></div>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:5px;">* Max Level (Lv 1) users do not gain XP.</div>
                     </div>
 
                     <div class="modal-section">
                         <div class="modal-subtitle">🏆 LEVEL BENEFITS</div>
                         <table class="level-table">
                             <thead>
-                                <tr>
-                                    <th>Level</th>
-                                    <th>Required XP</th>
-                                    <th>Fee</th>
-                                    <th>Min. Gift</th>
-                                </tr>
+                                <tr><th>Lv</th><th>XP Needed</th><th>Fee</th><th>Min Gift</th></tr>
                             </thead>
                             <tbody>
                                 ${LEVEL_TABLE.slice().reverse().map(l => `
-                                    <tr class="${l.lv <= 3 ? 'level-row-high' : ''}">
+                                    <tr class="${l.lv <= 3 ? 'high-rank' : ''}">
                                         <td>Lv.${l.lv}</td>
-                                        <td>${l.reqExp.toLocaleString()}</td>
+                                        <td>${l.reqExp === 0 ? '0' : (l.reqExp/1000) + 'k'}</td>
                                         <td>${l.lv}%</td>
-                                        <td>${(50000 + l.lv * 5000).toLocaleString()}</td>
+                                        <td>${(50000 + l.lv * 5000) / 1000}k</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -177,7 +184,6 @@ export async function renderProfile(user) {
             </div>
         `;
 
-        // 리스너 연결
         setTimeout(() => {
             const inputEl = document.getElementById('gift-amount');
             if(inputEl) {
@@ -194,12 +200,11 @@ export async function renderProfile(user) {
     }
 }
 
-// [NEW] 모달 열기/닫기 함수 (Window 등록)
+// Window Functions
 window.openLevelGuide = () => {
     const modal = document.getElementById('level-guide-modal');
     if (modal) {
         modal.style.display = 'flex';
-        // 클릭 시 배경 누르면 닫기 기능 추가
         modal.onclick = (e) => {
             if (e.target === modal) window.closeLevelGuide();
         };
@@ -211,7 +216,6 @@ window.closeLevelGuide = () => {
     if (modal) modal.style.display = 'none';
 };
 
-// 기존 함수들 유지
 window.sendCoinGift = async (currentLevel) => {
     const recipientEmail = document.getElementById('recipient-email').value.trim();
     const amount = parseInt(document.getElementById('gift-amount').value);
@@ -246,9 +250,12 @@ window.sendCoinGift = async (currentLevel) => {
             const senderDoc = await transaction.get(doc(db, "users", senderUid));
             const recipientDoc = await transaction.get(doc(db, "users", recipientUid));
             if (!senderDoc.exists() || !recipientDoc.exists()) throw "User error";
+            
             const sCoins = senderDoc.data().coins || 0;
             const rCoins = recipientDoc.data().coins || 0;
+            
             if (sCoins < totalDeduct) throw "Insufficient balance";
+            
             transaction.update(doc(db, "users", senderUid), { coins: sCoins - totalDeduct });
             transaction.update(doc(db, "users", recipientUid), { coins: rCoins + amount });
         });
