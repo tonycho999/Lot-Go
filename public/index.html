@@ -4,71 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lot-Go</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7272957295128241"
-     crossorigin="anonymous"></script>
+    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7272957295128241" crossorigin="anonymous"></script>
+    
     <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
     
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app-viewport">
-        <div id="auth-view" class="view-container">
-            <img src="images/logo.png" class="main-logo" alt="Lot-Go Logo">
-            <h2 class="title-glow">LOT-GO</h2>
-            <div id="auth-inputs" class="auth-box">
-                <input type="email" id="email" placeholder="Email Address">
-                <input type="password" id="pw" placeholder="Password">
-                <button class="main-btn" onclick="handleLogin()">LOGIN</button>
-                <button class="link-btn" onclick="switchView('signup-view')">CREATE ACCOUNT</button>
+        
+        <div id="auth-view" class="view-container auth-mode">
+            <div class="auth-card">
+                <div class="logo-wrapper">
+                    <img src="images/logo.png" alt="Lot-Go Logo" class="game-logo">
+                    <div class="logo-glow"></div>
+                </div>
+                
+                <h1 class="main-title">LOT-GO</h1>
+                <p class="sub-title">WIN BIG OR GO HOME</p>
+
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email Address" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="pw" placeholder="Password" class="neon-input">
+                </div>
+
+                <div class="auth-actions">
+                    <button onclick="handleLogin()" class="neon-btn primary full-width">LOGIN</button>
+                    <button onclick="switchView('signup-view')" class="neon-btn secondary full-width">CREATE ACCOUNT</button>
+                </div>
             </div>
         </div>
 
-        <div id="signup-view" class="view-container" style="display:none;">
-            <h2>CREATE ACCOUNT</h2>
-            <div class="auth-box">
-                <input type="email" id="signup-email" placeholder="New Email">
-                <input type="password" id="signup-pw" placeholder="New Password">
-                <button class="main-btn signup" onclick="handleSignUp()">SIGN UP</button>
-                <button class="link-btn" onclick="switchView('auth-view')">BACK TO LOGIN</button>
+        <div id="signup-view" class="view-container auth-mode" style="display:none;">
+            <div class="auth-card">
+                <div class="logo-wrapper" style="width: 80px; height: 80px;">
+                    <img src="images/logo.png" alt="Lot-Go Logo" class="game-logo">
+                </div>
+                <h2 class="game-title" style="margin-bottom: 20px;">JOIN US</h2>
+                
+                <div class="input-group">
+                    <input type="email" id="signup-email" placeholder="New Email Address" class="neon-input">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="signup-pw" placeholder="Password (Min 6 chars)" class="neon-input">
+                </div>
+                
+                <div class="auth-actions">
+                    <button onclick="handleSignUp()" class="neon-btn success full-width">SIGN UP</button>
+                    <button onclick="switchView('auth-view')" class="text-btn">Back to Login</button>
+                </div>
             </div>
         </div>
 
         <div id="lobby-view" class="view-container" style="display:none;">
             <div id="balance-container" style="width: 100%;"></div> 
 
-            <div class="tab-system">
+            <div class="tab-system" style="width: 100%; flex: 1; overflow-y: auto; padding-bottom: 80px;">
                 <div class="tab-content" id="single-tab"></div>
                 <div id="online-tab" class="tab-content" style="display:none;">
-                    <div class="placeholder-box">Online Mode Coming Soon...</div>
+                    <div class="game-room-border" style="text-align:center; padding:40px; color:#94a3b8;">
+                        <h3>🚧 ONLINE MODE</h3>
+                        <p>Coming Soon...</p>
+                    </div>
                 </div>
-                <div id="shop-tab" class="tab-content" style="display:none;"></div>
-                <div id="profile-tab" class="tab-content" style="display:none;"></div>
+                <div id="shop-tab" class="tab-content" style="display:none;">
+                    <div class="game-room-border" style="text-align:center; padding:40px; color:#94a3b8;">
+                        <h3>🛒 SHOP</h3>
+                        <p>Open Soon...</p>
+                    </div>
+                </div>
+                <div id="profile-tab" class="tab-content" style="display:none;">
+                    <div class="game-room-border" style="text-align:center; padding:40px; color:#94a3b8;">
+                        <h3>👤 PROFILE</h3>
+                        <p>Under Construction</p>
+                    </div>
+                </div>
             </div>
 
             <nav class="bottom-nav">
-                <button onclick="switchTab('single')">
+                <button id="nav-single" onclick="switchTab('single')" style="color: #3b82f6; opacity: 1;">
                     <span class="nav-icon">🎮</span><span>SINGLE</span>
                 </button>
-                <button onclick="switchTab('online')">
+                <button id="nav-online" onclick="switchTab('online')">
                     <span class="nav-icon">🌐</span><span>ONLINE</span>
                 </button>
-                <button onclick="switchTab('shop')">
+                <button id="nav-shop" onclick="switchTab('shop')">
                     <span class="nav-icon">🛒</span><span>SHOP</span>
                 </button>
-                <button onclick="switchTab('profile')">
+                <button id="nav-profile" onclick="switchTab('profile')">
                     <span class="nav-icon">👤</span><span>PROFILE</span>
                 </button>
             </nav>
         </div>
 
-        <div id="game-view" class="view-container" style="display:none;">
-            <div id="game-header"></div>
+        <div id="game-view" class="view-container" style="display:none; justify-content: flex-start; padding-top: 20px;">
+            <div id="game-header" style="width: 100%;"></div>
             <div id="game-board" class="card-grid"></div>
-            <button class="exit-btn" onclick="location.reload()">EXIT GAME</button>
-        </div>
+            </div>
     </div>
 
     <script type="module" src="js/app.js"></script>
