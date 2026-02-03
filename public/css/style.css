@@ -20,7 +20,7 @@ body {
 }
 
 /* =========================================
-   2. 로그인 & 로비 (기존 스타일 유지)
+   2. 로그인 & 로비 (기존 스타일)
    ========================================= */
 .auth-mode { justify-content: center; padding: 20px; background: radial-gradient(circle at center, #3e2723 0%, #1a120b 100%); }
 .auth-card { background: rgba(20, 10, 5, 0.9); border: 2px solid #8d6e63; border-radius: 24px; padding: 50px 30px; width: 100%; max-width: 420px; text-align: center; backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; }
@@ -60,20 +60,33 @@ body {
     margin-left: auto; margin-right: auto; max-width: 1600px;
 }
 
-/* [수정] 테이블 너비 95vw로 강제 고정 (찌그러짐 방지) */
 .game-room-border {
     border: 20px solid #5d4037; border-radius: 60px;
     background-color: #0d462b;
     background-image: radial-gradient(circle at center, #1b6b46 0%, #0a3d25 90%);
     box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.7);
-    
-    width: 95vw; /* 화면 너비의 95% 사용 */
-    max-width: 1600px; 
-    min-height: 60vh; 
+    width: 95vw; max-width: 1600px; min-height: 60vh; 
     margin: 20px auto; padding: 50px;
-    
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    box-sizing: border-box; /* 중요 */
+    box-sizing: border-box; 
+}
+
+/* [신규] 테이블 내부 상금 표시 스타일 */
+.in-game-prize-container {
+    text-align: center;
+    margin-bottom: 30px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px 40px;
+    border-radius: 50px;
+    border: 2px solid #5d4037;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+.prize-label {
+    font-size: 0.9rem; color: #a5d6a7; margin-bottom: 5px; letter-spacing: 1px;
+}
+.prize-value {
+    font-size: 2.5rem; font-family: 'Cinzel', serif; font-weight: 900;
+    color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
 }
 
 .game-title { 
@@ -86,7 +99,6 @@ body {
 }
 .highlight { color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
 
-/* [수정] 그리드 너비 100% 보장 */
 .card-grid { 
     display: grid; gap: 40px; 
     width: 100%; 
@@ -98,7 +110,6 @@ body {
 .grid-normal { grid-template-columns: repeat(5, 1fr); gap: 30px; max-width: 1100px; }
 .grid-hard { grid-template-columns: repeat(5, 1fr); gap: 15px; max-width: 900px; }
 
-/* 선택 단계 볼 */
 .lotto-ball {
     aspect-ratio: 1; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -121,14 +132,10 @@ body {
     box-shadow: 0 0 30px rgba(255, 193, 7, 0.6);
 }
 
-/* EASY 모드 크기 */
 .grid-easy .lotto-ball, .grid-easy .ball-face { font-size: clamp(2.5rem, 5vw, 4rem); }
-/* NORMAL 모드 크기 */
 .grid-normal .lotto-ball, .grid-normal .ball-face { font-size: clamp(2rem, 4vw, 3rem); }
-/* HARD 모드 크기 */
 .grid-hard .lotto-ball, .grid-hard .ball-face { font-size: clamp(1.2rem, 2.5vw, 2rem); }
 
-/* 플레이 단계 볼 */
 .ball-wrapper {
     perspective: 1000px;
     width: 100%; aspect-ratio: 1; cursor: pointer;
@@ -150,13 +157,11 @@ body {
     border: 1px solid rgba(0,0,0,0.2);
 }
 
-/* 앞면 (물음표 없음 - 붉은 공) */
 .ball-front {
     background: radial-gradient(circle at 30% 30%, #ef5350, #b71c1c);
     color: #fff; transform: rotateY(0deg);
 }
 
-/* 뒷면 (숫자 있음 - 붉은 공 + 흰색 원) */
 .ball-back {
     background: radial-gradient(circle at 30% 30%, #ef5350, #b71c1c);
     color: #000; transform: rotateY(180deg);
@@ -169,7 +174,6 @@ body {
     box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
 }
 
-/* 타겟 볼 */
 .target-container { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
 .target-ball { 
     width: 60px; height: 60px; 
