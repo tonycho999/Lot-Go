@@ -59,21 +59,15 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
+// [수정] 상단바는 항상 MAX PRIZE 고정
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     
+    // 오른쪽은 항상 MAX PRIZE 고정
     let prizeLabel = "MAX PRIZE";
     let prizeValue = gameState.mode.max.toLocaleString();
 
-    if (gameState.isGameOver) {
-        prizeLabel = "CURRENT PRIZE";
-        prizeValue = "0"; 
-    } else if (document.querySelector('.play-mode')) {
-        prizeLabel = "CURRENT PRIZE";
-        prizeValue = calculateCurrentPrize().toLocaleString();
-    }
-    
     topBar.innerHTML = `
         <div class="coin-info" style="display: flex; flex-direction: column; align-items: flex-start;">
             <div id="back-to-lobby-btn" style="cursor:pointer; margin-bottom: 5px; color: #ffca28; font-size: 0.8rem; font-weight: bold;">
@@ -90,6 +84,17 @@ function updateTopBar() {
     
     const backBtn = document.getElementById('back-to-lobby-btn');
     if(backBtn) backBtn.onclick = goBackToLobby;
+}
+
+// [신규] 테이블 내부 상금 업데이트 함수
+function updateTablePrize() {
+    const display = document.getElementById('table-current-prize');
+    if (!display) return;
+
+    let currentPrize = calculateCurrentPrize();
+    if (gameState.isGameOver) currentPrize = 0; // 게임 오버 시 0 처리 (또는 최종 상금)
+
+    display.innerText = currentPrize.toLocaleString();
 }
 
 function renderSelectionPhase() {
@@ -148,15 +153,23 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
+// [수정] 게임 플레이 화면 (테이블 레이아웃 변경)
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
 
+    // 1. Current Prize, 2. Target, 3. Grid 순서 배치
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
+            <div class="in-game-prize-container">
+                <div class="prize-label">CURRENT PRIZE</div>
+                <div id="table-current-prize" class="prize-value">${gameState.mode.max.toLocaleString()}</div>
+            </div>
+
             <div id="target-bar" class="target-container">
                 ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
             </div>
+
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
         </div>
     `;
@@ -168,7 +181,6 @@ export function renderPlayPhase() {
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
         ballWrapper.className = "ball-wrapper";
-        // [수정] ball-front에 공백 문자 추가하여 렌더링 보장 (물음표 제거됨)
         ballWrapper.innerHTML = `
             <div class="ball-inner">
                 <div class="ball-face ball-front">&nbsp;</div>
@@ -180,7 +192,9 @@ export function renderPlayPhase() {
             if (gameState.isGameOver || ballWrapper.classList.contains('flipped')) return;
             gameState.flips++;
             ballWrapper.classList.add('flipped'); 
-            updateTopBar(); 
+            
+            // 상단바가 아닌 테이블 내부 상금 업데이트
+            updateTablePrize();
 
             if (gameState.selected.includes(num)) {
                 gameState.found.push(num);
@@ -220,6 +234,7 @@ function handleGameOver() {
 
 function showResultButtons(message, prize, statusClass) {
     const board = document.getElementById('game-board');
+    // 결과 화면
     board.innerHTML = `
         <div class="game-room-border section-result ${statusClass}" style="text-align:center;">
             <h2 class="result-msg">${message}</h2>
@@ -231,7 +246,7 @@ function showResultButtons(message, prize, statusClass) {
                 <button id="result-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
             </div>
         </div>`;
-    updateTopBar();
+    updateTopBar(); // 상단바는 Max Prize 유지
     const lobbyBtn = document.getElementById('result-lobby-btn');
     if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
 }
