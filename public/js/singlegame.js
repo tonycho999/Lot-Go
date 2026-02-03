@@ -43,23 +43,11 @@ const TickerManager = {
         return `${adj}${noun}${num}`;
     },
 
-    // [수정] 10,000 코인 이상의 상금만 뽑기
     getRandomRealPrize: function() {
         let validPrizes = [];
-
-        // Normal 모드에서 10,000 이상만 추출
-        if (SINGLE_MODES[2].prizes) {
-            validPrizes = validPrizes.concat(SINGLE_MODES[2].prizes.filter(p => p >= 10000));
-        }
-
-        // Hard 모드에서 10,000 이상만 추출 (전부 해당됨)
-        if (SINGLE_MODES[3].prizes) {
-            validPrizes = validPrizes.concat(SINGLE_MODES[3].prizes.filter(p => p >= 10000));
-        }
-
-        // 안전장치 (혹시 비어있으면 기본값)
+        if (SINGLE_MODES[2].prizes) validPrizes = validPrizes.concat(SINGLE_MODES[2].prizes.filter(p => p >= 10000));
+        if (SINGLE_MODES[3].prizes) validPrizes = validPrizes.concat(SINGLE_MODES[3].prizes.filter(p => p >= 10000));
         if (validPrizes.length === 0) return 10000;
-
         return validPrizes[Math.floor(Math.random() * validPrizes.length)];
     },
 
@@ -72,19 +60,13 @@ const TickerManager = {
 
     loopFakeMessages: function() {
         const randomTime = Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000;
-        
         this.timer = setTimeout(() => {
             if (!document.getElementById('ticker-bar')) return;
-
             const user = this.generateFakeUser();
-            const prize = this.getRandomRealPrize(); // 10,000 이상만 나옴
+            const prize = this.getRandomRealPrize();
             const isJackpot = prize >= 1000000;
-            
             let msg = `${user} won ${prize.toLocaleString()} C!`;
-            if (isJackpot) {
-                msg = `🚨 JACKPOT!! ${user} hit ${prize.toLocaleString()} C! 🚨`;
-            }
-
+            if (isJackpot) msg = `🚨 JACKPOT!! ${user} hit ${prize.toLocaleString()} C! 🚨`;
             this.addMessage(msg, isJackpot);
             this.loopFakeMessages();
         }, randomTime);
@@ -97,7 +79,6 @@ const TickerManager = {
 
     playNext: function() {
         if (this.isAnimating || this.queue.length === 0) return;
-        
         const tickerBar = document.getElementById('ticker-bar');
         const container = document.querySelector('.ticker-container');
         if (!tickerBar || !container) return;
@@ -109,9 +90,7 @@ const TickerManager = {
         tickerBar.className = 'ticker-text'; 
         if (item.isJackpot) tickerBar.classList.add('ticker-jackpot');
 
-        // Web Animations API로 끊김 없이 이동
         const distance = container.offsetWidth + tickerBar.offsetWidth + 50;
-        
         const animation = tickerBar.animate([
             { transform: 'translateX(0)' }, 
             { transform: `translateX(-${distance}px)` }
@@ -149,14 +128,11 @@ export async function renderSingleMenu() {
     container.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
             <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
-                
                 <div class="ticker-container">
                     <div id="ticker-bar" class="ticker-text">Welcome to Lot-Go! Win Big!</div>
                 </div>
-
                 <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">📺 WATCH AD (+300 C)</button>
                 <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
-                
                 <button class="main-btn easy-btn" onclick="initSingleGame(1)">
                     <div class="btn-title">EASY</div>
                     <div class="btn-desc">2/5 Match • 100 C</div>
@@ -171,12 +147,12 @@ export async function renderSingleMenu() {
                 </button>
             </div>
         </div>`;
-
     TickerManager.init();
 }
 
 export async function handleWatchAd() { alert("광고 기능 준비 중입니다."); }
 
+// [핵심 수정] 싱글 게임 시작 시 XP 적립
 export async function initSingleGame(level) {
     TickerManager.stop(); 
 
@@ -195,21 +171,25 @@ export async function initSingleGame(level) {
 
     if (currentCoins < mode.cost) return alert(`Not enough coins! Need ${mode.cost} C.`);
 
+    // 경험치 계산 (10%)
+    const xpGain = Math.floor(mode.cost * 0.1);
+
     // 더블 아이템
     let useDouble = false;
+    let updates = {
+        coins: increment(-mode.cost),
+        exp: increment(xpGain) // [NEW] 경험치 증가
+    };
+
     if (myItems['item_double'] > 0) {
         if (confirm(`Use 'x2 Double Prize' item? (Owned: ${myItems['item_double']})`)) {
             useDouble = true;
-            await updateDoc(userDocRef, { 
-                coins: increment(-mode.cost),
-                "items.item_double": increment(-1)
-            });
-        } else {
-            await updateDoc(userDocRef, { coins: increment(-mode.cost) });
+            updates["items.item_double"] = increment(-1);
         }
-    } else {
-        await updateDoc(userDocRef, { coins: increment(-mode.cost) });
     }
+
+    // DB 업데이트 실행
+    await updateDoc(userDocRef, updates);
 
     if (coinUnsub) coinUnsub(); 
     coinUnsub = onSnapshot(userDocRef, (docSnapshot) => {
@@ -276,7 +256,6 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// [1] 번호 선택 화면
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -321,7 +300,6 @@ function renderStartButton() {
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
-// [2] 게임 플레이 화면
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
 
@@ -338,9 +316,7 @@ export function renderPlayPhase() {
                     ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
                 </div>
             </div>
-
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
-            
             <div class="board-footer" id="play-footer"></div>
         </div>
     `;
@@ -442,6 +418,5 @@ function showResultOnBoard(message, prize, statusClass) {
     }
 }
 
-// Window 등록
 window.initSingleGame = initSingleGame;
 window.handleWatchAd = handleWatchAd;
