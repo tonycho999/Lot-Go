@@ -11,13 +11,10 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// [수정] 로비로 돌아가는 함수 (새로고침 방지)
+// 로비로 돌아가는 함수
 function goBackToLobby() {
-    // 실시간 리스너 해제 (메모리 누수 방지)
     if (coinUnsub) coinUnsub();
-    // 뷰 전환
     window.switchView('lobby-view');
-    // 메뉴 다시 그리기 (선택적)
     renderSingleMenu();
 }
 
@@ -92,7 +89,6 @@ function updateTopBar() {
         </div>
     `;
     
-    // [수정] 이벤트 리스너 직접 바인딩 (HTML onclick 문자열 대신)
     document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
@@ -113,7 +109,6 @@ function renderSelectionPhase() {
 
     const selectionGrid = document.getElementById('selection-grid');
     for (let i = 1; i <= gameState.mode.total; i++) {
-        // [수정] 카드 -> 볼 형태 클래스 적용
         const ball = document.createElement('div');
         ball.className = "lotto-ball selection-ball";
         ball.innerHTML = `<div class="ball-content">${i}</div>`;
@@ -172,12 +167,12 @@ export function renderPlayPhase() {
 
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
-        // [수정] 3D 볼 구조
         ballWrapper.className = "ball-wrapper";
+        // [수정] 숫자를 span.ball-number로 감싸서 흰색 원 안에 넣음
         ballWrapper.innerHTML = `
             <div class="ball-inner">
                 <div class="ball-face ball-front">?</div>
-                <div class="ball-face ball-back">${num}</div>
+                <div class="ball-face ball-back"><span class="ball-number">${num}</span></div>
             </div>
         `;
         
@@ -237,6 +232,5 @@ function showResultButtons(message, prize, statusClass) {
             </div>
         </div>`;
     updateTopBar();
-    // [수정] 결과 화면에서도 로비 이동 시 깜빡임 방지
     document.getElementById('result-lobby-btn').onclick = goBackToLobby;
 }
