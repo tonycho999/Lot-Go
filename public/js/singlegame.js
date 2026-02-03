@@ -31,19 +31,7 @@ let coinUnsub = null;
 
 // Ticker (전광판) 기능
 const TickerManager = {
-    timer: null,
-    start: function() {
-        this.loop();
-    },
-    loop: function() {
-        const tickerBar = document.getElementById('ticker-bar');
-        if (!tickerBar) return;
-        // 예시 텍스트 애니메이션 (필요시 기능 확장 가능)
-        // tickerBar.style.transform = ... 
-    },
-    stop: function() {
-        if(this.timer) clearTimeout(this.timer);
-    }
+    stop: function() { }
 };
 
 // [A] 로비로 돌아가기
@@ -53,13 +41,12 @@ function goBackToLobby() {
     renderSingleMenu();
 }
 
-// [B] 싱글 메뉴 렌더링 (이 부분이 누락되었었습니다)
+// [B] 싱글 메뉴 렌더링
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
     const t = window.t || {}; 
 
-    // ★ 여기에 메뉴 HTML을 꽉 채워넣었습니다.
     container.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; width: 100%;">
             <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
@@ -89,8 +76,6 @@ export async function renderSingleMenu() {
                 </button>
             </div>
         </div>`;
-    
-    // TickerManager.start(); // 필요시 활성화
 }
 
 // [C] 게임 초기화 (비용 차감)
@@ -162,12 +147,12 @@ function renderSelectionPhase() {
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
-    // 난이도 클래스 적용
+    // 난이도 클래스 적용 및 텍스트 수정
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border ${gameState.mode.cssClass}">
                 <h2 class="game-title">
-                    ${t.pick_title || "PICK"} <span class="highlight">${gameState.mode.pick}</span>
+                    번호 <span class="highlight">${gameState.mode.pick}</span>개를 선택하세요
                 </h2>
                 <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
                 <div id="selection-footer" style="width:100%; margin-top:20px; z-index:1;"></div>
@@ -179,6 +164,7 @@ function renderSelectionPhase() {
     for (let i = 1; i <= gameState.mode.total; i++) {
         const ball = document.createElement('div');
         ball.className = "lotto-ball";
+        // 공 내부에 흰색 원과 숫자 추가
         ball.innerHTML = `<div class="ball-number-bg">${i}</div>`;
         
         ball.onclick = () => {
@@ -203,6 +189,7 @@ export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
 
+    // 난이도에 맞는 CSS 클래스 추가
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border play-mode ${gameState.mode.cssClass}">
