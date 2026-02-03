@@ -20,7 +20,7 @@ body {
 }
 
 /* =========================================
-   2. 로그인 & 로비 (기존 스타일 유지)
+   2. 로그인 & 로비 (기존 스타일)
    ========================================= */
 .auth-mode { justify-content: center; padding: 20px; background: radial-gradient(circle at center, #3e2723 0%, #1a120b 100%); }
 .auth-card { background: rgba(20, 10, 5, 0.9); border: 2px solid #8d6e63; border-radius: 24px; padding: 50px 30px; width: 100%; max-width: 420px; text-align: center; backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; }
@@ -48,66 +48,49 @@ body {
 .divider { height: 1px; background: linear-gradient(to right, transparent, #5d4037, transparent); margin: 10px 0; width: 100%; }
 
 /* =========================================
-   3. [최종 수정] 싱글 게임 (와이드 풀스크린 + 카지노 테이블)
+   3. [최종 수정] 싱글 게임 (80% 상단바 + 중앙 정렬 테이블)
    ========================================= */
 
-/* [수정] 상단 정보바 (너비 80%로 조정) */
+/* 상단 정보바 (너비 80%) */
 .game-top-bar {
-    width: 80%; /* 100% -> 80%로 변경 */
+    width: 80%; /* 요청사항: 80%로 조정 */
     display: flex;
     justify-content: space-between;
-    align-items: flex-end; /* 텍스트 아래쪽 정렬 */
+    align-items: flex-end; 
     background: linear-gradient(to bottom, #3e2723, #1a120b);
-    border-bottom: 4px solid #d4af37; /* 하단 금색 라인 */
-    padding: 15px 50px; /* 좌우 여백 */
+    border-bottom: 4px solid #d4af37;
+    padding: 15px 50px; 
     margin-bottom: 20px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-    
-    /* 화면 중앙 정렬 */
     margin-left: auto;
     margin-right: auto;
-    max-width: 1600px; /* 너무 커지지 않게 제한 */
+    max-width: 1600px;
 }
 
-/* 로비로 돌아가기 링크 */
-.back-link {
-    color: #ffca28;
-    font-size: 0.9rem;
-    font-weight: bold;
-    text-decoration: none;
-    font-family: 'Exo 2', sans-serif;
-}
-.back-link:hover { text-decoration: underline; color: #fff; }
-
-/* 게임 테이블 (화면 중앙, 크게 유지) */
+/* 게임 테이블 (화면 정중앙, 크기는 유지) */
 .game-room-border {
-    /* 우드 + 가죽 테두리 */
     border: 20px solid #5d4037; 
     border-radius: 60px;
-    
-    /* 초록색 펠트 바닥 */
     background-color: #0d462b;
     background-image: radial-gradient(circle at center, #1b6b46 0%, #0a3d25 90%);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.7);
     
-    /* 입체감 */
-    box-shadow: 
-        0 30px 60px rgba(0,0,0,0.9), 
-        inset 0 0 100px rgba(0,0,0,0.7);
-        
     width: 90%; 
-    max-width: 1600px; /* 최대 너비 제한 완화 */
-    min-height: 60vh; /* 높이 확보 */
-    margin: 20px auto;
+    max-width: 1600px; /* 테이블 크기 유지 */
+    min-height: 60vh; 
+    margin: 20px auto; /* 중앙 정렬 */
     padding: 50px;
+    
+    /* [수정] 테이블 내부 컨텐츠 중앙 정렬 */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-/* 타이틀 (테이블 위에 1열로 표시) */
+/* 타이틀 (폰트 크기 50% 축소) */
 .game-title { 
-    font-size: clamp(2rem, 4vw, 4rem); 
+    font-size: clamp(1.5rem, 2.5vw, 2.5rem); /* [수정] 폰트 크기 대폭 축소 */
     margin: 0 0 40px 0; 
     color: #f0e6d2;
     text-shadow: 0 4px 10px rgba(0,0,0,0.8);
@@ -126,25 +109,25 @@ body {
     gap: 30px; 
     width: 100%; 
     justify-content: center; 
-    /* 화면 크기에 맞춰 1열로 배치되는 카드들 */
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    max-width: 1400px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 최소 크기 조정 */
+    
+    /* [수정] 카드가 너무 퍼지지 않게 그리드 전체 너비 제한 */
+    max-width: 1200px; 
 }
-/* Easy 모드 등 카드가 적을 때는 중앙 정렬 보정 */
 .grid-easy { grid-template-columns: repeat(5, 1fr); } 
 
-/* 카드 스타일 (크기 조정) */
+/* 카드 스타일 (크기 축소) */
 .card { 
     aspect-ratio: 2.5 / 3.5; 
     border-radius: 12px; 
     display: flex; align-items: center; justify-content: center;
     
-    /* 폰트 크기 반응형 조절 */
-    font-size: clamp(2rem, 4vw, 4.5rem); 
+    /* [수정] 카드 폰트 크기 축소 */
+    font-size: clamp(1.5rem, 3vw, 3.5rem); 
     
     font-weight: 800; cursor: pointer;
     font-family: 'Cinzel', serif;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
     transition: all 0.3s ease;
 }
 
@@ -154,8 +137,8 @@ body {
     color: #444;
 }
 .card.selection-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     background: #fff;
     border-color: #d4af37;
 }
@@ -163,11 +146,11 @@ body {
     background: #fff;
     border: 4px solid #d4af37;
     color: #b71c1c;
-    box-shadow: 0 0 30px rgba(212, 175, 55, 0.5); 
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5); 
     transform: scale(1.05);
 }
 
-/* 3D 카드 효과 */
+/* 3D 효과 */
 .card-3d {
     perspective: 1000px;
     background: transparent !important;
@@ -194,7 +177,6 @@ body {
     background: #fff;
 }
 
-/* 카드 뒷면 (패턴) */
 .card-front { 
     background-color: #fff;
     background-image: 
@@ -205,7 +187,6 @@ body {
     color: transparent;
 }
 
-/* 카드 앞면 (숫자) */
 .card-back { 
     background: #fff; 
     color: #111; 
@@ -237,7 +218,6 @@ body {
 .win-gold .result-msg { color: #d4af37; }
 .win-fail .result-msg { color: #ef5350; }
 
-/* 네온 버튼 재정의 (테이블 내부용) */
 .neon-btn {
     padding: 15px 40px; border-radius: 50px; font-size: 1.2rem;
     box-shadow: 0 10px 20px rgba(0,0,0,0.4);
