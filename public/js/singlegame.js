@@ -103,19 +103,23 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
+// [수정] 선택 단계 (Header/Grid/Footer 구조 적용)
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
-    document.querySelector('.action-area')?.remove();
     
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
-    // [수정] Grid 클래스를 동적으로 적용하여 공 크기 제어
     board.innerHTML = `
         <div class="game-room-border section-selection">
-            <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
+            <div class="board-header">
+                <h2 class="game-title">PICK <span class="highlight">${gameState.mode.pick}</span> NUMBERS</h2>
+            </div>
+
             <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
+
+            <div class="board-footer" id="selection-footer"></div>
         </div>
     `;
 
@@ -123,7 +127,6 @@ function renderSelectionPhase() {
     for (let i = 1; i <= gameState.mode.total; i++) {
         const ball = document.createElement('div');
         ball.className = "lotto-ball selection-ball";
-        // [수정] 흰색 원과 숫자 포함
         ball.innerHTML = `<div class="ball-number">${i}</div>`;
         
         ball.onclick = () => {
@@ -132,42 +135,40 @@ function renderSelectionPhase() {
             ball.classList.add('selected');
             
             if (gameState.selected.length === gameState.mode.pick) {
-                renderStartButton(board);
+                renderStartButton();
             }
         };
         selectionGrid.appendChild(ball);
     }
 }
 
-function renderStartButton(boardElement) {
-    if (document.getElementById('btn-start-game')) return;
-    const selectionSection = document.querySelector('.section-selection');
-    const btnContainer = document.createElement('div');
-    btnContainer.className = "action-area";
-    // [수정] START GAME 버튼 잘 보이게 (CSS에서 색상 처리함)
-    btnContainer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
-    selectionSection.appendChild(btnContainer); 
+function renderStartButton() {
+    const footer = document.getElementById('selection-footer');
+    if (!footer || footer.innerHTML !== "") return; // 중복 방지
+    
+    footer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
 
+// [수정] 플레이 단계 (동일한 Header/Grid/Footer 구조 유지)
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
-    document.querySelector('.action-area')?.remove();
 
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
-            <div id="prize-container" class="in-game-prize-container">
-                <div class="prize-label">CURRENT PRIZE</div>
-                <div id="table-current-prize" class="prize-value">${gameState.mode.max.toLocaleString()}</div>
-            </div>
-
-            <div id="target-bar" class="target-container">
-                ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
+            <div class="board-header">
+                <div id="prize-container" class="in-game-prize-container">
+                    <div class="prize-label">CURRENT PRIZE</div>
+                    <div id="table-current-prize" class="prize-value">${gameState.mode.max.toLocaleString()}</div>
+                </div>
+                <div id="target-bar" class="target-container">
+                    ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
+                </div>
             </div>
 
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
             
-            <div id="end-game-actions" style="width: 100%; margin-top: 30px;"></div>
+            <div class="board-footer" id="play-footer"></div>
         </div>
     `;
     updateTopBar(); 
@@ -178,7 +179,6 @@ export function renderPlayPhase() {
     shuffled.forEach(num => {
         const ballWrapper = document.createElement('div');
         ballWrapper.className = "ball-wrapper";
-        // [수정] ball-front: 빈 공, ball-back: 숫자 공 (디자인 통일)
         ballWrapper.innerHTML = `
             <div class="ball-inner">
                 <div class="ball-face ball-front"></div>
@@ -230,11 +230,12 @@ function handleGameOver() {
 }
 
 function showResultOnBoard(message, prize, statusClass) {
+    // 상단 상금 표시 영역을 결과 메시지로 변경
     const prizeContainer = document.getElementById('prize-container');
     if (prizeContainer) {
         prizeContainer.innerHTML = `
             <div class="result-box ${statusClass}">
-                <div class="result-msg" style="margin-bottom: 5px;">${message}</div>
+                <div class="result-msg">${message}</div>
                 <div class="final-prize">Total: <span class="highlight">${prize.toLocaleString()} C</span></div>
             </div>
         `;
@@ -243,9 +244,10 @@ function showResultOnBoard(message, prize, statusClass) {
         prizeContainer.style.boxShadow = "none";
     }
 
-    const actionContainer = document.getElementById('end-game-actions');
-    if (actionContainer) {
-        actionContainer.innerHTML = `
+    // 하단 푸터에 버튼 추가
+    const footer = document.getElementById('play-footer');
+    if (footer) {
+        footer.innerHTML = `
             <div class="result-actions" style="display: flex; gap: 20px; justify-content: center;">
                 <button class="neon-btn success">🔄 REPLAY</button>
                 <button id="end-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
@@ -253,7 +255,7 @@ function showResultOnBoard(message, prize, statusClass) {
         `;
         
         const lobbyBtn = document.getElementById('end-lobby-btn');
-        const replayBtn = actionContainer.querySelector('.success');
+        const replayBtn = footer.querySelector('.success');
         
         if(lobbyBtn) lobbyBtn.onclick = goBackToLobby;
         if(replayBtn) replayBtn.onclick = () => initSingleGame(gameState.level);
