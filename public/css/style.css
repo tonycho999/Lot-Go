@@ -1,16 +1,40 @@
-/* --- [수정된] 로그인/타이틀 화면 전용 스타일 --- */
+/* =========================================
+   1. 기본 설정 & 폰트
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Orbitron:wght@700;900&display=swap');
 
-/* 1. 전체 컨테이너 정렬 */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body { 
+    margin: 0; 
+    /* 깊은 밤하늘/사이버펑크 배경 */
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    color: #e2e8f0; 
+    font-family: 'Exo 2', sans-serif; 
+    overflow-x: hidden; 
+    min-height: 100vh;
+}
+
+/* 뷰 컨테이너 공통 */
+.view-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    min-height: 100vh; 
+    width: 100%;
+}
+
+/* =========================================
+   2. 로그인 & 타이틀 화면 (Auth View)
+   ========================================= */
 .auth-mode {
     justify-content: center;
     padding: 20px;
     background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-    min-height: 100vh;
 }
 
-/* 2. 로그인 카드 디자인 개선 */
 .auth-card {
-    background: rgba(15, 23, 42, 0.85); /* 배경을 진하게 하여 가독성 확보 */
+    background: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(99, 102, 241, 0.5); 
     border-radius: 24px;
     padding: 50px 30px;
@@ -25,27 +49,25 @@
     animation: fadeInUp 0.8s ease-out;
 }
 
-/* 3. 로고 스타일 (흰색 배경 제거 핵심 로직) */
 .logo-wrapper {
     position: relative;
     width: 140px;  
     height: 140px; 
     margin: 0 auto 25px;
-    border-radius: 50%; /* 원형으로 자르기 */
-    overflow: hidden;   /* 네모난 모서리 숨김 (흰색 배경 제거됨) */
+    border-radius: 50%;
+    overflow: hidden;   
     border: 3px solid #6366f1; 
     box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); 
-    background: #000; /* 이미지 투명 영역 대비용 */
+    background: #000; 
 }
 
 .game-logo {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 원 안에 꽉 차게 */
+    object-fit: cover;
     display: block;
 }
 
-/* 4. 타이틀 텍스트 */
 .main-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.5rem;
@@ -63,11 +85,7 @@
     text-transform: uppercase;
 }
 
-/* 5. 입력창 디자인 */
-.input-group { 
-    width: 100%; 
-    margin-bottom: 15px; 
-}
+.input-group { width: 100%; margin-bottom: 15px; }
 
 .neon-input {
     width: 100%;
@@ -80,7 +98,7 @@
     font-size: 1rem;
     outline: none;
     transition: 0.3s;
-    text-align: center; /* 입력 텍스트 중앙 정렬 */
+    text-align: center;
 }
 
 .neon-input:focus {
@@ -89,7 +107,6 @@
     background: #0f172a;
 }
 
-/* 6. 버튼 스타일 (가독성 해결) */
 .auth-actions {
     width: 100%;
     margin-top: 10px;
@@ -100,37 +117,6 @@
 
 .full-width { width: 100%; margin-bottom: 0; }
 
-/* 로그인 버튼 (진한 파란색 배경 + 흰색 글씨) */
-.neon-btn.primary {
-    background: linear-gradient(135deg, #2563eb, #4f46e5);
-    color: #ffffff !important; /* 글씨 흰색 강제 */
-    border: none;
-    font-weight: 900;
-    letter-spacing: 1px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-}
-
-.neon-btn.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
-}
-
-/* 회원가입 버튼 (외곽선 스타일) */
-.neon-btn.secondary {
-    background: transparent;
-    border: 2px solid #38bdf8;
-    color: #38bdf8;
-    font-weight: 700;
-    box-shadow: none;
-}
-
-.neon-btn.secondary:hover {
-    background: rgba(56, 189, 248, 0.1);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-}
-
-/* 텍스트 링크 버튼 */
 .text-btn {
     background: none; border: none;
     color: #94a3b8; cursor: pointer;
@@ -138,8 +124,240 @@
     margin-top: 10px;
 }
 
-/* 애니메이션 */
+/* =========================================
+   3. 로비 & 네비게이션 (Lobby View)
+   ========================================= */
+#lobby-view {
+    justify-content: flex-start;
+    padding: 20px;
+    padding-bottom: 90px;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 탭 시스템 */
+.tab-system {
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+.tab-system::-webkit-scrollbar { display: none; }
+
+.tab-content {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 하단 네비게이션 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%; height: 80px;
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid #334155;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0 20px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+}
+
+.bottom-nav button {
+    background: none; border: none;
+    color: #64748b;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 25%;
+}
+
+.nav-icon { font-size: 1.5rem; margin-bottom: 2px; display: block; }
+
+.bottom-nav button:hover, .bottom-nav button.active {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    transform: translateY(-3px);
+}
+
+/* =========================================
+   4. 게임 메뉴 & 버튼 스타일
+   ========================================= */
+.menu-list { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+
+.main-btn { 
+    width: 100%; padding: 18px; border-radius: 16px; border: none; 
+    color: white; font-weight: 700; cursor: pointer; 
+    transition: transform 0.2s, filter 0.2s; 
+    font-family: 'Exo 2', sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.main-btn:active { transform: scale(0.98); }
+
+.btn-title { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+.btn-desc { font-size: 0.9rem; margin-top: 4px; opacity: 0.9; font-weight: 400; }
+
+/* 광고 버튼 */
+.ad-btn-style {
+    background: linear-gradient(45deg, #6d28d9, #8b5cf6);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    font-size: 1.1rem;
+}
+
+/* 난이도 버튼 */
+.easy-btn { background: linear-gradient(to right, #059669, #10b981); }
+.normal-btn { background: linear-gradient(to right, #2563eb, #3b82f6); }
+.hard-btn { background: linear-gradient(to right, #dc2626, #ef4444); }
+
+.divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #334155, transparent);
+    margin: 10px 0;
+    width: 100%;
+}
+
+/* 네온 버튼 공통 */
+.neon-btn {
+    padding: 16px 40px; border-radius: 12px; border: none; font-family: 'Exo 2';
+    font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1rem;
+    margin-top: 10px;
+}
+.neon-btn.primary {
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+}
+.neon-btn.secondary {
+    background: transparent;
+    border: 2px solid #38bdf8;
+    color: #38bdf8;
+    box-shadow: none;
+}
+.neon-btn.success {
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* =========================================
+   5. 싱글 게임 (보드, 카드, 상단바)
+   ========================================= */
+.game-title { 
+    font-size: 2.2rem; margin: 10px 0 20px; 
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    font-weight: 800; 
+    text-align: center;
+}
+.highlight { color: #fbbf24; font-weight: 800; }
+
+/* 상단 정보바 */
+.game-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #334155;
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* 게임 룸 테두리 */
+.game-room-border {
+    border: 2px solid #4ecca3;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(78, 204, 163, 0.2);
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* 카드 그리드 */
+.card-grid { display: grid; gap: 10px; width: 100%; justify-content: center; margin-top: 15px; }
+.grid-easy, .grid-normal, .grid-hard { grid-template-columns: repeat(5, 1fr); }
+
+.card { 
+    aspect-ratio: 1; border-radius: 12px; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: bold; cursor: pointer;
+}
+.card.selection-card {
+    background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
+}
+.card.selected { 
+    background: #4f46e5; border-color: #818cf8; color: white; 
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.5); 
+}
+
+/* 3D 카드 플립 & 숫자 반전 방지 */
+.card-3d {
+    perspective: 1000px;
+    background: transparent !important;
+    border: none !important;
+}
+.card-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+.card.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+    position: absolute; width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px; font-weight: bold; font-size: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+.card-front { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+.card-back { background: #4f46e5; color: white; transform: rotateY(180deg); border: 1px solid #6366f1; }
+
+/* 타겟 번호 바 */
+.target-container { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+.target-node { 
+    width: 40px; height: 40px; background: #334155; border-radius: 8px; 
+    display: flex; align-items: center; justify-content: center; font-weight: bold; color: #94a3b8;
+}
+.target-node.found { background: #10b981; color: white; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+
+.action-area, .result-actions { display: flex; justify-content: center; width: 100%; gap: 10px; }
+.result-msg { font-size: 2rem; margin-bottom: 10px; font-weight: 800; }
+.win-gold .result-msg { color: #fbbf24; }
+.win-fail .result-msg { color: #f43f5e; }
+
+/* =========================================
+   6. 애니메이션 정의
+   ========================================= */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.2; }
+    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
 }
