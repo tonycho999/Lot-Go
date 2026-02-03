@@ -26,9 +26,7 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// ==============================================
-// 티커(Ticker) 시스템
-// ==============================================
+// Ticker System
 const TickerManager = {
     queue: [],
     isAnimating: false,
@@ -120,7 +118,7 @@ function goBackToLobby() {
     renderSingleMenu();
 }
 
-// 메뉴 렌더링
+// Render Menu
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
@@ -152,7 +150,7 @@ export async function renderSingleMenu() {
 
 export async function handleWatchAd() { alert("광고 기능 준비 중입니다."); }
 
-// [핵심 수정] 싱글 게임 시작 시 XP 적립
+// [수정] XP 적립 로직 (Level > 1 일 때만 적립)
 export async function initSingleGame(level) {
     TickerManager.stop(); 
 
@@ -166,21 +164,21 @@ export async function initSingleGame(level) {
     
     const userData = snap.data();
     const currentCoins = userData.coins || 0;
+    const currentLevel = userData.level || 10;
     const myItems = userData.items || {};
     userCoins = currentCoins; 
 
     if (currentCoins < mode.cost) return alert(`Not enough coins! Need ${mode.cost} C.`);
 
-    // 경험치 계산 (10%)
-    const xpGain = Math.floor(mode.cost * 0.1);
+    let updates = { coins: increment(-mode.cost) };
 
-    // 더블 아이템
+    // 레벨이 1보다 클 때만 (즉, Lv 2 ~ 10) 경험치 획득
+    if (currentLevel > 1) {
+        const xpGain = Math.floor(mode.cost * 0.1);
+        updates.exp = increment(xpGain);
+    }
+
     let useDouble = false;
-    let updates = {
-        coins: increment(-mode.cost),
-        exp: increment(xpGain) // [NEW] 경험치 증가
-    };
-
     if (myItems['item_double'] > 0) {
         if (confirm(`Use 'x2 Double Prize' item? (Owned: ${myItems['item_double']})`)) {
             useDouble = true;
@@ -188,7 +186,6 @@ export async function initSingleGame(level) {
         }
     }
 
-    // DB 업데이트 실행
     await updateDoc(userDocRef, updates);
 
     if (coinUnsub) coinUnsub(); 
@@ -418,5 +415,6 @@ function showResultOnBoard(message, prize, statusClass) {
     }
 }
 
+// Window 등록
 window.initSingleGame = initSingleGame;
 window.handleWatchAd = handleWatchAd;
