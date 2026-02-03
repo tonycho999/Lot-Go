@@ -1,8 +1,8 @@
 /* =========================================
-   4. 싱글 게임 (테이블 & 볼) - 파일명: singlegame.css
+   4. Single Game (Table & Balls) - singlegame.css
    ========================================= */
 
-/* 상단 정보바 */
+/* Top Info Bar */
 .game-top-bar {
     width: 90%; max-width: 1400px;
     display: flex; justify-content: space-between; align-items: flex-end; 
@@ -13,7 +13,7 @@
 }
 .back-link { color: #ffca28; font-size: 0.9rem; font-weight: bold; }
 
-/* [핵심 수정] 게임 테이블 레이아웃 안정화 */
+/* [CRITICAL FIX] Game Table Layout Stabilization */
 .game-room-border {
     border: 20px solid #5d4037; border-radius: 60px;
     background-color: #0d462b;
@@ -22,36 +22,36 @@
     
     width: 90%; max-width: 1400px; 
     min-width: 340px; 
-    min-height: 600px; /* 최소 높이 확보 */
-    height: auto;      /* 내용에 따라 늘어나도록 설정 */
+    min-height: 600px; /* Minimum height */
+    height: auto;      /* Allow it to grow if content is tall */
     
     margin: 0 auto 50px auto; 
-    padding: 60px 40px; /* 내부 여백 넉넉하게 */
+    padding: 60px 40px; /* Generous padding */
     
-    /* Flex 정렬 수정: 중앙 강제 정렬 대신 위에서부터 배치 + 간격 추가 */
+    /* Layout Fix: Stack from top, don't center-squish */
     display: flex; 
     flex-direction: column; 
     align-items: center; 
-    justify-content: flex-start; /* [중요] 겹침 방지 */
-    gap: 30px; /* [중요] 요소 사이 간격 강제 */
+    justify-content: flex-start; /* Fixes overlapping */
+    gap: 30px; /* Enforces space between elements */
     
     box-sizing: border-box; 
 }
 
-/* 상금 표시 */
+/* Prize Display */
 .in-game-prize-container {
     text-align: center; 
-    /* margin-bottom 제거 -> 부모의 gap으로 처리 */
+    /* Remove margins, use gap instead */
     background: rgba(0, 0, 0, 0.3); padding: 15px 40px;
     border-radius: 50px; border: 2px solid #5d4037;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     min-width: 250px;
-    flex-shrink: 0; /* 찌그러짐 방지 */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 .prize-label { font-size: 0.9rem; color: #a5d6a7; margin-bottom: 5px; letter-spacing: 1px; }
 .prize-value { font-size: 2.5rem; font-family: 'Cinzel', serif; font-weight: 900; color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
 
-/* 타이틀 */
+/* Title */
 .game-title { 
     font-size: clamp(1.5rem, 2.5vw, 2.5rem); 
     margin: 0 0 40px 0; color: #f0e6d2;
@@ -62,32 +62,32 @@
 }
 .highlight { color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
 
-/* 결과 화면 */
+/* Result Screen */
 .result-box { animation: fadeIn 0.5s ease-out; margin-bottom: 20px; }
 .result-msg { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 900; font-family: 'Cinzel', serif; }
 .final-prize { font-size: 1.5rem; color: #e0e0e0; }
 .win-gold .result-msg { color: #d4af37; text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
 .win-fail .result-msg { color: #ff5252; text-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
 
-/* 그리드 시스템 */
+/* Grid System */
 .card-grid { 
     display: grid; 
     width: 100%; justify-content: center; 
     max-width: 1200px;
-    flex-shrink: 0; /* 찌그러짐 방지 */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 .grid-easy { grid-template-columns: repeat(5, 1fr); gap: 40px; }
 .grid-normal { grid-template-columns: repeat(5, 1fr); gap: 25px; max-width: 1000px; }
 .grid-hard { grid-template-columns: repeat(5, 1fr); gap: 15px; max-width: 900px; }
 
-/* 로또 볼 스타일 */
+/* Lotto Ball Style */
 .lotto-ball, .ball-face {
     aspect-ratio: 1; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-weight: 900; cursor: pointer; font-family: 'Cinzel', serif;
 }
 
-/* 선택 단계 */
+/* Selection Phase */
 .lotto-ball {
     background: radial-gradient(circle at 30% 30%, #e0e0e0, #9e9e9e);
     box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset -5px -5px 15px rgba(0,0,0,0.2);
@@ -96,12 +96,12 @@
 .lotto-ball:hover { transform: translateY(-5px); background: radial-gradient(circle at 30% 30%, #ffffff, #bdbdbd); }
 .lotto-ball.selected { background: radial-gradient(circle at 30% 30%, #ffecb3, #ffca28); border: 3px solid #ff6f00; color: #bf360c; transform: scale(1.1); box-shadow: 0 0 30px rgba(255, 193, 7, 0.6); }
 
-/* 볼 크기 (모드별) */
+/* Ball Sizes (Responsive) */
 .grid-easy .lotto-ball, .grid-easy .ball-face { font-size: clamp(2.5rem, 5vw, 4rem); }
 .grid-normal .lotto-ball, .grid-normal .ball-face { font-size: clamp(2rem, 4vw, 3rem); }
 .grid-hard .lotto-ball, .grid-hard .ball-face { font-size: clamp(1rem, 2vw, 1.8rem); }
 
-/* 플레이 단계 (3D 회전) */
+/* Play Phase (3D Rotation) */
 .ball-wrapper { perspective: 1000px; width: 100%; aspect-ratio: 1; cursor: pointer; }
 .ball-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; border-radius: 50%; }
 .ball-wrapper.flipped .ball-inner { transform: rotateY(180deg); }
@@ -111,16 +111,16 @@
 .ball-back { background: radial-gradient(circle at 30% 30%, #ef5350, #b71c1c); color: #000; transform: rotateY(180deg); }
 .ball-number { background: #fff; color: #000; border-radius: 50%; width: 60%; height: 60%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
 
-/* 타겟 볼 */
+/* Target Balls */
 .target-container { 
     display: flex; gap: 20px; justify-content: center; 
-    flex-wrap: wrap; /* 화면 좁을 때 줄바꿈 허용 */
+    flex-wrap: wrap; /* Allow wrapping on small screens */
     flex-shrink: 0;
 }
 .target-ball { width: 60px; height: 60px; background: radial-gradient(circle at 30% 30%, #5d4037, #3e2723); border: 2px solid #8d6e63; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
 .target-ball.found { background: radial-gradient(circle at 30% 30%, #66bb6a, #2e7d32); border-color: #a5d6a7; transform: scale(1.1); }
 
-/* 게임 버튼 */
+/* Buttons */
 .neon-btn { padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.4); text-transform: uppercase; font-weight: bold; border: none; cursor: pointer; color: white; margin-top: 10px; }
 .neon-btn.success { background: linear-gradient(135deg, #388e3c, #1b5e20); }
 .neon-btn.primary { background: linear-gradient(135deg, #1565c0, #0d47a1); }
