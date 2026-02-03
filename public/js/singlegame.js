@@ -11,7 +11,16 @@ let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: fal
 let userCoins = 0; 
 let coinUnsub = null;
 
-// 메뉴 렌더링
+// [수정] 로비로 돌아가는 함수 (새로고침 방지)
+function goBackToLobby() {
+    // 실시간 리스너 해제 (메모리 누수 방지)
+    if (coinUnsub) coinUnsub();
+    // 뷰 전환
+    window.switchView('lobby-view');
+    // 메뉴 다시 그리기 (선택적)
+    renderSingleMenu();
+}
+
 export async function renderSingleMenu() {
     const container = document.getElementById('single-tab');
     if (!container) return;
@@ -27,7 +36,6 @@ export async function renderSingleMenu() {
 
 export async function handleWatchAd() { alert("광고 기능 준비 중입니다."); }
 
-// 게임 초기화
 export async function initSingleGame(level) {
     const db = window.lotGoDb;
     const auth = window.lotGoAuth;
@@ -55,7 +63,6 @@ export async function initSingleGame(level) {
     renderSelectionPhase();
 }
 
-// [수정] 상단바 업데이트 (Back Link 위치 조정)
 function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
@@ -73,21 +80,22 @@ function updateTopBar() {
     
     topBar.innerHTML = `
         <div class="coin-info" style="display: flex; flex-direction: column; align-items: flex-start;">
-            <div onclick="location.reload()" style="cursor:pointer; margin-bottom: 5px; color: #ffca28; font-size: 0.8rem; font-weight: bold;">
+            <div id="back-to-lobby-btn" style="cursor:pointer; margin-bottom: 5px; color: #ffca28; font-size: 0.8rem; font-weight: bold;">
                 ← BACK TO LOBBY
             </div>
             <div style="font-size:0.7rem; color:#94a3b8; letter-spacing:1px;">MY COINS</div>
             <div style="font-weight:bold; color:#e2e8f0; font-size: 1.2rem;">🪙 ${userCoins.toLocaleString()}</div>
         </div>
-        
         <div class="prize-info" style="text-align: right;">
             <div style="font-size:0.7rem; color:#94a3b8; letter-spacing:1px;">${prizeLabel}</div>
             <div class="highlight" style="font-size:1.5rem;">${prizeValue}</div>
         </div>
     `;
+    
+    // [수정] 이벤트 리스너 직접 바인딩 (HTML onclick 문자열 대신)
+    document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
-// 번호 선택 화면
 function renderSelectionPhase() {
     const header = document.getElementById('game-header');
     const board = document.getElementById('game-board');
@@ -105,31 +113,30 @@ function renderSelectionPhase() {
 
     const selectionGrid = document.getElementById('selection-grid');
     for (let i = 1; i <= gameState.mode.total; i++) {
-        const card = document.createElement('div');
-        card.className = "card selection-card";
-        card.innerHTML = `<span class="card-num">${i}</span>`;
+        // [수정] 카드 -> 볼 형태 클래스 적용
+        const ball = document.createElement('div');
+        ball.className = "lotto-ball selection-ball";
+        ball.innerHTML = `<div class="ball-content">${i}</div>`;
         
-        card.onclick = () => {
+        ball.onclick = () => {
             if (gameState.selected.includes(i) || gameState.selected.length >= gameState.mode.pick) return;
             gameState.selected.push(i);
-            card.classList.add('selected');
+            ball.classList.add('selected');
             
             if (gameState.selected.length === gameState.mode.pick) {
                 renderStartButton(board);
             }
         };
-        selectionGrid.appendChild(card);
+        selectionGrid.appendChild(ball);
     }
 }
 
 function renderStartButton(boardElement) {
     if (document.getElementById('btn-start-game')) return;
     const selectionSection = document.querySelector('.section-selection');
-    
     const btnContainer = document.createElement('div');
     btnContainer.className = "action-area";
     btnContainer.innerHTML = `<button id="btn-start-game" class="neon-btn">START GAME</button>`;
-    
     selectionSection.appendChild(btnContainer); 
     document.getElementById('btn-start-game').addEventListener('click', renderPlayPhase);
 }
@@ -146,7 +153,6 @@ function calculateCurrentPrize() {
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
-// 게임 플레이 화면
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     document.querySelector('.action-area')?.remove();
@@ -154,7 +160,7 @@ export function renderPlayPhase() {
     board.innerHTML = `
         <div class="game-room-border section-play play-mode">
             <div id="target-bar" class="target-container">
-                ${gameState.selected.map(num => `<div id="target-${num}" class="card target-node">${num}</div>`).join('')}
+                ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
             </div>
             <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
         </div>
@@ -165,19 +171,20 @@ export function renderPlayPhase() {
     const shuffled = Array.from({length: gameState.mode.total}, (_, i) => i + 1).sort(() => Math.random() - 0.5);
 
     shuffled.forEach(num => {
-        const card = document.createElement('div');
-        card.className = "card card-3d";
-        card.innerHTML = `
-            <div class="card-inner">
-                <div class="card-face card-front">?</div>
-                <div class="card-face card-back">${num}</div>
+        const ballWrapper = document.createElement('div');
+        // [수정] 3D 볼 구조
+        ballWrapper.className = "ball-wrapper";
+        ballWrapper.innerHTML = `
+            <div class="ball-inner">
+                <div class="ball-face ball-front">?</div>
+                <div class="ball-face ball-back">${num}</div>
             </div>
         `;
         
-        card.onclick = () => {
-            if (gameState.isGameOver || card.classList.contains('flipped')) return;
+        ballWrapper.onclick = () => {
+            if (gameState.isGameOver || ballWrapper.classList.contains('flipped')) return;
             gameState.flips++;
-            card.classList.add('flipped'); 
+            ballWrapper.classList.add('flipped'); 
             updateTopBar(); 
 
             if (gameState.selected.includes(num)) {
@@ -189,7 +196,7 @@ export function renderPlayPhase() {
                 handleGameOver();
             }
         };
-        playGrid.appendChild(card);
+        playGrid.appendChild(ballWrapper);
     });
 }
 
@@ -226,8 +233,10 @@ function showResultButtons(message, prize, statusClass) {
             </div>
             <div class="result-actions" style="display: flex; gap: 20px; justify-content: center;">
                 <button class="neon-btn success" onclick="initSingleGame(${gameState.level})">🔄 REPLAY</button>
-                <button class="neon-btn primary" onclick="location.reload()">🏠 LOBBY</button>
+                <button id="result-lobby-btn" class="neon-btn primary">🏠 LOBBY</button>
             </div>
         </div>`;
     updateTopBar();
+    // [수정] 결과 화면에서도 로비 이동 시 깜빡임 방지
+    document.getElementById('result-lobby-btn').onclick = goBackToLobby;
 }
