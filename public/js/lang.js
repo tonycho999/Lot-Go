@@ -44,7 +44,7 @@ export const DICTIONARY = {
         big_win: "✨ BIG WIN!",
         safe: "SAFE!",
         almost: "ALMOST!",
-        unlucky: "UNLUCKY!",
+        unlucky: "Better luck next time!", // [수정됨]
         replay: "🔄 REPLAY",
         lobby_btn: "🏠 LOBBY",
         back_lobby: "BACK TO LOBBY",
@@ -140,7 +140,7 @@ export const DICTIONARY = {
         big_win: "✨ 대박 당첨!",
         safe: "본전 회수!",
         almost: "아까워요!",
-        unlucky: "꽝입니다!",
+        unlucky: "아쉽네요.. 다음 기회에.. 😭", // [수정됨]
         replay: "🔄 다시 하기",
         lobby_btn: "🏠 로비로",
         back_lobby: "로비로 돌아가기",
