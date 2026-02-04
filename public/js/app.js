@@ -28,9 +28,20 @@ const FakeTicker = {
     names: [
         "DragonSlayer", "BitMaster", "LottoKing", "Lucky777", "MoonWalker", "abc", "rkwk09991", "sksmsi91", "tkfkdgo01", "love01029222",
         "RichPuppy", "GoldMiner", "AcePlayer", "WinningSpirit", "SuperNova", "fhlas", "dkekeddd01177", "qwer01919222", "Asdf03331",
-        "CryptoWhale", "JackpotHunter", "SkyHigh", "OceanBlue", "MarsRover", "nice9394812", "gkekekdccc01995",
-        "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer", "abc12313211",
-        "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
+        "CryptoWhale", "JackpotHunter", "SkyHigh", "OceanBlue", "MarsRover", "nice9394812", "QLZP9284", "kdwq2048", "MXNC1102", "vpxl5839", "BTRE4721", "asdf9302", "WOIE8374", "zxcv1192", "PLMK0023", 
+        "qwer5564", "NBVC3847", "jhgf7721", "TYUI1029", "mnbv6632", "HJKL4958", "poiu8812", "GAFD3720", "lkjh4490", "REWA0192", "ytre3381", "VCNX7712", "nbvc5504", "OIPU2239", "cxza8827", "LKJH6610", 
+        "bvcz4432", "POIU9901", "asdf1123", "QWER5546", "mnbv0098", "ZXCV3384", "ghjk2271", "IUYT7743", "plok1120", "DSFA5562", "trew9948", 
+        "NBVC1023", "qazx8872", "LKJH4431", "wsxe0093", "OIUY2284", "edcr5510", "MNBV7732", "rfvt9921", "ASDF1140", "tgbn3384", "POIU6672", "yhnm0019", "QWER4423", "ujmk8857", "ZXCV1190", "ikol2231", 
+        "HJKL7746", "olpz5582", "IUYT9903", "mnbv4412", "GAFD1029", "cxza7764", "TREW3381", "vpxl8890", "PLMK2234", "lkjh0012", "NBVC5576", "qwer9931", "TYUI4420", "asdf1182", "WOIE7749", 
+        "zxcv5503", "HJKL1021", "poiu3394", "VCNX8872", "nbvc4410", "OIPU9923", "cxza1109", "LKJH7746", "bvcz3321", "POIU0098", "asdf5564", "QWER1120", "mnbv8872", "ZXCV4439", "ghjk0012", 
+        "IUYT5584", "plok9910", "DSFA1173", "trew7742", "NBVC4401", "qazx3398", "LKJH0027", "wsxe5512", "OIUY1184", "edcr9930", "MNBV4472", "rfvt0019", "ASDF5562", "tgbn1103", "POIU7748", "yhnm3321", 
+        "QWER0094", "ujmk5587", "KLJH0921", "xcnv8827", "POER1134", "lksj5560", "MZNX3391", "poiq0082", "ALSK7741", "zxcv4419", "QWRE8830", "mnba2212", "ZXCV5593", "ghjk1102", "IUYT6674", "plkm3381", 
+        "DSFA8820", "trew0094", "NBVC7763", "qazx4412", "LKJH9930", "wsxe1182", "OIUY5571", "edcr4409", "MNBV8823", "rfvt1102", "ASDF6674", "tgbn9931", "POIU2280", "yhnm4412", "QWER7763", "ujmk1109", "ZXCV8821", 
+        "ikol4430", "HJKL1129", "olpz9982", "IUYT4410", "mnbv7732", "GAFD4419", "cxza9930", "TREW1182", "vpxl5571", "PLMK8823", "lkjh1102", "NBVC6674", "qwer4431", "TYUI9980", "asdf4412", "WOIE1163", "zxcv9909", 
+        "HJKL5521", "poiu4430", "VCNX1129", "nbvc9982", "OIPU4410", "cxza7732", "LKJH4419", "bvcz9930", "POIU1182", "asdf5571", "QWER8823", "mnbv1102", "ZXCV6674", "ghjk4431", "IUYT9980", "plok4412", "DSFA1163", 
+        "trew9909", "NBVC5521", "qazx4430", "LKJH1129", "wsxe9982", "OIUY4410", "edcr7732", "MNBV4419", "rfvt9930", "ASDF1182", "tgbn5571", "POIU8823", "yhnm1102", "QWER6674", "ujmk4431", "ZXCV9980", "ikol4412", 
+        "HJKL1163", "olpz9909", "IUYT5521", "mnbv4430", "GAFD1129", "cxza9982", "TREW4410", "vpxl7732", "PLMK4419", "lkjh9930", "NBVC1182", "qwer5571", "TYUI8823", "asdf1102", "WOIE6674", "zxcv4431", "HJKL9980", 
+        "poiu4412""gkekekdccc01995", "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer", "abc12313211", "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
     ],
     seededRandom: function(seed) {
         var x = Math.sin(seed++) * 10000;
