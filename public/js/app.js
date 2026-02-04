@@ -10,7 +10,7 @@ import { renderProfile } from './profile.js';
 import { renderShop } from './shop.js';
 import { renderOnlineLobby } from './online-lobby.js';
 import { initLanguage } from './lang.js';
-import { renderCoinTab } from './coin.js'; // [NEW] 코인 탭 모듈 추가
+import { renderCoinTab } from './coin.js';
 
 // [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
@@ -28,7 +28,6 @@ renderAuthScreens();
 
 function renderAuthScreens() {
     const t = window.t;
-    // 1. 로그인 화면 텍스트 교체
     const authView = document.getElementById('auth-view');
     if (authView) {
         authView.innerHTML = `
@@ -37,17 +36,14 @@ function renderAuthScreens() {
                     <img src="images/logo.png" alt="Lot-Go Logo" class="game-logo">
                     <div class="logo-glow"></div>
                 </div>
-                
                 <h1 class="main-title">LOT-GO</h1>
                 <p class="sub-title">${t.login_subtitle}</p>
-
                 <div class="input-group">
                     <input type="text" id="login-username" placeholder="${t.ph_username}" class="neon-input">
                 </div>
                 <div class="input-group">
                     <input type="password" id="login-pw" placeholder="${t.ph_password}" class="neon-input">
                 </div>
-
                 <div class="auth-actions">
                     <button onclick="handleLogin()" class="neon-btn primary full-width">${t.btn_login}</button>
                     <button onclick="switchView('signup-view')" class="neon-btn secondary full-width">${t.btn_create_acc}</button>
@@ -56,13 +52,11 @@ function renderAuthScreens() {
         `;
     }
 
-    // 2. 회원가입 화면 텍스트 교체
     const signupView = document.getElementById('signup-view');
     if (signupView) {
         signupView.innerHTML = `
             <div class="auth-card" style="max-width:400px;"> 
                 <h2 class="game-title" style="margin-bottom: 20px;">${t.join_title}</h2>
-                
                 <div class="input-group">
                     <input type="email" id="signup-email" placeholder="${t.ph_email}" class="neon-input">
                 </div>
@@ -78,7 +72,6 @@ function renderAuthScreens() {
                 <div class="input-group">
                     <input type="text" id="signup-referral" placeholder="${t.ph_referral}" class="neon-input">
                 </div>
-                
                 <div class="auth-actions">
                     <button onclick="handleSignUp()" class="neon-btn success full-width">${t.btn_signup}</button>
                     <button onclick="switchView('auth-view')" class="text-btn">${t.btn_back_login}</button>
@@ -92,20 +85,15 @@ function renderAuthScreens() {
 window.handleLogin = async () => {
     const username = document.getElementById('login-username').value.trim();
     const pw = document.getElementById('login-pw').value;
-    
     if (!username || !pw) return alert("Please enter username and password.");
 
     try {
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("username", "==", username));
         const querySnapshot = await getDocs(q);
-
         if (querySnapshot.empty) return alert("Username not found.");
-
         const userDoc = querySnapshot.docs[0].data();
-        const email = userDoc.email;
-
-        await signInWithEmailAndPassword(auth, email, pw);
+        await signInWithEmailAndPassword(auth, userDoc.email, pw);
     } catch (e) {
         console.error(e);
         alert("Login failed: " + e.message);
@@ -120,11 +108,8 @@ window.handleSignUp = async () => {
     const pwConfirm = document.getElementById('signup-pw-confirm').value;
     const referralInput = document.getElementById('signup-referral').value.trim();
 
-    if (!email || !username || !pw || !pwConfirm || !referralInput) {
-        return alert("Please fill in all fields.");
-    }
+    if (!email || !username || !pw || !pwConfirm || !referralInput) return alert("Please fill in all fields.");
     if (pw !== pwConfirm) return alert("Passwords do not match.");
-    if (pw.length < 6) return alert("Password must be at least 6 characters.");
 
     try {
         const usersRef = collection(db, "users");
@@ -140,7 +125,6 @@ window.handleSignUp = async () => {
             referrerUid = refCheckSnap.docs[0].id;
         }
 
-        const myReferralCode = generateReferralCode();
         const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
         const user = userCredential.user;
         
@@ -155,43 +139,24 @@ window.handleSignUp = async () => {
             photoURL: 'images/default-profile.png',
             items: {},
             frames: [],
-            myReferralCode: myReferralCode, 
+            myReferralCode: Math.random().toString(36).substring(2, 10).toUpperCase(), 
             referredBy: referralInput,      
             referralCount: 0                
         });
 
         if (referrerUid) {
-            const referrerRef = doc(db, "users", referrerUid);
-            const refSnap = await getDoc(referrerRef);
-            if (refSnap.exists()) {
-                const refData = refSnap.data();
-                const refLevel = refData.level !== undefined ? refData.level : 10;
-                const refRole = refData.role || 'user';
-                let updates = { referralCount: increment(1) };
-                if (refLevel > 1 && refRole !== 'admin') {
-                    updates.exp = increment(1000);
-                }
-                await updateDoc(referrerRef, updates);
-            }
+            await updateDoc(doc(db, "users", referrerUid), { 
+                referralCount: increment(1),
+                exp: increment(1000)
+            });
         }
-        
-        alert(`Welcome, ${username}! You received +3,000 Coins!`);
+        alert(`Welcome, ${username}!`);
         window.switchView('auth-view'); 
-
     } catch (e) {
         console.error(e);
         alert("Signup failed: " + e.message);
     }
 };
-
-function generateReferralCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
 
 window.switchView = (viewId) => {
     document.querySelectorAll('.view-container').forEach(el => el.style.display = 'none');
@@ -202,10 +167,16 @@ window.switchView = (viewId) => {
     }
 };
 
+// [핵심] 탭 전환 및 스크롤 관리
 window.switchTab = async (tabName) => {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     const targetTab = document.getElementById(`${tabName}-tab`);
-    if (targetTab) targetTab.style.display = 'block';
+    if (targetTab) {
+        targetTab.style.display = 'block';
+        // 탭 전환 시 중앙 스크롤 영역을 맨 위로 올림
+        const scrollContainer = document.querySelector('.tab-system');
+        if (scrollContainer) scrollContainer.scrollTop = 0;
+    }
 
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
     const navBtn = document.getElementById(`nav-${tabName}`);
@@ -217,7 +188,7 @@ window.switchTab = async (tabName) => {
     if (tabName === 'single') renderSingleMenu();
     else if (tabName === 'online') renderOnlineLobby();
     else if (tabName === 'shop') await renderShop(user);
-    else if (tabName === 'coin') await renderCoinTab(user); // [NEW] 코인 탭 연결
+    else if (tabName === 'coin') await renderCoinTab(user);
     else if (tabName === 'profile') await renderProfile(user);
 };
 
@@ -227,7 +198,7 @@ onAuthStateChanged(auth, (user) => {
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
-            const t = window.t; // 언어 사용
+            const t = window.t;
 
             const balanceEl = document.getElementById('balance-container');
             if (balanceEl) {
@@ -241,16 +212,23 @@ onAuthStateChanged(auth, (user) => {
                 `;
             }
             
-            // 현재 활성화된 탭이 있으면 데이터 갱신 (실시간 반영)
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
-            const activeCoin = document.getElementById('coin-tab'); // [NEW]
+            const activeCoin = document.getElementById('coin-tab');
 
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
             if (activeProfile && activeProfile.style.display === 'block') renderProfile(user);
-            if (activeCoin && activeCoin.style.display === 'block') renderCoinTab(user); // [NEW]
+            if (activeCoin && activeCoin.style.display === 'block') renderCoinTab(user);
         });
     } else {
         window.switchView('auth-view');
     }
 });
+
+// [모바일 대응] 브라우저 주소창 제외 실제 높이 계산
+function setScreenSize() {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+window.addEventListener('resize', setScreenSize);
+setScreenSize();
