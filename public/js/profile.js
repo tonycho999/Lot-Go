@@ -1,7 +1,6 @@
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// [레벨 테이블 (10 -> 1 역순)]
+// [레벨 테이블]
 const LEVEL_TABLE = [
     { lv: 10, reqExp: 0, title: "ROOKIE", color: "#a1a1aa" },
     { lv: 9, reqExp: 2000, title: "BRONZE", color: "#cd7f32" },
@@ -15,14 +14,10 @@ const LEVEL_TABLE = [
     { lv: 1, reqExp: 500000, title: "GOD", color: "#ffffff" }
 ];
 
-// 레벨 정보 계산 함수
 function getLevelInfo(exp, role) {
-    if (role === 'admin') {
-        return { lv: 0, title: "OPERATOR", color: "#ef4444", percent: 100, label: "MAX LEVEL" };
-    }
-    if (exp >= LEVEL_TABLE[9].reqExp) {
-        return { lv: 1, title: "GOD", color: "#ffffff", percent: 100, label: "MAX LEVEL" };
-    }
+    if (role === 'admin') return { lv: 0, title: "OPERATOR", color: "#ef4444", percent: 100, label: "MAX LEVEL" };
+    if (exp >= LEVEL_TABLE[9].reqExp) return { lv: 1, title: "GOD", color: "#ffffff", percent: 100, label: "MAX LEVEL" };
+    
     for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
         if (exp >= LEVEL_TABLE[i].reqExp) {
             const cur = LEVEL_TABLE[i]; 
@@ -57,7 +52,7 @@ export async function renderProfile(user) {
             const role = userData.role || 'user';
             const isAdmin = role === 'admin';
             
-            // [수정] 이미지가 깨지거나 via.placeholder인 경우 기본 이미지로 대체
+            // 사진 URL이 있으면 쓰고, 없으면 기본 이미지
             let photoURL = userData.photoURL;
             if (!photoURL || photoURL.includes('via.placeholder.com')) {
                 photoURL = 'images/default-profile.png';
@@ -80,7 +75,7 @@ export async function renderProfile(user) {
                         <div class="profile-img-wrapper">
                             <img id="profile-img" class="${equippedFrame}" src="${photoURL}" onerror="this.src='images/default-profile.png'" alt="Profile">
                             <label for="img-upload" class="camera-icon">📸</label>
-                            <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)">
+                            <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="window.uploadProfileImg(this)">
                         </div>
                         
                         <h3 class="user-email" style="color:#fbbf24; font-size:1.5rem; margin-bottom:5px;">${username}</h3>
@@ -136,7 +131,6 @@ export async function renderProfile(user) {
                 <div id="level-guide-modal" class="modal-overlay" style="display:none;">
                     <div class="modal-content">
                         <div class="modal-title">LEVEL & XP SYSTEM</div>
-                        
                         <div class="modal-section">
                             <div class="modal-subtitle">📈 HOW TO GET XP</div>
                             <div class="xp-row"><span>Invite Friend (Referral)</span><span class="xp-val">+1,000 XP</span></div>
@@ -144,12 +138,11 @@ export async function renderProfile(user) {
                             <div class="xp-row" style="color:#ef4444;"><span>Send Coin (Transfer)</span><span class="xp-val">-100 XP</span></div>
                             <div style="font-size:0.75rem; color:#64748b; margin-top:5px;">* Max Level (Lv 1) users do not gain XP.</div>
                         </div>
-
                         <div class="modal-section">
                             <div class="modal-subtitle">🏆 LEVEL BENEFITS</div>
                             <table class="level-table">
                                 <thead>
-                                    <tr><th>Lv</th><th>XP Needed</th><th>Fee</th><th>최소 송금</th></tr>
+                                    <tr><th>Lv</th><th>XP Needed</th><th>Fee</th><th>Min Send</th></tr>
                                 </thead>
                                 <tbody>
                                     ${LEVEL_TABLE.slice().reverse().map(l => `
@@ -163,7 +156,6 @@ export async function renderProfile(user) {
                                 </tbody>
                             </table>
                         </div>
-
                         <button class="close-modal-btn" onclick="closeLevelGuide()">CLOSE</button>
                     </div>
                 </div>
@@ -175,7 +167,80 @@ export async function renderProfile(user) {
     }
 }
 
-// Window Functions
+// ==========================================
+// [Storage 없이 이미지 저장하는 핵심 로직]
+// ==========================================
+
+// 1. 이미지를 압축하고 Base64 문자열로 변환하는 함수
+function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // 비율 유지하며 리사이징
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 결과물 반환 (Data URL)
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+}
+
+// 2. 프로필 이미지 업로드 함수 (Firebase Storage 대신 Firestore에 문자열 저장)
+window.uploadProfileImg = async (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const auth = window.lotGoAuth;
+    const db = window.lotGoDb;
+
+    try {
+        // 로딩 표시
+        const imgEl = document.getElementById('profile-img');
+        if(imgEl) imgEl.style.opacity = '0.5';
+
+        // 1. 이미지 압축 (최대 너비 150px, 품질 0.7) -> 용량을 확 줄임
+        const compressedDataUrl = await compressImage(file, 150, 0.7);
+
+        // 2. Firestore 유저 문서에 '문자열'로 직접 저장
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { 
+            photoURL: compressedDataUrl 
+        });
+
+        // 3. 화면 즉시 반영
+        if(imgEl) {
+            imgEl.src = compressedDataUrl;
+            imgEl.style.opacity = '1';
+        }
+        
+        alert("Profile updated successfully!");
+
+    } catch (err) { 
+        console.error("Upload Error:", err);
+        alert("Upload failed. Try a smaller image.");
+        const imgEl = document.getElementById('profile-img');
+        if(imgEl) imgEl.style.opacity = '1';
+    }
+};
+
 window.openLevelGuide = () => {
     const modal = document.getElementById('level-guide-modal');
     if (modal) {
@@ -189,20 +254,6 @@ window.openLevelGuide = () => {
 window.closeLevelGuide = () => {
     const modal = document.getElementById('level-guide-modal');
     if (modal) modal.style.display = 'none';
-};
-
-window.uploadProfileImg = async (input) => {
-    const file = input.files[0];
-    if (!file) return;
-    const auth = window.lotGoAuth;
-    const db = window.lotGoDb;
-    const storage = getStorage(); 
-    const fileRef = sRef(storage, `profiles/${auth.currentUser.uid}`);
-    try {
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { photoURL: url });
-    } catch (err) { console.error(err); }
 };
 
 window.handleLogout = () => {
