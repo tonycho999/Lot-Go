@@ -3,7 +3,6 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
 import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// [1] 모듈 불러오기
 import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
@@ -12,7 +11,6 @@ import { renderOnlineLobby } from './online-lobby.js';
 import { initLanguage } from './lang.js';
 import { renderCoinTab } from './coin.js';
 
-// [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -22,7 +20,6 @@ window.lotGoAuth = auth;
 window.lotGoDb = db;
 window.lotGoRtdb = rtdb;
 
-// [3] 언어 설정 및 로그인 화면 번역 실행
 window.t = initLanguage();
 renderAuthScreens();
 
@@ -81,7 +78,6 @@ function renderAuthScreens() {
     }
 }
 
-// [4] 로그인 처리
 window.handleLogin = async () => {
     const username = document.getElementById('login-username').value.trim();
     const pw = document.getElementById('login-pw').value;
@@ -100,7 +96,6 @@ window.handleLogin = async () => {
     }
 };
 
-// [5] 회원가입 처리
 window.handleSignUp = async () => {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-username').value.trim();
@@ -167,17 +162,20 @@ window.switchView = (viewId) => {
     }
 };
 
-// [핵심] 탭 전환 및 스크롤 관리
+// [탭 전환 및 스크롤 관리]
 window.switchTab = async (tabName) => {
+    // 1. 모든 탭 숨김
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    
+    // 2. 선택 탭 표시 및 스크롤 초기화
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) {
         targetTab.style.display = 'block';
-        // 탭 전환 시 중앙 스크롤 영역을 맨 위로 올림
         const scrollContainer = document.querySelector('.tab-system');
         if (scrollContainer) scrollContainer.scrollTop = 0;
     }
 
+    // 3. 버튼 활성화 UI
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
     const navBtn = document.getElementById(`nav-${tabName}`);
     if (navBtn) navBtn.classList.add('active');
@@ -185,6 +183,7 @@ window.switchTab = async (tabName) => {
     const user = auth.currentUser;
     if (!user) return; 
 
+    // 4. 각 탭 렌더링
     if (tabName === 'single') renderSingleMenu();
     else if (tabName === 'online') renderOnlineLobby();
     else if (tabName === 'shop') await renderShop(user);
@@ -225,7 +224,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// [모바일 대응] 브라우저 주소창 제외 실제 높이 계산
+// [모바일 높이 계산]
 function setScreenSize() {
     let vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
