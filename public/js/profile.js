@@ -1,5 +1,7 @@
+// public/js/profile.js
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// [수정] query, where 추가 (Username 검색용)
+import { doc, getDoc, updateDoc, collection, getDocs, runTransaction, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // [레벨 테이블 (10 -> 1 역순)]
 const LEVEL_TABLE = [
@@ -17,12 +19,19 @@ const LEVEL_TABLE = [
 
 // 레벨 정보 계산 함수
 function getLevelInfo(exp, role) {
+    // 1. 운영자 (Level 0)
     if (role === 'admin') {
         return { lv: 0, title: "OPERATOR", color: "#ef4444", percent: 100, label: "MAX LEVEL" };
     }
+
+    // 2. 레벨 1 (GOD) 체크: 경험치가 500,000 이상이면 MAX 처리
     if (exp >= LEVEL_TABLE[9].reqExp) {
-        return { lv: 1, title: "GOD", color: "#ffffff", percent: 100, label: "MAX LEVEL" };
+        return { 
+            lv: 1, title: "GOD", color: "#ffffff", percent: 100, label: "MAX LEVEL" 
+        };
     }
+
+    // 3. 나머지 레벨 (10 ~ 2) 계산
     for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
         if (exp >= LEVEL_TABLE[i].reqExp) {
             const cur = LEVEL_TABLE[i]; 
@@ -39,6 +48,7 @@ function getLevelInfo(exp, role) {
             return { lv: cur.lv, title: cur.title, color: cur.color, percent, label };
         }
     }
+    // 기본값 (Lv 10)
     return { lv: 10, title: "ROOKIE", color: "#a1a1aa", percent: 0, label: "0 / 2,000 XP" };
 }
 
@@ -49,123 +59,120 @@ export async function renderProfile(user) {
     try {
         const db = window.lotGoDb;
         const userDocRef = doc(db, "users", user.uid);
+        const snapshot = await getDoc(userDocRef);
+        const userData = snapshot.exists() ? snapshot.data() : {};
         
-        // 실시간 업데이트 (onSnapshot 사용)
-        onSnapshot(userDocRef, (snapshot) => {
-            if (!snapshot.exists()) return;
-            const userData = snapshot.data();
-            
-            const role = userData.role || 'user';
-            const isAdmin = role === 'admin';
-            const photoURL = userData.photoURL || 'images/default-profile.png'; 
-            const items = userData.items || {}; 
-            const username = userData.username || user.email.split('@')[0];
-            const myCode = userData.myReferralCode || 'UNKNOWN';
-            const refCount = userData.referralCount || 0;
-            const myExp = userData.exp || 0;
-            const equippedFrame = userData.equippedFrame || '';
+        const role = userData.role || 'user';
+        const isAdmin = role === 'admin';
+        const photoURL = userData.photoURL || 'images/default-profile.png'; 
+        const items = userData.items || {}; 
+        const username = userData.username || user.email.split('@')[0];
+        const myCode = userData.myReferralCode || 'UNKNOWN';
+        const refCount = userData.referralCount || 0;
+        const myExp = userData.exp || 0;
+        const equippedFrame = userData.equippedFrame || '';
 
-            // 레벨 계산
-            const lvInfo = getLevelInfo(myExp, role);
-            const currentLevel = lvInfo.lv;
+        // 레벨 계산
+        const lvInfo = getLevelInfo(myExp, role);
+        const currentLevel = lvInfo.lv;
 
-            // [수정] 수수료 계산 로직만 남김 (화면 표시는 제거)
-            let feePercent = (currentLevel === 0) ? 0 : currentLevel;
+        // 송금 수수료 및 최소 금액 계산
+        let feePercent = (currentLevel === 0) ? 0 : currentLevel;
+        let minAmount = (currentLevel === 0) ? 1 : 50000 + (currentLevel * 5000);
 
-            container.innerHTML = `
-                <div class="profile-container">
-                    <div class="profile-header">
-                        <div class="profile-img-wrapper">
-                            <img id="profile-img" class="${equippedFrame}" src="${photoURL}" onerror="this.src='images/default-profile.png'" alt="Profile">
-                            <label for="img-upload" class="camera-icon">📸</label>
-                            <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)">
+        container.innerHTML = `
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-img-wrapper">
+                        <img id="profile-img" class="${equippedFrame}" src="${photoURL}" onerror="this.src='images/default-profile.png'" alt="Profile">
+                        <label for="img-upload" class="camera-icon">📸</label>
+                        <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="uploadProfileImg(this)">
+                    </div>
+                    
+                    <h3 class="user-email" style="color:#fbbf24; font-size:1.5rem; margin-bottom:5px;">${username}</h3>
+                    
+                    <div style="margin-bottom:15px; width:100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <span style="color:${lvInfo.color}; font-weight:bold; font-size:1.1rem; text-shadow:0 0 10px ${lvInfo.color};">
+                                Lv.${currentLevel} ${lvInfo.title}
+                            </span>
+                            <button class="guide-btn" onclick="openLevelGuide()">❓ LEVEL GUIDE</button>
                         </div>
+                        <div style="text-align:right; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">${lvInfo.label}</div>
                         
-                        <h3 class="user-email" style="color:#fbbf24; font-size:1.5rem; margin-bottom:5px;">${username}</h3>
-                        
-                        <div style="margin-bottom:15px; width:100%;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                <span style="color:${lvInfo.color}; font-weight:bold; font-size:1.1rem; text-shadow:0 0 10px ${lvInfo.color};">
-                                    Lv.${currentLevel} ${lvInfo.title}
-                                </span>
-                                <button class="guide-btn" onclick="openLevelGuide()">❓ LEVEL GUIDE</button>
-                            </div>
-                            <div style="text-align:right; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">${lvInfo.label}</div>
-                            
-                            <div style="width:100%; height:10px; background:#1e293b; border-radius:5px; overflow:hidden;">
-                                <div style="width:${lvInfo.percent}%; height:100%; background:linear-gradient(90deg, ${lvInfo.color}, #fff); transition:width 0.5s;"></div>
-                            </div>
-                            <div style="text-align:right; font-size:0.75rem; color:#64748b; margin-top:3px;">
-                                Refs: ${refCount} | Transfer Fee: <span style="color:#ef4444">${feePercent}%</span>
-                            </div>
+                        <div style="width:100%; height:10px; background:#1e293b; border-radius:5px; overflow:hidden;">
+                            <div style="width:${lvInfo.percent}%; height:100%; background:linear-gradient(90deg, ${lvInfo.color}, #fff); transition:width 0.5s;"></div>
                         </div>
-
-                        ${isAdmin ? '<span class="admin-badge">[OPERATOR]</span>' : ''}
-
-                        <div style="background:#1e293b; padding:10px; border-radius:8px; margin-top:15px; border:1px solid #334155;">
-                            <div style="font-size:0.8rem; color:#94a3b8;">MY REFERRAL CODE</div>
-                            <div style="font-size:1.2rem; font-weight:bold; color:#3b82f6; letter-spacing:2px; margin-top:5px; cursor:pointer;" 
-                                 onclick="navigator.clipboard.writeText('${myCode}'); alert('Copied!');">
-                                ${myCode} 📋
-                            </div>
+                        <div style="text-align:right; font-size:0.75rem; color:#64748b; margin-top:3px;">
+                            Refs: ${refCount} | Fee: <span style="color:#ef4444">${feePercent}%</span>
                         </div>
                     </div>
 
-                    <div class="section-box">
-                        <h4 class="section-title">PROFILE FRAMES</h4>
-                        <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:5px;">
-                            <div class="frame-selector" onclick="equipFrame('')" style="border:2px dashed #555;">🚫</div>
-                            ${(userData.frames || []).map(frameId => `<div class="frame-selector ${frameId}" onclick="equipFrame('${frameId}')"></div>`).join('')}
+                    ${isAdmin ? '<span class="admin-badge">[OPERATOR]</span>' : ''}
+
+                    <div style="background:#1e293b; padding:10px; border-radius:8px; margin-top:15px; border:1px solid #334155;">
+                        <div style="font-size:0.8rem; color:#94a3b8;">MY REFERRAL CODE</div>
+                        <div style="font-size:1.2rem; font-weight:bold; color:#3b82f6; letter-spacing:2px; margin-top:5px; cursor:pointer;" 
+                             onclick="navigator.clipboard.writeText('${myCode}'); alert('Copied!');">
+                            ${myCode} 📋
                         </div>
                     </div>
-
-                    <div class="section-box item-section">
-                        <h4 class="section-title">MY ITEMS</h4>
-                        <div id="my-items-list">
-                            ${Object.keys(items).length > 0 
-                                ? Object.entries(items).map(([id, qty]) => `<div class="item-tag">${id} x${qty}</div>`).join('') 
-                                : '<span class="empty-msg">No items owned.</span>'}
-                        </div>
-                    </div>
-
-                    <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
                 </div>
 
-                <div id="level-guide-modal" class="modal-overlay" style="display:none;">
-                    <div class="modal-content">
-                        <div class="modal-title">LEVEL & XP SYSTEM</div>
-                        
-                        <div class="modal-section">
-                            <div class="modal-subtitle">📈 HOW TO GET XP</div>
-                            <div class="xp-row"><span>Invite Friend (Referral)</span><span class="xp-val">+1,000 XP</span></div>
-                            <div class="xp-row"><span>Play Game</span><span class="xp-val">10% of Cost</span></div>
-                            <div style="font-size:0.75rem; color:#64748b; margin-top:5px;">* Max Level (Lv 1) users do not gain XP.</div>
-                        </div>
-
-                        <div class="modal-section">
-                            <div class="modal-subtitle">🏆 LEVEL BENEFITS</div>
-                            <table class="level-table">
-                                <thead>
-                                    <tr><th>Lv</th><th>XP Needed</th><th>Fee</th><th>Min Gift</th></tr>
-                                </thead>
-                                <tbody>
-                                    ${LEVEL_TABLE.slice().reverse().map(l => `
-                                        <tr class="${l.lv <= 3 ? 'high-rank' : ''}">
-                                            <td>Lv.${l.lv}</td>
-                                            <td>${l.reqExp === 0 ? '0' : (l.reqExp/1000) + 'k'}</td>
-                                            <td>${l.lv}%</td>
-                                            <td>${(50000 + l.lv * 5000) / 1000}k</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <button class="close-modal-btn" onclick="closeLevelGuide()">CLOSE</button>
+                <div class="section-box">
+                    <h4 class="section-title">PROFILE FRAMES</h4>
+                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:5px;">
+                        <div class="frame-selector" onclick="equipFrame('')" style="border:2px dashed #555;">🚫</div>
+                        ${(userData.frames || []).map(frameId => `<div class="frame-selector ${frameId}" onclick="equipFrame('${frameId}')"></div>`).join('')}
                     </div>
                 </div>
-            `;
-        });
+
+                <div class="section-box item-section">
+                    <h4 class="section-title">MY ITEMS</h4>
+                    <div id="my-items-list">
+                        ${Object.keys(items).length > 0 
+                            ? Object.entries(items).map(([id, qty]) => `<div class="item-tag">${id} x${qty}</div>`).join('') 
+                            : '<span class="empty-msg">No items owned.</span>'}
+                    </div>
+                </div>
+
+                <button class="logout-btn" onclick="handleLogout()">LOGOUT</button>
+            </div>
+
+            <div id="level-guide-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-title">LEVEL & XP SYSTEM</div>
+                    
+                    <div class="modal-section">
+                        <div class="modal-subtitle">📈 HOW TO GET XP</div>
+                        <div class="xp-row"><span>Invite Friend (Referral)</span><span class="xp-val">+1,000 XP</span></div>
+                        <div class="xp-row"><span>Play Game</span><span class="xp-val">10% of Cost</span></div>
+                        <div class="xp-row" style="color:#ef4444;"><span>Send Coin (Transfer)</span><span class="xp-val">-100 XP</span></div> <div style="font-size:0.75rem; color:#64748b; margin-top:5px;">* Max Level (Lv 1) users do not gain XP.</div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-subtitle">🏆 LEVEL BENEFITS</div>
+                        <table class="level-table">
+                            <thead>
+                                <tr><th>Lv</th><th>XP Needed</th><th>Fee</th><th>Min Gift</th></tr>
+                            </thead>
+                            <tbody>
+                                ${LEVEL_TABLE.slice().reverse().map(l => `
+                                    <tr class="${l.lv <= 3 ? 'high-rank' : ''}">
+                                        <td>Lv.${l.lv}</td>
+                                        <td>${l.reqExp === 0 ? '0' : (l.reqExp/1000) + 'k'}</td>
+                                        <td>${l.lv}%</td>
+                                        <td>${(50000 + l.lv * 5000) / 1000}k</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button class="close-modal-btn" onclick="closeLevelGuide()">CLOSE</button>
+                </div>
+            </div>
+        `;
 
     } catch (err) {
         console.error("Profile Render Error:", err);
@@ -199,6 +206,7 @@ window.uploadProfileImg = async (input) => {
         await uploadBytes(fileRef, file);
         const url = await getDownloadURL(fileRef);
         await updateDoc(doc(db, "users", auth.currentUser.uid), { photoURL: url });
+        document.getElementById('profile-img').src = url;
     } catch (err) { console.error(err); }
 };
 
@@ -212,5 +220,6 @@ window.equipFrame = async (frameId) => {
     try {
         await updateDoc(doc(db, "users", auth.currentUser.uid), { equippedFrame: frameId });
         alert("Frame updated!");
+        renderProfile(auth.currentUser);
     } catch(e) { console.error(e); }
 };
