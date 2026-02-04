@@ -41,7 +41,7 @@ const FakeTicker = {
         "HJKL5521", "poiu4430", "VCNX1129", "nbvc9982", "OIPU4410", "cxza7732", "LKJH4419", "bvcz9930", "POIU1182", "asdf5571", "QWER8823", "mnbv1102", "ZXCV6674", "ghjk4431", "IUYT9980", "plok4412", "DSFA1163", 
         "trew9909", "NBVC5521", "qazx4430", "LKJH1129", "wsxe9982", "OIUY4410", "edcr7732", "MNBV4419", "rfvt9930", "ASDF1182", "tgbn5571", "POIU8823", "yhnm1102", "QWER6674", "ujmk4431", "ZXCV9980", "ikol4412", 
         "HJKL1163", "olpz9909", "IUYT5521", "mnbv4430", "GAFD1129", "cxza9982", "TREW4410", "vpxl7732", "PLMK4419", "lkjh9930", "NBVC1182", "qwer5571", "TYUI8823", "asdf1102", "WOIE6674", "zxcv4431", "HJKL9980", 
-        "poiu4412""gkekekdccc01995", "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer", "abc12313211", "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
+        "poiu4412", "gkekekdccc01995", "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer", "abc12313211", "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
     ],
     seededRandom: function(seed) {
         var x = Math.sin(seed++) * 10000;
@@ -95,10 +95,9 @@ async function checkDailyBonus(user) {
     if (snap.exists()) {
         const data = snap.data();
         const lastDate = data.lastBonusDate || "";
-        const today = new Date().toDateString(); // 예: "Wed Feb 04 2026"
+        const today = new Date().toDateString(); 
 
         if (lastDate !== today) {
-            // 오늘 처음 접속
             await updateDoc(userRef, {
                 coins: increment(1000),
                 lastBonusDate: today
@@ -226,7 +225,7 @@ window.handleSignUp = async () => {
             myReferralCode: Math.random().toString(36).substring(2, 10).toUpperCase(), 
             referredBy: referralInput,      
             referralCount: 0,
-            lastBonusDate: "" // [신규] 보너스 날짜 추적용 필드
+            lastBonusDate: "" 
         });
 
         if (referrerUid) {
@@ -290,7 +289,6 @@ onAuthStateChanged(auth, async (user) => {
         window.switchView('lobby-view');
         FakeTicker.start();
         
-        // [신규] 일일 보너스 체크
         await checkDailyBonus(user);
 
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
