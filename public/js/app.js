@@ -22,10 +22,9 @@ window.lotGoRtdb = rtdb;
 window.t = initLanguage();
 
 // ==========================================
-// [신규] 동기화된 가짜 알림 시스템 (클라이언트 동기화)
+// [동기화된 가짜 알림 시스템]
 // ==========================================
 const FakeTicker = {
-    // 'user'로 시작하지 않는 멋진 아이디 목록
     names: [
         "DragonSlayer", "BitMaster", "LottoKing", "Lucky777", "MoonWalker",
         "RichPuppy", "GoldMiner", "AcePlayer", "WinningSpirit", "SuperNova",
@@ -33,76 +32,50 @@ const FakeTicker = {
         "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer",
         "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
     ],
-    
-    // 시드 기반 난수 생성기 (모든 유저가 같은 값을 얻기 위해 사용)
     seededRandom: function(seed) {
         var x = Math.sin(seed++) * 10000;
         return x - Math.floor(x);
     },
-
-    // 메시지 생성 및 동기화 로직
     generateMessage: function() {
         const now = Date.now();
-        // 10초마다 변경되는 타임 블록 생성
         const timeBlock = Math.floor(now / 10000); 
-        
-        // 이 블록에서 메시지를 보여줄지 말지 결정 (랜덤)
         const rand = this.seededRandom(timeBlock);
         
-        // 30% 확률로 메시지 발생 (너무 자주 뜨지 않게 조절)
         if (rand > 0.3) return null; 
 
-        // 메시지 내용 생성 (모든 클라이언트가 동일하게 계산됨)
         const nameIndex = Math.floor(this.seededRandom(timeBlock + 1) * this.names.length);
         const name = this.names[nameIndex];
-        
-        // 당첨금: 50,000 ~ 5,000,000 사이 랜덤 (50,000 이상 요청 반영)
         const amountBase = Math.floor(this.seededRandom(timeBlock + 2) * 500) + 5; 
         const amount = amountBase * 10000; 
-
-        // 잭팟 여부: 1% 확률로 대박 메시지
         const isJackpot = this.seededRandom(timeBlock + 3) > 0.99; 
 
         return { name, amount, isJackpot };
     },
-
     start: function() {
-        // 10초마다 체크하여 메시지 표시
         setInterval(() => {
             const msgData = this.generateMessage();
-            if (msgData) {
-                this.show(msgData);
-            }
+            if (msgData) this.show(msgData);
         }, 10000); 
     },
-
     show: function(data) {
         const tickerEl = document.getElementById('notification-msg');
         if (!tickerEl) return;
 
         const amountStr = data.amount.toLocaleString();
-        
         let html = '';
         if (data.isJackpot) {
-            // 잭팟 메시지 (별도 스타일)
             html = `<span class="jackpot-msg">🎰 JACKPOT! [${data.name}] won ${amountStr} C! 🎰</span>`;
         } else {
-            // 일반 대박 메시지 (50,000 이상)
             html = `🎉 <span style="color:#fbbf24; font-weight:bold;">${data.name}</span> won <span style="color:#4ade80; font-weight:bold;">${amountStr} C</span>! Congrats!`;
         }
-
         tickerEl.innerHTML = html;
         tickerEl.classList.add('show');
-
-        // 6초 뒤에 메시지 숨김
-        setTimeout(() => {
-            if(tickerEl) tickerEl.classList.remove('show');
-        }, 6000);
+        setTimeout(() => { if(tickerEl) tickerEl.classList.remove('show'); }, 6000);
     }
 };
 
 // ==========================================
-// [기존 로직]
+// [메인 로직]
 // ==========================================
 
 renderAuthScreens();
@@ -210,7 +183,7 @@ window.handleSignUp = async () => {
             exp: 0,
             level: 10,
             createdAt: new Date(),
-            role: 'user',
+            role: 'user', // 기본값은 'user'
             photoURL: 'images/default-profile.png',
             items: {},
             frames: [],
@@ -240,6 +213,21 @@ window.switchView = (viewId) => {
 };
 
 window.switchTab = async (tabName) => {
+    // [보안 수정] ONLINE 탭은 레벨 0(관리자)만 접근 가능
+    if (tabName === 'online') {
+        const user = auth.currentUser;
+        if (user) {
+            // Firestore에서 최신 유저 정보 확인
+            const snap = await getDoc(doc(db, "users", user.uid));
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.role !== 'admin') {
+                    return alert("접근 권한이 없습니다. (Level 0 전용)");
+                }
+            }
+        }
+    }
+
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) {
@@ -262,12 +250,9 @@ window.switchTab = async (tabName) => {
     else if (tabName === 'profile') await renderProfile(user);
 };
 
-// [AUTH CHANGED: 밸런스 컨테이너 HTML 구조 변경]
 onAuthStateChanged(auth, (user) => {
     if (user) {
         window.switchView('lobby-view');
-        
-        // 가짜 알림 시스템 시작
         FakeTicker.start();
 
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
@@ -276,10 +261,19 @@ onAuthStateChanged(auth, (user) => {
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
             const t = window.t;
+            
+            // [UI 제어] 레벨 0(admin)이 아니면 ONLINE 버튼 숨기기
+            const navOnline = document.getElementById('nav-online');
+            if (navOnline) {
+                if (userData.role === 'admin') {
+                    navOnline.style.display = 'flex'; // 원래 스타일대로 보임
+                } else {
+                    navOnline.style.display = 'none'; // 숨김
+                }
+            }
 
             const balanceEl = document.getElementById('balance-container');
             if (balanceEl) {
-                // [수정] 밸런스바 레이아웃 변경 (Ticker 영역 추가 + 폰트 축소 클래스 적용)
                 balanceEl.innerHTML = `
                     <div class="balance-wrapper">
                         <div class="balance-label">CURRENT BALANCE</div>
