@@ -1,5 +1,5 @@
 /* =========================================
-   [공통] 폰트, 배경, 네비게이션, 버튼
+   [공통] 전체 레이아웃 (상단 고정 / 내부 스크롤)
    ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
 
@@ -11,24 +11,64 @@
     --text-main: #f8fafc;
 }
 
-body {
+body, html {
     margin: 0; padding: 0;
+    width: 100%; height: 100%;
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow-x: hidden;
+    overflow: hidden; /* [중요] 전체 화면 스크롤 막기 */
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    padding-bottom: 70px; /* 하단 탭 공간 확보 */
 }
 
-#app {
-    width: 100%;
-    min-height: 100vh;
+#app-viewport {
+    width: 100%; height: 100%;
     display: flex; flex-direction: column;
+    overflow: hidden;
 }
 
-/* 네온 버튼 (공통) */
+/* 뷰 컨테이너 (로비, 게임 등) */
+.view-container {
+    display: flex;
+    flex-direction: column; /* 위에서 아래로 배치 */
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 내부 요소가 넘쳐도 뷰 자체는 스크롤 X */
+    padding-bottom: 70px; /* 하단 네비게이션 공간 확보 */
+    box-sizing: border-box;
+}
+
+/* -------------------------------------------
+   [핵심] 상단바 고정 영역 (밸런스, 헤더 등)
+   ------------------------------------------- */
+#balance-container, 
+#game-header,
+.fixed-header {
+    flex-shrink: 0; /* 크기가 줄어들지 않음 (고정) */
+    width: 100%;
+    z-index: 100;
+    background: var(--bg-dark); /* 스크롤되는 내용 가림 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* 그림자로 구분 */
+}
+
+/* -------------------------------------------
+   [핵심] 스크롤되는 콘텐츠 영역
+   ------------------------------------------- */
+.tab-system, 
+#game-board, 
+.scroll-content {
+    flex: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto; /* 내용이 많으면 여기서만 스크롤 */
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+}
+
+/* -------------------------------------------
+   [공통] 버튼 및 UI 요소
+   ------------------------------------------- */
 .neon-btn {
     background: transparent;
     color: var(--primary);
@@ -47,30 +87,16 @@ body {
 .neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
 .neon-btn.success { color: #10b981; border-color: #10b981; box-shadow: 0 0 5px #10b981; }
 
-/* 메인 메뉴 버튼 (Easy, Normal, Hard) */
-.main-btn {
-    width: 100%; padding: 20px; margin-bottom: 10px;
-    border: none; border-radius: 12px;
-    cursor: pointer; text-align: left;
-    position: relative; overflow: hidden;
-}
-.main-btn:active { transform: scale(0.98); }
-.easy-btn { background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; }
-.normal-btn { background: linear-gradient(135deg, #8b5cf6, #5b21b6); color: white; }
-.hard-btn { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; }
-.ad-btn-style { background: linear-gradient(135deg, #10b981, #047857); color: white; text-align: center; }
-
-.btn-title { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 900; margin-bottom: 5px; }
-.btn-desc { font-size: 0.85rem; opacity: 0.8; }
-
-/* 하단 네비게이션 바 (필수) */
+/* 하단 네비게이션 바 (고정) */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; width: 100%;
+    height: 70px;
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px);
     border-top: 1px solid #334155;
     display: flex; justify-content: space-around;
-    padding: 10px 0; z-index: 100;
+    align-items: center;
+    z-index: 1000;
 }
 .nav-item {
     background: none; border: none;
