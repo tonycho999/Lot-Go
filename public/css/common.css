@@ -1,109 +1,116 @@
 /* =========================================
-   [공통] 전체 레이아웃 & 스크롤 설정
+   [공통] 전체 레이아웃 & 스크롤 설정 (FINAL FIX)
    ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
 
 :root {
     --bg-dark: #0f172a;
-    --bg-panel: #1e293b;
     --primary: #3b82f6;
     --accent: #f59e0b;
     --text-main: #f8fafc;
-    --vh: 1vh; /* 모바일 높이 대응 변수 */
+    --vh: 1vh; 
 }
 
-/* 1. 앱 전체 화면 고정 */
+/* 1. 기본 설정 */
+* { box-sizing: border-box; } /* 모든 요소 크기 계산 통일 */
+
 body, html {
     margin: 0; padding: 0;
-    width: 100%; 
-    height: 100%;
-    /* 모바일 브라우저 주소창 문제 해결을 위한 높이 설정 */
+    width: 100%; height: 100%;
+    /* 모바일 브라우저 실제 높이 대응 */
     height: calc(var(--vh, 1vh) * 100);
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow: hidden; /* 바깥쪽 스크롤 금지 */
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    overflow: hidden; /* 바깥쪽 스크롤 차단 */
+    position: fixed; /* iOS 스크롤 튕김 방지 */
 }
 
 #app-viewport {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+}
+
+/* 2. 뷰 컨테이너 구조 */
+.view-container {
     width: 100%; 
     height: 100%;
     display: flex; 
-    flex-direction: column;
+    flex-direction: column; /* 세로 정렬 필수 */
+    background: var(--bg-dark);
     overflow: hidden;
 }
 
-/* 2. 뷰 컨테이너 (Flex Column 구조) */
-.view-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* 자식 요소에서만 스크롤 허용 */
-    background: var(--bg-dark);
-    position: relative;
-}
-
-/* [로그인 화면 예외 처리] */
+/* [로그인 화면] */
 .view-container.auth-mode {
-    overflow-y: auto !important; /* 내용이 길면 전체 스크롤 */
-    justify-content: center;
-    align-items: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center; justify-content: center;
     padding: 20px;
 }
 
 /* -------------------------------------------
-   [로비 레이아웃: 고정 - 스크롤 - 고정]
+   [로비 레이아웃: Flex 분할 방식]
    ------------------------------------------- */
 
-/* [상단] 밸런스바 및 게임 헤더 (고정) */
+/* [상단] 높이 고정 (줄어들지 않음) */
 #balance-container, 
 #game-header {
-    flex-shrink: 0; /* 크기 줄어들지 않음 */
+    flex: 0 0 auto; /* 크기 고정 */
     width: 100%;
     z-index: 50;
     background: var(--bg-dark);
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* [중앙] 탭 시스템 (스크롤 영역) */
+/* [중앙] 남은 공간 모두 차지 (스크롤 발생 지점) */
 .tab-system, 
 #game-board {
-    flex: 1; /* 남은 공간 모두 차지 */
+    flex: 1 1 auto; /* 남은 공간 차지 */
+    min-height: 0; /* [중요] Flex 자식의 스크롤을 위해 필수 설정 */
+    
+    width: 100%;
     overflow-y: auto !important; /* 세로 스크롤 강제 */
     overflow-x: hidden;
-    width: 100%;
+    
     position: relative;
-    padding-bottom: 20px; /* 하단 여백 */
-    box-sizing: border-box;
-    -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
+    /* 하단바가 이제 공간을 차지하므로 패딩 불필요 */
+    padding: 0; 
+    padding-bottom: 20px; /* 미관상 여백 */
+    
+    -webkit-overflow-scrolling: touch;
 }
 
-/* 탭 내부 컨텐츠 */
+/* 탭 내용물 */
 .tab-content {
     width: 100%;
-    height: auto;
+    height: auto; /* 내용만큼 늘어남 */
     display: block;
 }
 
-/* [하단] 네비게이션바 (고정) */
+/* [하단] 높이 고정 (줄어들지 않음) */
 .bottom-nav {
-    flex-shrink: 0; /* 크기 줄어들지 않음 */
+    flex: 0 0 70px; /* 높이 70px 고정 */
     width: 100%;
-    height: 70px;
-    background: rgba(15, 23, 42, 0.98);
+    
+    /* fixed 제거하고 flex 흐름에 태움 */
+    position: relative; 
+    background: #0f172a;
     border-top: 1px solid #334155;
+    
     display: flex; 
     justify-content: space-around;
     align-items: center;
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단바 대응 */
+    
+    /* 아이폰 홈바 대응 (높이에 padding 추가) */
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(70px + env(safe-area-inset-bottom));
 }
 
 /* -------------------------------------------
-   [UI 요소] 버튼 및 입력창
+   [UI 요소]
    ------------------------------------------- */
 .neon-btn {
     background: transparent;
@@ -113,24 +120,17 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-shadow: 0 0 5px var(--primary);
-    box-shadow: 0 0 5px var(--primary);
     border-radius: 8px;
     width: 100%;
     font-size: 1rem;
+    transition: 0.2s;
 }
-.neon-btn:hover { background: var(--primary); color: #000; }
-.neon-btn:active { transform: scale(0.98); }
-
+.neon-btn:active { transform: scale(0.96); }
 .neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
 .neon-btn.secondary { color: #a855f7; border-color: #a855f7; }
 .neon-btn.success { color: #10b981; border-color: #10b981; }
 
-.text-btn {
-    background: none; border: none;
-    color: #94a3b8; margin-top: 10px; cursor: pointer; text-decoration: underline;
-}
+.text-btn { background: none; border: none; color: #94a3b8; text-decoration: underline; margin-top: 10px; }
 
 .nav-item {
     background: none; border: none;
@@ -145,8 +145,6 @@ body, html {
     width: 100%; padding: 12px;
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid #475569;
-    border-radius: 8px;
-    color: #fff; font-size: 1rem; outline: none;
-    box-sizing: border-box;
+    border-radius: 8px; color: #fff; font-size: 1rem; outline: none;
 }
 .neon-input:focus { border-color: var(--primary); }
