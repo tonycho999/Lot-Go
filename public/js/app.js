@@ -22,7 +22,7 @@ window.lotGoRtdb = rtdb;
 window.t = initLanguage();
 
 // ==========================================
-// [동기화된 가짜 알림 시스템]
+// [가짜 알림 시스템]
 // ==========================================
 const FakeTicker = {
     names: [
@@ -73,6 +73,31 @@ const FakeTicker = {
         setTimeout(() => { if(tickerEl) tickerEl.classList.remove('show'); }, 6000);
     }
 };
+
+// ==========================================
+// [일일 보너스 지급 시스템]
+// ==========================================
+async function checkDailyBonus(user) {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    
+    if (snap.exists()) {
+        const data = snap.data();
+        const lastDate = data.lastBonusDate || "";
+        const today = new Date().toDateString(); // 예: "Wed Feb 04 2026"
+
+        if (lastDate !== today) {
+            // 오늘 처음 접속
+            await updateDoc(userRef, {
+                coins: increment(1000),
+                lastBonusDate: today
+            });
+            
+            const t = window.t;
+            alert(`🎁 ${t.daily_bonus_title || "DAILY BONUS"} 🎁\n\n+1,000 ${t.coins}`);
+        }
+    }
+}
 
 // ==========================================
 // [메인 로직]
@@ -183,13 +208,14 @@ window.handleSignUp = async () => {
             exp: 0,
             level: 10,
             createdAt: new Date(),
-            role: 'user', // 기본값은 'user'
+            role: 'user', 
             photoURL: 'images/default-profile.png',
             items: {},
             frames: [],
             myReferralCode: Math.random().toString(36).substring(2, 10).toUpperCase(), 
             referredBy: referralInput,      
-            referralCount: 0                
+            referralCount: 0,
+            lastBonusDate: "" // [신규] 보너스 날짜 추적용 필드
         });
 
         if (referrerUid) {
@@ -213,11 +239,9 @@ window.switchView = (viewId) => {
 };
 
 window.switchTab = async (tabName) => {
-    // [보안 수정] ONLINE 탭은 레벨 0(관리자)만 접근 가능
     if (tabName === 'online') {
         const user = auth.currentUser;
         if (user) {
-            // Firestore에서 최신 유저 정보 확인
             const snap = await getDoc(doc(db, "users", user.uid));
             if (snap.exists()) {
                 const data = snap.data();
@@ -250,10 +274,13 @@ window.switchTab = async (tabName) => {
     else if (tabName === 'profile') await renderProfile(user);
 };
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         window.switchView('lobby-view');
         FakeTicker.start();
+        
+        // [신규] 일일 보너스 체크
+        await checkDailyBonus(user);
 
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
             if (!docSnapshot.exists()) return;
@@ -262,13 +289,12 @@ onAuthStateChanged(auth, (user) => {
             const coins = userData?.coins || 0;
             const t = window.t;
             
-            // [UI 제어] 레벨 0(admin)이 아니면 ONLINE 버튼 숨기기
             const navOnline = document.getElementById('nav-online');
             if (navOnline) {
                 if (userData.role === 'admin') {
-                    navOnline.style.display = 'flex'; // 원래 스타일대로 보임
+                    navOnline.style.display = 'flex'; 
                 } else {
-                    navOnline.style.display = 'none'; // 숨김
+                    navOnline.style.display = 'none'; 
                 }
             }
 
