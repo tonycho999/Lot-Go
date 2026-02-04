@@ -1,23 +1,20 @@
 import { doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. 게임 모드 설정 (요청하신 규칙 적용)
+// 1. 게임 모드 설정
 export const SINGLE_MODES = {
     1: { 
         name: 'EASY', pick: 2, total: 6, cost: 100, max: 1000, 
         grid: 'grid-easy', cssClass: 'easy-mode',
-        // 상금: 1~2장: 1000, 3장: 500, 4장: 200, 5장: 50, 6장: 0
         table: { 1: 1000, 2: 1000, 3: 500, 4: 200, 5: 50, 6: 0 }
     },
     2: { 
         name: 'NORMAL', pick: 4, total: 12, cost: 200, max: 40000, 
         grid: 'grid-normal', cssClass: 'normal-mode',
-        // 상금: 1~4장: 40000, 5장: 8000, 6장: 3000, 7: 1000, 8: 400, 9: 200, 10: 100, 11: 50, 12: 0
         table: { 1: 40000, 2: 40000, 3: 40000, 4: 40000, 5: 8000, 6: 3000, 7: 1000, 8: 400, 9: 200, 10: 100, 11: 50, 12: 0 }
     },
     3: { 
         name: 'HARD', pick: 6, total: 20, cost: 500, max: 10000000, 
         grid: 'grid-hard', cssClass: 'hard-mode',
-        // 상금: 1~6: 10M, 7~20: 지정값
         table: { 
             1: 10000000, 2: 10000000, 3: 10000000, 4: 10000000, 5: 10000000, 6: 10000000,
             7: 1428570, 8: 357140, 9: 119040, 10: 47610, 
@@ -30,8 +27,6 @@ export const SINGLE_MODES = {
 let gameState = { selected: [], found: [], flips: 0, mode: null, isGameOver: false, level: 1, activeDouble: false };
 let userCoins = 0; 
 let coinUnsub = null;
-
-const TickerManager = { stop: function() { } };
 
 function goBackToLobby() {
     if (coinUnsub) coinUnsub();
@@ -128,7 +123,6 @@ function updateTopBar() {
 
 function calculateCurrentPrize() {
     const { mode, flips } = gameState;
-    // table 객체에서 현재 flip 횟수에 맞는 상금을 반환 (없으면 0)
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
@@ -144,9 +138,12 @@ function renderSelectionPhase() {
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border ${gameState.mode.cssClass}">
-                <h2 class="game-title">
-                    번호 <span class="highlight">${gameState.mode.pick}</span>개를 선택하세요
-                </h2>
+                <div class="game-header-wrapper">
+                    <h2 class="game-title">
+                        번호 <span class="highlight">${gameState.mode.pick}</span>개를 선택하세요
+                    </h2>
+                </div>
+
                 <div class="card-grid ${gameState.mode.grid}" id="selection-grid"></div>
                 <div id="selection-footer" style="width:100%; margin-top:20px; z-index:1;"></div>
             </div>
@@ -184,15 +181,18 @@ export function renderPlayPhase() {
     board.innerHTML = `
         <div class="game-view-container">
             <div class="game-room-border play-mode ${gameState.mode.cssClass}">
-                <div style="text-align:center; margin-bottom:15px; z-index:1;">
-                    <div style="font-size:0.8rem; color:var(--gold-accent);">${t.game_prize || "PRIZE"}</div>
-                    <div id="table-current-prize" style="font-size:2rem; color:#fff; font-weight:bold; font-family:'Orbitron'; text-shadow: 0 0 10px var(--gold-accent);">
-                        ${gameState.mode.max.toLocaleString()}
+                <div class="game-header-wrapper">
+                    <div style="text-align:center;">
+                        <div style="font-size:0.8rem; color:var(--gold-accent);">${t.game_prize || "PRIZE"}</div>
+                        <div id="table-current-prize" style="font-size:2rem; color:#fff; font-weight:bold; font-family:'Orbitron'; text-shadow: 0 0 10px var(--gold-accent);">
+                            ${gameState.mode.max.toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="target-container">
+                        ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
                     </div>
                 </div>
-                <div class="target-container">
-                    ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
-                </div>
+
                 <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
                 <div id="play-footer" style="width:100%; margin-top:20px; z-index:1;"></div>
             </div>
@@ -245,14 +245,16 @@ async function handleGameWin(prize) {
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
     
-    let msg = (prize > 0) ? (t.big_win || "WIN!") : (t.unlucky || "FAIL");
+    // [수정된 부분] 꽝일 때 메시지 변경
+    // t.unlucky가 있으면 그것을 쓰고, 없으면 "아쉽네요.. 다음 기회에!"를 표시
+    let msg = (prize > 0) ? (t.big_win || "WIN!") : (t.unlucky || "아쉽네요.. 다음 기회에!");
     let cssClass = (prize > 0) ? "win-gold" : "win-fail";
 
     const footer = document.getElementById('play-footer');
     if (footer) {
         footer.innerHTML = `
             <div class="result-box ${cssClass}">
-                <div class="result-msg">${msg}</div>
+                <div class="result-msg" style="font-size: 1.5rem; word-break: keep-all;">${msg}</div>
                 <div class="final-prize">+ ${prize.toLocaleString()} C</div>
             </div>
             <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
