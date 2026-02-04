@@ -56,7 +56,13 @@ export async function renderProfile(user) {
             
             const role = userData.role || 'user';
             const isAdmin = role === 'admin';
-            const photoURL = userData.photoURL || 'images/default-profile.png'; 
+            
+            // [수정] 이미지가 깨지거나 via.placeholder인 경우 기본 이미지로 대체
+            let photoURL = userData.photoURL;
+            if (!photoURL || photoURL.includes('via.placeholder.com')) {
+                photoURL = 'images/default-profile.png';
+            }
+
             const items = userData.items || {}; 
             const username = userData.username || user.email.split('@')[0];
             const myCode = userData.myReferralCode || 'UNKNOWN';
