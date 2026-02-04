@@ -3,7 +3,6 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
 import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// [1] 모듈 불러오기
 import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
@@ -12,7 +11,6 @@ import { renderOnlineLobby } from './online-lobby.js';
 import { initLanguage } from './lang.js';
 import { renderCoinTab } from './coin.js';
 
-// [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -21,9 +19,92 @@ const rtdb = getDatabase(app);
 window.lotGoAuth = auth;
 window.lotGoDb = db;
 window.lotGoRtdb = rtdb;
-
-// [3] 언어 설정 및 로그인 화면 번역 실행
 window.t = initLanguage();
+
+// ==========================================
+// [신규] 동기화된 가짜 알림 시스템 (클라이언트 동기화)
+// ==========================================
+const FakeTicker = {
+    // 'user'로 시작하지 않는 멋진 아이디 목록
+    names: [
+        "DragonSlayer", "BitMaster", "LottoKing", "Lucky777", "MoonWalker",
+        "RichPuppy", "GoldMiner", "AcePlayer", "WinningSpirit", "SuperNova",
+        "CryptoWhale", "JackpotHunter", "SkyHigh", "OceanBlue", "MarsRover",
+        "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer",
+        "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
+    ],
+    
+    // 시드 기반 난수 생성기 (모든 유저가 같은 값을 얻기 위해 사용)
+    seededRandom: function(seed) {
+        var x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    },
+
+    // 메시지 생성 및 동기화 로직
+    generateMessage: function() {
+        const now = Date.now();
+        // 10초마다 변경되는 타임 블록 생성
+        const timeBlock = Math.floor(now / 10000); 
+        
+        // 이 블록에서 메시지를 보여줄지 말지 결정 (랜덤)
+        const rand = this.seededRandom(timeBlock);
+        
+        // 30% 확률로 메시지 발생 (너무 자주 뜨지 않게 조절)
+        if (rand > 0.3) return null; 
+
+        // 메시지 내용 생성 (모든 클라이언트가 동일하게 계산됨)
+        const nameIndex = Math.floor(this.seededRandom(timeBlock + 1) * this.names.length);
+        const name = this.names[nameIndex];
+        
+        // 당첨금: 50,000 ~ 5,000,000 사이 랜덤 (50,000 이상 요청 반영)
+        const amountBase = Math.floor(this.seededRandom(timeBlock + 2) * 500) + 5; 
+        const amount = amountBase * 10000; 
+
+        // 잭팟 여부: 1% 확률로 대박 메시지
+        const isJackpot = this.seededRandom(timeBlock + 3) > 0.99; 
+
+        return { name, amount, isJackpot };
+    },
+
+    start: function() {
+        // 10초마다 체크하여 메시지 표시
+        setInterval(() => {
+            const msgData = this.generateMessage();
+            if (msgData) {
+                this.show(msgData);
+            }
+        }, 10000); 
+    },
+
+    show: function(data) {
+        const tickerEl = document.getElementById('notification-msg');
+        if (!tickerEl) return;
+
+        const amountStr = data.amount.toLocaleString();
+        
+        let html = '';
+        if (data.isJackpot) {
+            // 잭팟 메시지 (별도 스타일)
+            html = `<span class="jackpot-msg">🎰 JACKPOT! [${data.name}] won ${amountStr} C! 🎰</span>`;
+        } else {
+            // 일반 대박 메시지 (50,000 이상)
+            html = `🎉 <span style="color:#fbbf24; font-weight:bold;">${data.name}</span> won <span style="color:#4ade80; font-weight:bold;">${amountStr} C</span>! Congrats!`;
+        }
+
+        tickerEl.innerHTML = html;
+        tickerEl.classList.add('show');
+
+        // 6초 뒤에 메시지 숨김
+        setTimeout(() => {
+            if(tickerEl) tickerEl.classList.remove('show');
+        }, 6000);
+    }
+};
+
+// ==========================================
+// [기존 로직]
+// ==========================================
+
 renderAuthScreens();
 
 function renderAuthScreens() {
@@ -81,12 +162,10 @@ function renderAuthScreens() {
     }
 }
 
-// [4] 로그인 처리
 window.handleLogin = async () => {
     const username = document.getElementById('login-username').value.trim();
     const pw = document.getElementById('login-pw').value;
     if (!username || !pw) return alert("Please enter username and password.");
-
     try {
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("username", "==", username));
@@ -94,13 +173,9 @@ window.handleLogin = async () => {
         if (querySnapshot.empty) return alert("Username not found.");
         const userDoc = querySnapshot.docs[0].data();
         await signInWithEmailAndPassword(auth, userDoc.email, pw);
-    } catch (e) {
-        console.error(e);
-        alert("Login failed: " + e.message);
-    }
+    } catch (e) { console.error(e); alert("Login failed: " + e.message); }
 };
 
-// [5] 회원가입 처리
 window.handleSignUp = async () => {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-username').value.trim();
@@ -136,7 +211,7 @@ window.handleSignUp = async () => {
             level: 10,
             createdAt: new Date(),
             role: 'user',
-            photoURL: 'images/default-profile.png', // 로컬 이미지 사용 (URL 에러 방지)
+            photoURL: 'images/default-profile.png',
             items: {},
             frames: [],
             myReferralCode: Math.random().toString(36).substring(2, 10).toUpperCase(), 
@@ -152,10 +227,7 @@ window.handleSignUp = async () => {
         }
         alert(`Welcome, ${username}!`);
         window.switchView('auth-view'); 
-    } catch (e) {
-        console.error(e);
-        alert("Signup failed: " + e.message);
-    }
+    } catch (e) { console.error(e); alert("Signup failed: " + e.message); }
 };
 
 window.switchView = (viewId) => {
@@ -167,22 +239,15 @@ window.switchView = (viewId) => {
     }
 };
 
-// [탭 전환 및 스크롤 관리]
 window.switchTab = async (tabName) => {
-    // 1. 모든 탭 숨김
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    
-    // 2. 선택 탭 표시 및 스크롤 초기화
     const targetTab = document.getElementById(`${tabName}-tab`);
     if (targetTab) {
         targetTab.style.display = 'block';
         const scrollContainer = document.querySelector('.tab-system');
-        if (scrollContainer) {
-            scrollContainer.scrollTop = 0; // 스크롤 맨 위로 이동
-        }
+        if (scrollContainer) scrollContainer.scrollTop = 0;
     }
 
-    // 3. 버튼 활성화 UI
     document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
     const navBtn = document.getElementById(`nav-${tabName}`);
     if (navBtn) navBtn.classList.add('active');
@@ -190,7 +255,6 @@ window.switchTab = async (tabName) => {
     const user = auth.currentUser;
     if (!user) return; 
 
-    // 4. 각 탭 렌더링
     if (tabName === 'single') renderSingleMenu();
     else if (tabName === 'online') renderOnlineLobby();
     else if (tabName === 'shop') await renderShop(user);
@@ -198,11 +262,16 @@ window.switchTab = async (tabName) => {
     else if (tabName === 'profile') await renderProfile(user);
 };
 
+// [AUTH CHANGED: 밸런스 컨테이너 HTML 구조 변경]
 onAuthStateChanged(auth, (user) => {
     if (user) {
         window.switchView('lobby-view');
+        
+        // 가짜 알림 시스템 시작
+        FakeTicker.start();
+
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
-            if (!docSnapshot.exists()) return; // 데이터 없으면 중단
+            if (!docSnapshot.exists()) return;
 
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
@@ -210,12 +279,16 @@ onAuthStateChanged(auth, (user) => {
 
             const balanceEl = document.getElementById('balance-container');
             if (balanceEl) {
+                // [수정] 밸런스바 레이아웃 변경 (Ticker 영역 추가 + 폰트 축소 클래스 적용)
                 balanceEl.innerHTML = `
-                    <div style="background:linear-gradient(to right, #1e293b, #0f172a); padding:15px; text-align:center; border-bottom:1px solid #334155;">
-                        <div style="font-size:0.8rem; color:#94a3b8; letter-spacing:1px; margin-bottom:5px;">CURRENT BALANCE</div>
-                        <div style="font-size:1.8rem; font-weight:900; color:#fff; font-family:'Orbitron', sans-serif;">
+                    <div class="balance-wrapper">
+                        <div class="balance-label">CURRENT BALANCE</div>
+                        <div class="balance-amount">
                             ${coins.toLocaleString()} <span style="font-size:0.9rem; color:#3b82f6;">${t.coins}</span>
                         </div>
+                    </div>
+                    <div class="notification-ticker">
+                        <div id="notification-msg" class="ticker-text"></div>
                     </div>
                 `;
             }
@@ -224,7 +297,6 @@ onAuthStateChanged(auth, (user) => {
             const activeProfile = document.getElementById('profile-tab');
             const activeCoin = document.getElementById('coin-tab');
 
-            // 활성화된 탭만 다시 렌더링 (불필요한 리소스 방지)
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
             if (activeProfile && activeProfile.style.display === 'block') renderProfile(user);
             if (activeCoin && activeCoin.style.display === 'block') renderCoinTab(user);
@@ -234,7 +306,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// [모바일 높이 계산]
 function setScreenSize() {
     let vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
