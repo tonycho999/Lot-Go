@@ -6,6 +6,7 @@ export const DICTIONARY = {
         cancel: "Cancel",
         close: "CLOSE",
         loading: "Loading...",
+        daily_bonus_title: "DAILY BONUS", // [추가]
         // [Auth]
         login_subtitle: "WIN BIG OR GO HOME",
         ph_username: "Username",
@@ -102,6 +103,7 @@ export const DICTIONARY = {
         cancel: "취소",
         close: "닫기",
         loading: "로딩 중...",
+        daily_bonus_title: "출석 보너스", // [추가]
         // [Auth]
         login_subtitle: "인생 한방! 승부하라!",
         ph_username: "아이디",
