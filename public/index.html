@@ -19,8 +19,7 @@
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/shop.css">
     <link rel="stylesheet" href="css/online.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="css/coin.css"> <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 </head>
@@ -52,7 +51,8 @@
         </div>
 
         <div id="signup-view" class="view-container auth-mode" style="display:none;">
-            <div class="auth-card" style="max-width:400px;"> <h2 class="game-title" style="margin-bottom: 20px;">JOIN US</h2>
+            <div class="auth-card" style="max-width:400px;"> 
+                <h2 class="game-title" style="margin-bottom: 20px;">JOIN US</h2>
                 
                 <div class="input-group">
                     <input type="email" id="signup-email" placeholder="Email Address" class="neon-input">
@@ -79,12 +79,17 @@
 
         <div id="lobby-view" class="view-container" style="display:none;">
             <div id="balance-container" style="width: 100%;"></div> 
+            
             <div class="tab-system" style="width: 100%; flex: 1; overflow-y: auto; padding-bottom: 80px;">
                 <div class="tab-content" id="single-tab" style="width: 100%;"></div>
                 <div id="online-tab" class="tab-content" style="display:none; width: 100%;"></div>
                 <div id="shop-tab" class="tab-content" style="display:none; width: 100%;"></div>
+                
+                <div id="coin-tab" class="tab-content" style="display:none; width: 100%;"></div>
+                
                 <div id="profile-tab" class="tab-content" style="display:none; width: 100%;"></div>
             </div>
+
             <nav class="bottom-nav">
                 <button id="nav-single" onclick="switchTab('single')" class="active">
                     <span class="nav-icon">🎮</span><span>SINGLE</span>
@@ -104,9 +109,9 @@
             </nav>
         </div>
 
-        <div id="game-view" class="view-container" style="display:none; justify-content: flex-start; padding-top: 20px;">
+        <div id="game-view" class="view-container" style="display:none;">
             <div id="game-header" style="width: 100%;"></div>
-            <div id="game-board" class="card-grid" style="width: 100%;"></div>
+            <div id="game-board" style="width: 100%;"></div>
         </div>
     </div>
 
