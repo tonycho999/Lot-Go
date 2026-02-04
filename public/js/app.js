@@ -10,6 +10,7 @@ import { renderProfile } from './profile.js';
 import { renderShop } from './shop.js';
 import { renderOnlineLobby } from './online-lobby.js';
 import { initLanguage } from './lang.js';
+import { renderCoinTab } from './coin.js'; // [NEW] 코인 탭 모듈 추가
 
 // [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
@@ -23,7 +24,7 @@ window.lotGoRtdb = rtdb;
 
 // [3] 언어 설정 및 로그인 화면 번역 실행
 window.t = initLanguage();
-renderAuthScreens(); // [NEW] 앱 시작하자마자 로그인 화면 번역
+renderAuthScreens();
 
 function renderAuthScreens() {
     const t = window.t;
@@ -151,7 +152,7 @@ window.handleSignUp = async () => {
             level: 10,
             createdAt: new Date(),
             role: 'user',
-            photoURL: 'https://via.placeholder.com/150',
+            photoURL: 'images/default-profile.png',
             items: {},
             frames: [],
             myReferralCode: myReferralCode, 
@@ -216,6 +217,7 @@ window.switchTab = async (tabName) => {
     if (tabName === 'single') renderSingleMenu();
     else if (tabName === 'online') renderOnlineLobby();
     else if (tabName === 'shop') await renderShop(user);
+    else if (tabName === 'coin') await renderCoinTab(user); // [NEW] 코인 탭 연결
     else if (tabName === 'profile') await renderProfile(user);
 };
 
@@ -238,10 +240,15 @@ onAuthStateChanged(auth, (user) => {
                     </div>
                 `;
             }
+            
+            // 현재 활성화된 탭이 있으면 데이터 갱신 (실시간 반영)
             const activeShop = document.getElementById('shop-tab');
             const activeProfile = document.getElementById('profile-tab');
+            const activeCoin = document.getElementById('coin-tab'); // [NEW]
+
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
             if (activeProfile && activeProfile.style.display === 'block') renderProfile(user);
+            if (activeCoin && activeCoin.style.display === 'block') renderCoinTab(user); // [NEW]
         });
     } else {
         window.switchView('auth-view');
