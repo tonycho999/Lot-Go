@@ -245,21 +245,32 @@ async function handleGameWin(prize) {
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
     
-    // [수정된 부분] 꽝일 때 메시지 변경
-    // t.unlucky가 있으면 그것을 쓰고, 없으면 "아쉽네요.. 다음 기회에!"를 표시
-    let msg = (prize > 0) ? (t.big_win || "WIN!") : (t.unlucky || "아쉽네요.. 다음 기회에!");
-    let cssClass = (prize > 0) ? "win-gold" : "win-fail";
+    // [로직 변경] 참가비(cost)보다 상금이 커야 축하 메시지 출력
+    const cost = gameState.mode.cost;
+    let msg, cssClass;
+
+    if (prize > cost) {
+        // 이득인 경우
+        msg = t.big_win || "✨ 축하합니다! 대박 당첨! ✨";
+        cssClass = "win-gold";
+    } else {
+        // 0원이거나 참가비보다 적거나 같은 경우 (손해 또는 본전)
+        msg = t.unlucky || "아쉽네요.. 다음 기회에.. 😭";
+        cssClass = "win-fail";
+    }
 
     const footer = document.getElementById('play-footer');
     if (footer) {
+        // [구조 변경] 버튼들을 result-box 안으로 넣어서 함께 중앙 정렬되도록 함
         footer.innerHTML = `
             <div class="result-box ${cssClass}">
-                <div class="result-msg" style="font-size: 1.5rem; word-break: keep-all;">${msg}</div>
-                <div class="final-prize">+ ${prize.toLocaleString()} C</div>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
-                <button class="neon-btn success" style="flex:1;" onclick="initSingleGame(${gameState.level})">${t.replay || "REPLAY"}</button>
-                <button id="end-lobby-btn" class="neon-btn primary" style="flex:1;">${t.lobby_btn || "LOBBY"}</button>
+                <div class="result-msg" style="font-size: 1.5rem; word-break: keep-all; margin-bottom: 10px;">${msg}</div>
+                <div class="final-prize" style="margin-bottom: 20px;">+ ${prize.toLocaleString()} C</div>
+                
+                <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                    <button class="neon-btn success" style="flex:1;" onclick="initSingleGame(${gameState.level})">${t.replay || "REPLAY"}</button>
+                    <button id="end-lobby-btn" class="neon-btn primary" style="flex:1;">${t.lobby_btn || "LOBBY"}</button>
+                </div>
             </div>
         `;
         document.getElementById('end-lobby-btn').onclick = goBackToLobby;
