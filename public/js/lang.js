@@ -69,6 +69,21 @@ export const DICTIONARY = {
         alert_gift_min: "Minimum transfer amount is",
         alert_gift_confirm: "Send",
         alert_gift_success: "Successfully sent"
+        lobby_coin: "COIN",
+        coin_title: "TRANSFER COIN",
+        rate_info: "※ Approx. Value: 1,000 C ≈ $1.00",
+        receiver_label: "Receiver Username",
+        amount_label: "Amount to Send",
+        min_send: "Min Send:",
+        fee_info: "Fee:",
+        xp_cost_info: "⚠️ 100 XP will be deducted per transfer.",
+        btn_send: "SEND COIN",
+        log_title: "TRANSFER LOGS",
+        log_sent: "Sent",
+        log_received: "Received",
+        alert_sent_success: "Coin sent successfully!",
+        alert_low_xp: "Not enough XP! Need 100 XP.",
+        alert_self_send: "Cannot send to yourself."
     },
     ko: {
         // [공통]
@@ -140,6 +155,21 @@ export const DICTIONARY = {
         alert_gift_min: "최소 송금 금액은",
         alert_gift_confirm: "보내시겠습니까?",
         alert_gift_success: "전송 성공!"
+        lobby_coin: "코인",
+        coin_title: "코인 보내기",
+        rate_info: "※ 가치 환산: 1,000 C ≈ $1.00 (참고용)",
+        receiver_label: "받는 사람 (아이디)",
+        amount_label: "보낼 금액",
+        min_send: "최소 송금:",
+        fee_info: "수수료:",
+        xp_cost_info: "⚠️ 송금 시 100 XP가 차감됩니다.",
+        btn_send: "코인 보내기",
+        log_title: "송금 내역",
+        log_sent: "보냄",
+        log_received: "받음",
+        alert_sent_success: "코인을 성공적으로 보냈습니다!",
+        alert_low_xp: "XP가 부족합니다! (필요: 100 XP)",
+        alert_self_send: "자신에게 보낼 수 없습니다."
     }
 };
 
