@@ -9,8 +9,8 @@ const LEVEL_TABLE = [
 ];
 
 function getCurrentLevel(exp, role) {
-    if (role === 'admin') return 0; // 운영자
-    if (exp >= LEVEL_TABLE[9].reqExp) return 1; // 만렙
+    if (role === 'admin') return 0; // 운영자 (Level 0)
+    if (exp >= LEVEL_TABLE[9].reqExp) return 1; // 만렙 (Level 1)
     for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
         if (exp >= LEVEL_TABLE[i].reqExp) return LEVEL_TABLE[i].lv;
     }
@@ -41,10 +41,16 @@ export async function renderCoinTab(user) {
         const level = getCurrentLevel(myExp, role);
         
         // [규칙]
-        // 수수료: Lv.N = N% (Lv.1 = 1%, Lv.10 = 10%)
-        // 최소 송금: 50,000 + (Lv * 5,000) (Lv.1 = 55k, Lv.10 = 100k)
+        // 수수료: Lv.N = N% (Lv.1=1%, Lv.10=10%, Admin=0%)
+        // 최소 송금: 50,000 + (Lv * 5,000) (Lv.1=55k, Lv.10=100k, Admin=1)
         let feePercent = (level === 0) ? 0 : level; 
         let minAmount = (level === 0) ? 1 : 50000 + (level * 5000);
+
+        // XP 안내 문구 조건부 표시
+        let xpWarningText = t.xp_cost_info || "⚠️ 100 XP will be deducted per transfer.";
+        if (level === 0 || level === 1) {
+            xpWarningText = "✨ No XP deduction for your level.";
+        }
 
         container.innerHTML = `
             <div class="coin-container">
@@ -68,8 +74,8 @@ export async function renderCoinTab(user) {
                         Est. Fee: <span id="coin-est-fee" style="color:#ef4444;">0</span> C
                     </div>
 
-                    <div class="xp-warning" style="color:#ef4444; text-align:center; font-size:0.8rem; margin-top:10px;">
-                        ${t.xp_cost_info || "⚠️ 100 XP will be deducted per transfer."}
+                    <div class="xp-warning" style="color:${level <= 1 ? '#10b981' : '#ef4444'}; text-align:center; font-size:0.8rem; margin-top:10px;">
+                        ${xpWarningText}
                     </div>
 
                     <button id="btn-send-coin" class="neon-btn primary" style="width:100%; margin-top:15px;">
@@ -120,15 +126,20 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
     // 최소 금액 체크
     if (amount < minAmount) return alert(`${t.alert_gift_min || "Minimum:"} ${minAmount.toLocaleString()} C`);
     
-    // XP 체크 (만렙/운영자 제외하고 XP 부족하면 송금 불가)
-    if (userData.exp < 100 && level > 1) return alert(t.alert_low_xp || "Need 100 XP to transfer.");
+    // XP 부족 체크 (레벨 2~10인 경우에만 100 XP 필요)
+    if (level > 1 && userData.exp < 100) {
+        return alert(t.alert_low_xp || "Need 100 XP to transfer.");
+    }
 
     const fee = Math.floor(amount * (feePercent / 100));
     const totalDeduct = amount + fee;
 
     if (userData.coins < totalDeduct) return alert(t.alert_no_coin || "Not enough coins.");
 
-    if (!confirm(`Send ${amount.toLocaleString()} C to ${targetName}?\n(Fee: ${fee.toLocaleString()} C, Total: ${totalDeduct.toLocaleString()} C)\n(-100 XP)`)) return;
+    let confirmMsg = `Send ${amount.toLocaleString()} C to ${targetName}?\n(Fee: ${fee.toLocaleString()} C, Total: ${totalDeduct.toLocaleString()} C)`;
+    if (level > 1) confirmMsg += `\n(-100 XP)`; // XP 차감 안내 문구 조건부 추가
+
+    if (!confirm(confirmMsg)) return;
 
     try {
         const usersRef = collection(db, "users");
@@ -154,11 +165,14 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
 
             if (sData.coins < totalDeduct) throw "Insufficient coins";
 
-            // 1. 보내는 사람 차감 (코인 + XP 100)
+            // 1. 보내는 사람 차감 (코인 + 조건부 XP)
             let updates = { coins: sData.coins - totalDeduct };
-            if (level > 1 && level !== 0) { 
+            
+            // [중요] 레벨 1(God)과 레벨 0(Admin)은 XP 차감 없음
+            if (level > 1) { 
                 updates.exp = Math.max(0, (sData.exp || 0) - 100);
             }
+            
             transaction.update(senderRef, updates);
 
             // 2. 받는 사람 증가
