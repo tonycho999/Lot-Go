@@ -19,7 +19,9 @@
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/shop.css">
     <link rel="stylesheet" href="css/online.css">
-    <link rel="stylesheet" href="css/coin.css"> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="css/coin.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 </head>
@@ -32,17 +34,14 @@
                     <img src="images/logo.png" alt="Lot-Go Logo" class="game-logo">
                     <div class="logo-glow"></div>
                 </div>
-                
                 <h1 class="main-title">LOT-GO</h1>
                 <p class="sub-title">WIN BIG OR GO HOME</p>
-
                 <div class="input-group">
                     <input type="text" id="login-username" placeholder="Username" class="neon-input">
                 </div>
                 <div class="input-group">
                     <input type="password" id="login-pw" placeholder="Password" class="neon-input">
                 </div>
-
                 <div class="auth-actions">
                     <button onclick="handleLogin()" class="neon-btn primary full-width">LOGIN</button>
                     <button onclick="switchView('signup-view')" class="neon-btn secondary full-width">CREATE ACCOUNT</button>
@@ -53,7 +52,6 @@
         <div id="signup-view" class="view-container auth-mode" style="display:none;">
             <div class="auth-card" style="max-width:400px;"> 
                 <h2 class="game-title" style="margin-bottom: 20px;">JOIN US</h2>
-                
                 <div class="input-group">
                     <input type="email" id="signup-email" placeholder="Email Address" class="neon-input">
                 </div>
@@ -69,7 +67,6 @@
                 <div class="input-group">
                     <input type="text" id="signup-referral" placeholder="Referral Code (Required)" class="neon-input">
                 </div>
-                
                 <div class="auth-actions">
                     <button onclick="handleSignUp()" class="neon-btn success full-width">SIGN UP</button>
                     <button onclick="switchView('auth-view')" class="text-btn">Back to Login</button>
@@ -78,16 +75,14 @@
         </div>
 
         <div id="lobby-view" class="view-container" style="display:none;">
-            <div id="balance-container" style="width: 100%;"></div> 
+            <div id="balance-container"></div> 
             
-            <div class="tab-system" style="width: 100%; flex: 1; overflow-y: auto; padding-bottom: 80px;">
-                <div class="tab-content" id="single-tab" style="width: 100%;"></div>
-                <div id="online-tab" class="tab-content" style="display:none; width: 100%;"></div>
-                <div id="shop-tab" class="tab-content" style="display:none; width: 100%;"></div>
-                
-                <div id="coin-tab" class="tab-content" style="display:none; width: 100%;"></div>
-                
-                <div id="profile-tab" class="tab-content" style="display:none; width: 100%;"></div>
+            <div class="tab-system">
+                <div id="single-tab" class="tab-content"></div>
+                <div id="online-tab" class="tab-content" style="display:none;"></div>
+                <div id="shop-tab" class="tab-content" style="display:none;"></div>
+                <div id="coin-tab" class="tab-content" style="display:none;"></div>
+                <div id="profile-tab" class="tab-content" style="display:none;"></div>
             </div>
 
             <nav class="bottom-nav">
@@ -110,8 +105,8 @@
         </div>
 
         <div id="game-view" class="view-container" style="display:none;">
-            <div id="game-header" style="width: 100%;"></div>
-            <div id="game-board" style="width: 100%;"></div>
+            <div id="game-header"></div>
+            <div id="game-board"></div>
         </div>
     </div>
 
