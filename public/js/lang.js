@@ -5,7 +5,6 @@ export const DICTIONARY = {
         confirm: "Confirm",
         cancel: "Cancel",
         close: "CLOSE",
-        loading: "Loading...",
         daily_bonus_title: "DAILY BONUS",
         
         // [Auth]
@@ -39,22 +38,25 @@ export const DICTIONARY = {
         single_desc_hard: "6/20 Match • 500 C",
         watch_ad: "📺 WATCH AD (+300 C)",
         ticker_welcome: "Welcome to Lot-Go! Win Big!",
-        pick_title: "PICK",
-        pick_numbers: "NUMBERS",
+        
+        // [Game Play]
+        pick_msg_1: "PICK",          // "번호"
+        pick_msg_2: "NUMBERS",       // "개를 선택하세요"
         start_game: "START GAME",
         current_prize: "MAX PRIZE",
         game_prize: "CURRENT PRIZE",
         game_over: "GAME OVER!",
-        big_win: "✨ BIG WIN!",
-        safe: "SAFE!",
-        almost: "ALMOST!",
-        unlucky: "Better luck next time!",
+        
+        // [Game Result]
+        win_gold_msg: "✨ CONGRATS! BIG WIN! ✨",
+        win_fail_msg: "Better luck next time.. 😭",
+        insurance_msg: "🛡️ Insurance saved your coins!",
         replay: "🔄 REPLAY",
         lobby_btn: "🏠 LOBBY",
         back_lobby: "BACK TO LOBBY",
         my_coins: "MY COINS",
         
-        // [Shop & Items]
+        // [Shop]
         shop_title: "ITEM SHOP",
         buy_btn: "BUY",
         owned: "Owned",
@@ -62,27 +64,22 @@ export const DICTIONARY = {
         buy_confirm: "Buy this item for",
         buy_success: "Purchase successful!",
         already_owned: "Already owned.",
-        daily_limit: "Daily Limit Reached (1/1)",
+        daily_limit: "Daily Limit (1/1)",
+        shop_limit_reached: "Limit Reached",
 
-        // Item Names & Descriptions
+        // Item Names & Desc
         item_skin_gold_name: "Gold Ball Skin",
         item_skin_gold_desc: "Bling bling! Golden texture.",
-        
         item_double_name: "x2 Double Ticket",
         item_double_desc: "Doubles the prize (Auto-use on Win).",
-        
         item_spyglass_name: "Spyglass",
         item_spyglass_desc: "Reveals 1 winning number at start.",
-        
         item_insurance_name: "Insurance",
         item_insurance_desc: "Recover 50% cost if you lose.",
-        
         item_xp_boost_name: "XP Booster (1h)",
         item_xp_boost_desc: "x2 XP gain for 1 hour (Activates on buy).",
-        
         item_free_pass_name: "Free Pass",
         item_free_pass_desc: "Play for free (1 per day).",
-        
         item_discount_50_name: "50% Discount",
         item_discount_50_desc: "50% off entry fee.",
 
@@ -90,16 +87,24 @@ export const DICTIONARY = {
         use_items: "USE ITEMS",
         active_booster: "🔥 XP BOOST ACTIVE!",
         spyglass_msg: "🕵️ Spyglass revealed: ",
-        insurance_msg: "🛡️ Insurance saved your coins!",
+        no_items: "No items available.",
 
         // [Profile]
         level_guide_btn: "❓ LEVEL GUIDE",
         my_items: "MY ITEMS",
-        no_items: "No items owned.",
+        no_items_owned: "No items owned.",
         logout: "LOGOUT",
         my_referral: "MY REFERRAL CODE",
         copied: "Copied!",
+        profile_refs: "Refs",
+        profile_fee: "Fee",
+        profile_frames: "PROFILE FRAMES",
         
+        // [Ticker]
+        ticker_jackpot: "🎰 JACKPOT!",
+        ticker_won: "won",
+        ticker_congrats: "Congrats!",
+
         // [Popup & Alerts]
         guide_title: "LEVEL & XP SYSTEM",
         guide_subtitle_xp: "📈 HOW TO GET XP",
@@ -109,8 +114,6 @@ export const DICTIONARY = {
         guide_desc: "* Max Level (Lv 1) users do not gain XP.",
         alert_no_data: "User data not found.",
         alert_no_coin: "Not enough coins!",
-        alert_use_double: "Use 'x2 Double Prize' item?",
-        alert_ad_ready: "Ad function is preparing.",
         alert_gift_min: "Minimum transfer amount is",
         alert_gift_confirm: "Send",
         alert_gift_success: "Successfully sent",
@@ -137,7 +140,6 @@ export const DICTIONARY = {
         confirm: "확인",
         cancel: "취소",
         close: "닫기",
-        loading: "로딩 중...",
         daily_bonus_title: "출석 보너스",
         
         // [Auth]
@@ -171,22 +173,25 @@ export const DICTIONARY = {
         single_desc_hard: "6/20 매치 • 500 C",
         watch_ad: "📺 광고 보고 코인 받기 (+300 C)",
         ticker_welcome: "Lot-Go에 오신 것을 환영합니다! 대박 터지세요!",
-        pick_title: "번호를",
-        pick_numbers: "개 선택하세요",
+        
+        // [게임 플레이]
+        pick_msg_1: "번호",
+        pick_msg_2: "개를 선택하세요",
         start_game: "게임 시작",
         current_prize: "최대 당첨금",
         game_prize: "현재 당첨금",
         game_over: "게임 오버!",
-        big_win: "✨ 대박 당첨!",
-        safe: "본전 회수!",
-        almost: "아까워요!",
-        unlucky: "아쉽네요.. 다음 기회에.. 😭",
+        
+        // [게임 결과]
+        win_gold_msg: "✨ 축하합니다! 대박 당첨! ✨",
+        win_fail_msg: "아쉽네요.. 다음 기회에.. 😭",
+        insurance_msg: "🛡️ 보험권으로 코인을 일부 복구했습니다!",
         replay: "🔄 다시 하기",
         lobby_btn: "🏠 로비로",
         back_lobby: "로비로 돌아가기",
         my_coins: "내 코인",
         
-        // [상점 & 아이템]
+        // [상점]
         shop_title: "아이템 상점",
         buy_btn: "구매하기",
         owned: "보유량",
@@ -195,26 +200,21 @@ export const DICTIONARY = {
         buy_success: "구매 성공!",
         already_owned: "이미 보유 중입니다.",
         daily_limit: "일일 구매 제한 (1/1)",
+        shop_limit_reached: "구매 제한됨",
 
         // 아이템 이름 및 설명
         item_skin_gold_name: "나만의 공 (골드)",
         item_skin_gold_desc: "블링블링! 황금색 공 스킨입니다.",
-        
         item_double_name: "상금 더블 티켓",
         item_double_desc: "당첨 시 상금을 2배로 받습니다.",
-        
         item_spyglass_name: "투시경",
         item_spyglass_desc: "게임 시작 시 정답 공 1개를 미리 봅니다.",
-        
         item_insurance_name: "보험권",
         item_insurance_desc: "꽝일 경우 참가비의 50%를 돌려받습니다.",
-        
         item_xp_boost_name: "XP 부스터 (1시간)",
         item_xp_boost_desc: "1시간 동안 경험치 2배 (구매 즉시 발동).",
-        
         item_free_pass_name: "무료 입장권",
         item_free_pass_desc: "참가비 무료 (매일 1회 구매 가능).",
-        
         item_discount_50_name: "50% 할인권",
         item_discount_50_desc: "참가비를 50% 할인받습니다.",
 
@@ -222,17 +222,25 @@ export const DICTIONARY = {
         use_items: "아이템 사용 설정",
         active_booster: "🔥 XP 부스터 적용 중!",
         spyglass_msg: "🕵️ 투시경이 번호를 찾았습니다: ",
-        insurance_msg: "🛡️ 보험권으로 코인을 일부 복구했습니다!",
+        no_items: "사용 가능한 아이템이 없습니다.",
 
         // [프로필]
         level_guide_btn: "❓ 레벨 가이드",
         my_items: "내 아이템",
-        no_items: "보유한 아이템이 없습니다.",
+        no_items_owned: "보유한 아이템이 없습니다.",
         logout: "로그아웃",
         my_referral: "내 추천인 코드",
         copied: "복사됨!",
+        profile_refs: "초대",
+        profile_fee: "수수료",
+        profile_frames: "프로필 프레임",
         
-        // [팝업 & 알림]
+        // [Ticker]
+        ticker_jackpot: "🎰 잭팟!",
+        ticker_won: "님이",
+        ticker_congrats: "획득! 축하합니다!",
+        
+        // [Popup & Alerts]
         guide_title: "레벨 및 XP 시스템",
         guide_subtitle_xp: "📈 경험치 획득 방법",
         guide_subtitle_benefit: "🏆 레벨별 혜택",
@@ -241,8 +249,6 @@ export const DICTIONARY = {
         guide_desc: "* 만렙(Lv 1)은 경험치가 오르지 않습니다.",
         alert_no_data: "유저 정보를 찾을 수 없습니다.",
         alert_no_coin: "코인이 부족합니다!",
-        alert_use_double: "'x2배 당첨' 아이템을 사용하시겠습니까?",
-        alert_ad_ready: "광고 기능 준비 중입니다.",
         alert_gift_min: "최소 송금 금액은",
         alert_gift_confirm: "보내시겠습니까?",
         alert_gift_success: "전송 성공!",
