@@ -9,23 +9,29 @@
     --primary: #3b82f6;
     --accent: #f59e0b;
     --text-main: #f8fafc;
+    /* 모바일 브라우저 툴바 제외 실제 높이 대응 */
+    --vh: 1vh; 
 }
 
-/* 1. 앱 전체 화면 고정 (바깥 스크롤 막기) */
+/* 1. 앱 전체 화면 고정 */
 body, html {
     margin: 0; padding: 0;
-    width: 100%; height: 100%;
+    width: 100%; 
+    height: 100%; 
+    height: calc(var(--vh, 1vh) * 100);
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow: hidden; /* [중요] 전체 화면 스크롤 잠금 */
+    overflow: hidden; /* 바깥 스크롤 금지 */
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
 #app-viewport {
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column;
+    width: 100%; 
+    height: 100%;
+    display: flex; 
+    flex-direction: column;
     overflow: hidden;
 }
 
@@ -34,70 +40,70 @@ body, html {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%; /* 화면 꽉 채움 */
-    overflow: hidden; /* 내부 요소가 넘쳐도 뷰 자체는 늘어나지 않음 */
+    height: 100%;
+    overflow: hidden;
     background: var(--bg-dark);
-    position: relative; /* 자식 absolute 배치 기준 */
+    position: relative;
 }
 
-/* [예외] 로그인 화면은 내용이 길면 전체 스크롤 허용 */
+/* [예외] 로그인 화면 스크롤 설정 */
 .view-container.auth-mode {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    display: flex;
+    align-items: center;
     justify-content: center;
     padding: 20px;
     box-sizing: border-box;
-}
-@media (max-height: 700px) {
-    .view-container.auth-mode { justify-content: flex-start; }
 }
 
 /* -------------------------------------------
    [로비/게임 레이아웃] 상단 고정 - 중간 스크롤 - 하단 고정
    ------------------------------------------- */
 
-/* 상단 고정 영역 (내 코인, 헤더) */
+/* 상단 고정 영역 */
 #balance-container, 
 #game-header {
-    flex-shrink: 0; /* 크기 고정 (줄어들지 않음) */
+    flex-shrink: 0; 
     width: 100%;
-    z-index: 50;
+    z-index: 100;
     background: var(--bg-dark);
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* [핵심] 중간 스크롤 영역 (탭 내용, 게임 보드) */
-/* Online, Shop, Coin, Profile 탭이 모두 여기 포함됩니다 */
+/* [핵심] 중앙 스크롤 영역 */
 .tab-system, 
 #game-board {
-    flex: 1; /* 남은 공간 모두 차지 */
-    overflow-y: auto; /* [중요] 내용이 넘치면 스크롤 */
-    overflow-x: hidden; /* 가로 스크롤 방지 */
+    flex: 1; /* 가변 높이 */
+    overflow-y: auto !important;
+    overflow-x: hidden;
     width: 100%;
-    padding-bottom: 100px; /* 하단 네비게이션 가림 방지 여백 */
+    /* 하단 네비게이션 가림 방지 패딩 증가 */
+    padding-bottom: 90px; 
     box-sizing: border-box;
-    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+    -webkit-overflow-scrolling: touch;
 }
 
-/* 각 탭별 컨텐츠 컨테이너 스타일 보정 */
-#online-tab, #shop-tab, #coin-tab, #profile-tab {
+/* 개별 탭 컨텐츠 보정 */
+.tab-content {
     width: 100%;
-    min-height: 100%; /* 내용이 적어도 꽉 차게 */
-    padding: 10px;
-    box-sizing: border-box;
+    height: auto; /* 내용만큼 늘어나야 스크롤 생김 */
+    min-height: 100%;
+    display: block; /* Flex 충돌 방지 */
 }
 
-/* 하단 네비게이션 (바닥 고정) */
+/* 하단 네비게이션 (고정) */
 .bottom-nav {
-    position: absolute; /* 뷰 컨테이너 기준 바닥 고정 */
+    position: fixed; /* absolute보다 fixed가 스크롤 간섭이 적음 */
     bottom: 0; left: 0; width: 100%;
     height: 70px;
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(15, 23, 42, 0.98); /* 배경 투명도 낮춤 */
     backdrop-filter: blur(10px);
     border-top: 1px solid #334155;
-    display: flex; justify-content: space-around;
+    display: flex; 
+    justify-content: space-around;
     align-items: center;
-    z-index: 100;
+    z-index: 1000;
     padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -112,17 +118,32 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s ease;
     text-shadow: 0 0 5px var(--primary);
     box-shadow: 0 0 5px var(--primary);
     border-radius: 8px;
     width: 100%;
     font-size: 1rem;
+    text-transform: uppercase;
 }
-.neon-btn:hover { background: var(--primary); color: #000; }
+.neon-btn:hover { 
+    background: var(--primary); 
+    color: #000;
+    box-shadow: 0 0 15px var(--primary);
+}
+.neon-btn:active { transform: scale(0.98); }
+
 .neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
 .neon-btn.secondary { color: #a855f7; border-color: #a855f7; }
-.neon-btn.success { color: #10b981; border-color: #10b981; box-shadow: 0 0 5px #10b981; }
+.neon-btn.success { color: #10b981; border-color: #10b981; }
+
+/* 텍스트용 버튼 (회원가입/로그인 전환용) */
+.text-btn {
+    background: none; border: none;
+    color: #94a3b8; font-size: 0.9rem;
+    text-decoration: underline;
+    cursor: pointer; margin-top: 10px;
+}
 
 .nav-item {
     background: none; border: none;
@@ -130,14 +151,15 @@ body, html {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     cursor: pointer; flex: 1;
     padding: 5px 0;
+    transition: 0.2s;
 }
 .nav-item.active { color: var(--accent); }
 .nav-icon { font-size: 1.5rem; margin-bottom: 2px; }
 
 .neon-input {
     width: 100%;
-    padding: 12px;
-    background: rgba(30, 41, 59, 0.5);
+    padding: 12px 15px;
+    background: rgba(30, 41, 59, 0.8);
     border: 1px solid #475569;
     border-radius: 8px;
     color: #fff;
@@ -145,8 +167,10 @@ body, html {
     font-size: 1rem;
     outline: none;
     box-sizing: border-box;
+    transition: 0.2s;
 }
 .neon-input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    background: rgba(30, 41, 59, 1);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
