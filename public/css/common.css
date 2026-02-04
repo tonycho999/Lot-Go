@@ -1,5 +1,5 @@
 /* =========================================
-   [공통] 전체 레이아웃 & 스크롤 설정
+   [공통] 전체 레이아웃 & 스크롤 설정 (Fixed)
    ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
 
@@ -26,17 +26,18 @@ body, html {
     position: fixed; /* iOS 튕김 방지 */
 }
 
-/* 2. 최상위 컨테이너 (Flex 세로 정렬) */
+/* 2. 최상위 컨테이너 */
 #app-viewport, 
 .view-container {
     width: 100%; 
     height: 100%;
     display: flex; 
-    flex-direction: column; /* 위에서 아래로 쌓기 */
-    overflow: hidden;
+    flex-direction: column; /* 세로 정렬 */
+    overflow: hidden; /* 자식이 넘치면 숨김 (자식 내부에서 스크롤) */
     position: relative;
 }
 
+/* 로그인 화면은 예외적으로 전체 스크롤 */
 .view-container.auth-mode {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -45,13 +46,13 @@ body, html {
 }
 
 /* -------------------------------------------
-   [로비 레이아웃 핵심]
+   [로비 레이아웃 핵심: Header - Content - Footer]
    ------------------------------------------- */
 
-/* [상단] 높이 고정 (줄어들지 않음) */
+/* [1. 상단] 높이 고정 */
 #balance-container, 
 #game-header {
-    flex: 0 0 auto; /* 크기 고정 */
+    flex: 0 0 auto; /* 줄어들지 않음 */
     width: 100%;
     z-index: 50;
     background: var(--bg-dark);
@@ -59,24 +60,23 @@ body, html {
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* [중앙] 스크롤 영역 
-   핵심: flex: 1을 줘서 남은 공간을 다 차지하게 함
-*/
+/* [2. 중앙] 스크롤 영역 (여기가 핵심!) */
 .tab-system, 
 #game-board {
-    flex: 1; /* 남은 공간 모두 차지 */
-    overflow-y: auto !important; /* 세로 스크롤 허용 */
-    overflow-x: hidden;
+    /* [매우 중요] flex-basis를 0으로 설정해야 부모 높이에 맞춰짐 */
+    flex: 1 1 0px; 
     
     width: 100%;
+    height: 100%; /* 부모의 남은 공간을 꽉 채움 */
+    
+    overflow-y: scroll !important; /* 스크롤 강제 */
+    overflow-x: hidden;
+    
     position: relative;
+    padding: 0;
     
-    /* [중요] 내용이 하단바에 가려지지 않게 여백 추가 */
-    padding-bottom: 120px !important; 
-    
-    /* [중요] 높이 강제 지정 금지 */
-    height: auto; 
-    min-height: 0; 
+    /* [중요] 하단바에 내용이 가려지지 않도록 넉넉한 여백 추가 */
+    padding-bottom: 150px !important; 
     
     -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
 }
@@ -84,16 +84,15 @@ body, html {
 /* 탭 내용물 */
 .tab-content {
     width: 100%;
-    /* 내용만큼 늘어나도록 설정 */
-    height: auto !important; 
+    height: auto; /* 내용만큼 늘어남 */
     display: block;
 }
 
-/* [하단] 높이 고정 (줄어들지 않음) */
+/* [3. 하단] 네비게이션바 (고정) */
 .bottom-nav {
-    flex: 0 0 70px; /* 높이 70px 고정 */
+    flex: 0 0 70px; /* 높이 고정 */
     width: 100%;
-    position: relative; /* fixed 아님! flex 흐름 따름 */
+    position: relative; /* fixed 아님! flex 흐름에 태움 */
     background: #0f172a;
     border-top: 1px solid #334155;
     
@@ -108,7 +107,7 @@ body, html {
 }
 
 /* -------------------------------------------
-   [기타 스타일]
+   [UI 디자인 및 애니메이션]
    ------------------------------------------- */
 .balance-wrapper {
     background: linear-gradient(to right, #1e293b, #0f172a);
