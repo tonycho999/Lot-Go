@@ -1,0 +1,93 @@
+/* 코인 탭 전체 레이아웃 */
+.coin-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #fff;
+}
+
+.coin-title {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    color: #fbbf24;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+/* 환율 정보 박스 */
+.rate-info-box {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    background: rgba(0,0,0,0.3);
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px dashed #475569;
+}
+
+/* 송금 박스 */
+.transfer-box {
+    background: #1e293b;
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.transfer-box label {
+    display: block;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.rule-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 10px;
+    padding: 10px;
+    background: #0f172a;
+    border-radius: 8px;
+}
+.rule-info strong { color: #fbbf24; }
+
+.xp-warning {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* 로그 리스트 */
+.log-container {
+    margin-top: 30px;
+}
+
+.logs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.log-item {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+}
+
+.log-info { display: flex; flex-direction: column; gap: 2px; }
+.log-type { font-weight: bold; font-size: 0.8rem; }
+.log-user { font-size: 0.9rem; color: #fff; }
+.log-date { font-size: 0.7rem; color: #64748b; }
+
+.log-amount { font-family: 'Orbitron'; font-weight: bold; font-size: 1.1rem; }
+.log-sent { color: #ef4444; }     /* 보낸 돈: 빨강 */
+.log-received { color: #10b981; } /* 받은 돈: 초록 */
