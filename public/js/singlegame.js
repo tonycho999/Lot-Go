@@ -1,27 +1,29 @@
 import { doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. 게임 모드 설정
+// 1. 게임 모드 설정 (요청하신 규칙 적용)
 export const SINGLE_MODES = {
     1: { 
-        name: 'EASY', pick: 2, total: 5, cost: 100, max: 500, grid: 'grid-easy',
-        prizes: [500, 250, 50],
-        cssClass: 'easy-mode' 
+        name: 'EASY', pick: 2, total: 6, cost: 100, max: 1000, 
+        grid: 'grid-easy', cssClass: 'easy-mode',
+        // 상금: 1~2장: 1000, 3장: 500, 4장: 200, 5장: 50, 6장: 0
+        table: { 1: 1000, 2: 1000, 3: 500, 4: 200, 5: 50, 6: 0 }
     },
     2: { 
-        name: 'NORMAL', pick: 4, total: 10, cost: 200, max: 10000, grid: 'grid-normal', 
-        table: { 4: 10000, 5: 2000, 6: 666, 7: 285, 8: 142, 9: 79, 10: 0 },
-        prizes: [10000, 2000, 666, 285],
-        cssClass: 'normal-mode'
+        name: 'NORMAL', pick: 4, total: 12, cost: 200, max: 40000, 
+        grid: 'grid-normal', cssClass: 'normal-mode',
+        // 상금: 1~4장: 40000, 5장: 8000, 6장: 3000, 7: 1000, 8: 400, 9: 200, 10: 100, 11: 50, 12: 0
+        table: { 1: 40000, 2: 40000, 3: 40000, 4: 40000, 5: 8000, 6: 3000, 7: 1000, 8: 400, 9: 200, 10: 100, 11: 50, 12: 0 }
     },
     3: { 
-        name: 'HARD', pick: 6, total: 20, cost: 500, max: 10000000, grid: 'grid-hard', 
+        name: 'HARD', pick: 6, total: 20, cost: 500, max: 10000000, 
+        grid: 'grid-hard', cssClass: 'hard-mode',
+        // 상금: 1~6: 10M, 7~20: 지정값
         table: { 
-            6: 10000000, 7: 1428570, 8: 357140, 9: 119040, 10: 47610, 
+            1: 10000000, 2: 10000000, 3: 10000000, 4: 10000000, 5: 10000000, 6: 10000000,
+            7: 1428570, 8: 357140, 9: 119040, 10: 47610, 
             11: 21640, 12: 10820, 13: 5820, 14: 3330, 15: 1990, 
             16: 1249, 17: 808, 18: 539, 19: 369, 20: 0 
-        },
-        prizes: [10000000, 1428570, 357140, 119040, 47610],
-        cssClass: 'hard-mode'
+        }
     }
 };
 
@@ -54,15 +56,15 @@ export async function renderSingleMenu() {
                 <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
                 <button class="main-btn easy-btn" onclick="initSingleGame(1)">
                     <div class="btn-title">${t.single_menu_easy || "EASY"}</div>
-                    <div class="btn-desc">${t.single_desc_easy || "2/5 Match"}</div>
+                    <div class="btn-desc">2/6 Match • 100 C</div>
                 </button>
                 <button class="main-btn normal-btn" onclick="initSingleGame(2)">
                     <div class="btn-title">${t.single_menu_normal || "NORMAL"}</div>
-                    <div class="btn-desc">${t.single_desc_normal || "4/10 Match"}</div>
+                    <div class="btn-desc">4/12 Match • 200 C</div>
                 </button>
                 <button class="main-btn hard-btn" onclick="initSingleGame(3)">
                     <div class="btn-title">${t.single_menu_hard || "HARD"}</div>
-                    <div class="btn-desc">${t.single_desc_hard || "6/20 Match"}</div>
+                    <div class="btn-desc">6/20 Match • 500 C</div>
                 </button>
             </div>
         </div>`;
@@ -104,7 +106,6 @@ function updateTopBar() {
     const topBar = document.getElementById('game-top-bar');
     if (!topBar) return;
     const t = window.t || {};
-    
     let prizeValue = gameState.mode.max.toLocaleString();
 
     topBar.innerHTML = `
@@ -122,18 +123,12 @@ function updateTopBar() {
             <div class="highlight" style="font-size:1.5rem; color:#fff; text-shadow: 0 0 10px var(--gold-accent);">${prizeValue}</div>
         </div>
     `;
-    
     document.getElementById('back-to-lobby-btn').onclick = goBackToLobby;
 }
 
 function calculateCurrentPrize() {
-    const { mode, flips, level } = gameState;
-    if (level === 1) { 
-        if (flips <= 2) return 500;
-        if (flips === 3) return 250;
-        if (flips === 4) return 50;
-        if (flips === 5) return 0;
-    }
+    const { mode, flips } = gameState;
+    // table 객체에서 현재 flip 횟수에 맞는 상금을 반환 (없으면 0)
     return mode.table && mode.table[flips] !== undefined ? mode.table[flips] : 0;
 }
 
@@ -142,9 +137,7 @@ function renderSelectionPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
     
-    // [중요] 기존 레이아웃 방해 클래스 제거
     board.className = ''; 
-    
     header.innerHTML = `<div id="game-top-bar" class="game-top-bar"></div>`;
     updateTopBar();
 
@@ -186,7 +179,6 @@ function renderStartButton() {
 export function renderPlayPhase() {
     const board = document.getElementById('game-board');
     const t = window.t || {};
-
     board.className = ''; 
 
     board.innerHTML = `
@@ -198,11 +190,9 @@ export function renderPlayPhase() {
                         ${gameState.mode.max.toLocaleString()}
                     </div>
                 </div>
-
                 <div class="target-container">
                     ${gameState.selected.map(num => `<div id="target-${num}" class="target-ball">${num}</div>`).join('')}
                 </div>
-
                 <div class="card-grid ${gameState.mode.grid}" id="play-grid"></div>
                 <div id="play-footer" style="width:100%; margin-top:20px; z-index:1;"></div>
             </div>
