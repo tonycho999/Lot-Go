@@ -204,3 +204,53 @@
     .game-title { font-size: 1.2rem; }
     .target-ball { width: 30px; height: 30px; font-size: 0.8rem; }
 }
+/* 결과 박스 (화면 정중앙 팝업 스타일) */
+.result-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* 정확한 중앙 정렬 */
+    
+    text-align: center; 
+    padding: 30px; 
+    border-radius: 20px;
+    width: 90%; 
+    max-width: 400px;
+    z-index: 100; /* 공들보다 위에 뜨게 */
+    
+    background: rgba(15, 23, 42, 0.95); /* 배경 불투명도 높임 */
+    border: 3px solid var(--gold-accent);
+    box-shadow: 0 0 50px rgba(0,0,0,0.8); /* 그림자 진하게 */
+    backdrop-filter: blur(10px);
+    
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 팝업 효과 */
+}
+
+/* 승리/패배 스타일 */
+.win-gold { 
+    box-shadow: 0 0 60px rgba(212, 175, 55, 0.4); 
+    border-color: var(--gold-accent); 
+}
+.win-fail { 
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.3); 
+    border-color: #ef4444; 
+}
+
+.result-msg { 
+    font-size: 1.8rem; 
+    font-weight: 900; 
+    color: #fff; 
+    margin-bottom: 10px; 
+}
+.final-prize { 
+    font-size: 2rem; 
+    color: #fde68a; 
+    font-weight: bold; 
+    font-family: 'Orbitron';
+    text-shadow: 0 0 10px rgba(253, 230, 138, 0.5);
+}
+
+@keyframes popIn { 
+    from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+}
