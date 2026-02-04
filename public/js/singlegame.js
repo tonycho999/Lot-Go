@@ -44,10 +44,10 @@ export async function renderSingleMenu() {
             <div class="menu-list" style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 400px; padding: 20px;">
                 <div class="ticker-container" style="background:black; border-top:2px solid #d4af37; border-bottom:2px solid #d4af37; padding:5px; margin-bottom:10px;">
                     <div id="ticker-bar" style="color:#d4af37; font-family:'Orbitron'; text-align:center;">
-                        ${t.ticker_welcome || "Welcome to Lot-Go!"}
+                        ${t.ticker_welcome || "Welcome to Lot-Go! Win Big!"}
                     </div>
                 </div>
-                <button id="ad-btn" class="main-btn ad-btn-style" onclick="handleWatchAd()">${t.watch_ad || "📺 WATCH AD (+300 C)"}</button>
+                
                 <div class="divider" style="width:100%; border-bottom:1px solid rgba(255,255,255,0.1); margin:10px 0;"></div>
                 <button class="main-btn easy-btn" onclick="initSingleGame(1)">
                     <div class="btn-title">${t.single_menu_easy || "EASY"}</div>
@@ -245,23 +245,19 @@ async function handleGameWin(prize) {
         await updateDoc(userDocRef, { coins: increment(prize) });
     }
     
-    // [로직 변경] 참가비(cost)보다 상금이 커야 축하 메시지 출력
     const cost = gameState.mode.cost;
     let msg, cssClass;
 
     if (prize > cost) {
-        // 이득인 경우
-        msg = t.big_win || "✨ 축하합니다! 대박 당첨! ✨";
+        msg = "✨ 축하합니다! 대박 당첨! ✨";
         cssClass = "win-gold";
     } else {
-        // 0원이거나 참가비보다 적거나 같은 경우 (손해 또는 본전)
-        msg = t.unlucky || "아쉽네요.. 다음 기회에.. 😭";
+        msg = "아쉽네요.. 다음 기회에.. 😭";
         cssClass = "win-fail";
     }
 
     const footer = document.getElementById('play-footer');
     if (footer) {
-        // [구조 변경] 버튼들을 result-box 안으로 넣어서 함께 중앙 정렬되도록 함
         footer.innerHTML = `
             <div class="result-box ${cssClass}">
                 <div class="result-msg" style="font-size: 1.5rem; word-break: keep-all; margin-bottom: 10px;">${msg}</div>
@@ -278,4 +274,3 @@ async function handleGameWin(prize) {
 }
 
 window.initSingleGame = initSingleGame;
-window.handleWatchAd = () => alert("Ad Coming Soon");
