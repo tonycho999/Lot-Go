@@ -26,10 +26,10 @@ window.t = initLanguage();
 // ==========================================
 const FakeTicker = {
     names: [
-        "DragonSlayer", "BitMaster", "LottoKing", "Lucky777", "MoonWalker",
-        "RichPuppy", "GoldMiner", "AcePlayer", "WinningSpirit", "SuperNova",
-        "CryptoWhale", "JackpotHunter", "SkyHigh", "OceanBlue", "MarsRover",
-        "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer",
+        "DragonSlayer", "BitMaster", "LottoKing", "Lucky777", "MoonWalker", "abc", "rkwk09991", "sksmsi91", "tkfkdgo01", "love01029222",
+        "RichPuppy", "GoldMiner", "AcePlayer", "WinningSpirit", "SuperNova", "fhlas", "dkekeddd01177", "qwer01919222", "Asdf03331",
+        "CryptoWhale", "JackpotHunter", "SkyHigh", "OceanBlue", "MarsRover", "nice9394812", "gkekekdccc01995",
+        "NeonTiger", "CyberPunk", "NightOwl", "MorningStar", "SpeedRacer", "abc12313211",
         "StarDust", "GalaxyHero", "CosmicRay", "SolarFlare", "Nebula"
     ],
     seededRandom: function(seed) {
