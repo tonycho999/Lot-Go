@@ -3,15 +3,22 @@
    ========================================= */
 
 .profile-container {
-    padding: 30px 20px;
+    /* [중요] 스크롤을 위해 높이를 내용에 맞춤 */
+    height: auto !important;
+    min-height: 100%;
+    
     width: 100%; 
     max-width: 500px;
     margin: 0 auto;
+    padding: 30px 20px;
+    padding-bottom: 50px; /* 하단 여백 추가 */
+    
     color: #e2e8f0;
     animation: fadeInUp 0.5s ease-out;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
 }
 
 /* 프로필 헤더 */
