@@ -3,6 +3,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
 import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, getDocs, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// [1] 모듈 불러오기
 import { firebaseConfig } from './firebase-config.js';
 import { renderSingleMenu } from './singlegame.js';
 import { renderProfile } from './profile.js';
@@ -11,6 +12,7 @@ import { renderOnlineLobby } from './online-lobby.js';
 import { initLanguage } from './lang.js';
 import { renderCoinTab } from './coin.js';
 
+// [2] Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -20,6 +22,7 @@ window.lotGoAuth = auth;
 window.lotGoDb = db;
 window.lotGoRtdb = rtdb;
 
+// [3] 언어 설정 및 로그인 화면 번역 실행
 window.t = initLanguage();
 renderAuthScreens();
 
@@ -78,6 +81,7 @@ function renderAuthScreens() {
     }
 }
 
+// [4] 로그인 처리
 window.handleLogin = async () => {
     const username = document.getElementById('login-username').value.trim();
     const pw = document.getElementById('login-pw').value;
@@ -96,6 +100,7 @@ window.handleLogin = async () => {
     }
 };
 
+// [5] 회원가입 처리
 window.handleSignUp = async () => {
     const email = document.getElementById('signup-email').value.trim();
     const username = document.getElementById('signup-username').value.trim();
@@ -131,7 +136,7 @@ window.handleSignUp = async () => {
             level: 10,
             createdAt: new Date(),
             role: 'user',
-            photoURL: 'images/default-profile.png',
+            photoURL: 'images/default-profile.png', // 로컬 이미지 사용 (URL 에러 방지)
             items: {},
             frames: [],
             myReferralCode: Math.random().toString(36).substring(2, 10).toUpperCase(), 
@@ -172,7 +177,9 @@ window.switchTab = async (tabName) => {
     if (targetTab) {
         targetTab.style.display = 'block';
         const scrollContainer = document.querySelector('.tab-system');
-        if (scrollContainer) scrollContainer.scrollTop = 0;
+        if (scrollContainer) {
+            scrollContainer.scrollTop = 0; // 스크롤 맨 위로 이동
+        }
     }
 
     // 3. 버튼 활성화 UI
@@ -195,6 +202,8 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         window.switchView('lobby-view');
         onSnapshot(doc(db, "users", user.uid), (docSnapshot) => {
+            if (!docSnapshot.exists()) return; // 데이터 없으면 중단
+
             const userData = docSnapshot.data();
             const coins = userData?.coins || 0;
             const t = window.t;
@@ -215,6 +224,7 @@ onAuthStateChanged(auth, (user) => {
             const activeProfile = document.getElementById('profile-tab');
             const activeCoin = document.getElementById('coin-tab');
 
+            // 활성화된 탭만 다시 렌더링 (불필요한 리소스 방지)
             if (activeShop && activeShop.style.display === 'block') renderShop(user);
             if (activeProfile && activeProfile.style.display === 'block') renderProfile(user);
             if (activeCoin && activeCoin.style.display === 'block') renderCoinTab(user);
