@@ -1,7 +1,6 @@
 import { doc, getDoc, updateDoc, increment, collection, query, where, getDocs, addDoc, orderBy, limit, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// [레벨 계산 함수 (profile.js와 동일)]
-// 10레벨(0xp) ~ 1레벨(500k xp)
+// [레벨 테이블 (규칙 계산용)]
 const LEVEL_TABLE = [
     { lv: 10, reqExp: 0 }, { lv: 9, reqExp: 2000 }, { lv: 8, reqExp: 5000 },
     { lv: 7, reqExp: 10000 }, { lv: 6, reqExp: 20000 }, { lv: 5, reqExp: 40000 },
@@ -11,11 +10,11 @@ const LEVEL_TABLE = [
 
 function getCurrentLevel(exp, role) {
     if (role === 'admin') return 0; // 운영자
-    if (exp >= LEVEL_TABLE[9].reqExp) return 1; // 만렙 (GOD)
+    if (exp >= LEVEL_TABLE[9].reqExp) return 1; // 만렙
     for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
         if (exp >= LEVEL_TABLE[i].reqExp) return LEVEL_TABLE[i].lv;
     }
-    return 10; // 기본값
+    return 10;
 }
 
 export async function renderCoinTab(user) {
@@ -26,7 +25,6 @@ export async function renderCoinTab(user) {
     const db = window.lotGoDb;
 
     try {
-        // 유저 정보 최신화
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
         
@@ -39,12 +37,12 @@ export async function renderCoinTab(user) {
         const role = userData.role || 'user';
         const myExp = userData.exp || 0;
         
-        // 레벨 계산 및 규칙 적용
+        // 레벨 및 규칙 계산
         const level = getCurrentLevel(myExp, role);
         
-        // [규칙 동기화]
-        // 수수료: 레벨 숫자와 동일 (Lv 10 = 10%, Lv 1 = 1%)
-        // 최소 송금: 50,000 + (레벨 * 5,000) (Lv 10 = 100k, Lv 1 = 55k)
+        // [규칙]
+        // 수수료: Lv.N = N% (Lv.1 = 1%, Lv.10 = 10%)
+        // 최소 송금: 50,000 + (Lv * 5,000) (Lv.1 = 55k, Lv.10 = 100k)
         let feePercent = (level === 0) ? 0 : level; 
         let minAmount = (level === 0) ? 1 : 50000 + (level * 5000);
 
@@ -88,7 +86,6 @@ export async function renderCoinTab(user) {
             </div>
         `;
 
-        // 예상 수수료 실시간 계산
         setTimeout(() => {
             const inputEl = document.getElementById('send-amount');
             if(inputEl) {
@@ -106,11 +103,9 @@ export async function renderCoinTab(user) {
 
     } catch (e) {
         console.error("Render Coin Tab Error:", e);
-        container.innerHTML = `<div style="padding:20px; text-align:center; color:red;">Error loading tab.<br>${e.message}</div>`;
     }
 }
 
-// 송금 처리 함수
 async function handleSendCoin(user, userData, level, minAmount, feePercent) {
     const db = window.lotGoDb;
     const t = window.t || {};
@@ -125,10 +120,9 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
     // 최소 금액 체크
     if (amount < minAmount) return alert(`${t.alert_gift_min || "Minimum:"} ${minAmount.toLocaleString()} C`);
     
-    // XP 부족 체크 (만렙/운영자 제외)
+    // XP 체크 (만렙/운영자 제외하고 XP 부족하면 송금 불가)
     if (userData.exp < 100 && level > 1) return alert(t.alert_low_xp || "Need 100 XP to transfer.");
 
-    // 수수료 계산
     const fee = Math.floor(amount * (feePercent / 100));
     const totalDeduct = amount + fee;
 
@@ -144,10 +138,8 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
         if (querySnapshot.empty) return alert("User not found.");
         
         const targetDoc = querySnapshot.docs[0];
-        const targetUser = targetDoc.data();
         const targetUid = targetDoc.id;
 
-        // 트랜잭션 처리 (안전한 송금)
         await runTransaction(db, async (transaction) => {
             const senderRef = doc(db, "users", user.uid);
             const receiverRef = doc(db, "users", targetUid);
@@ -162,9 +154,9 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
 
             if (sData.coins < totalDeduct) throw "Insufficient coins";
 
-            // 1. 보내는 사람 차감 (코인 + XP)
+            // 1. 보내는 사람 차감 (코인 + XP 100)
             let updates = { coins: sData.coins - totalDeduct };
-            if (level > 1 && level !== 0) { // 만렙(1)과 운영자(0)는 XP 차감 안 함
+            if (level > 1 && level !== 0) { 
                 updates.exp = Math.max(0, (sData.exp || 0) - 100);
             }
             transaction.update(senderRef, updates);
@@ -173,11 +165,10 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
             transaction.update(receiverRef, { coins: (rData.coins || 0) + amount });
         });
 
-        // 3. 로그 저장 (별도 수행)
         await addDoc(collection(db, "transfers"), {
             sender: userData.username,
             senderUid: user.uid,
-            receiver: targetUser.username,
+            receiver: querySnapshot.docs[0].data().username,
             receiverUid: targetUid,
             amount: amount,
             fee: fee,
@@ -192,11 +183,10 @@ async function handleSendCoin(user, userData, level, minAmount, feePercent) {
 
     } catch (e) {
         console.error(e);
-        alert("Transfer failed: " + e.message); // 에러 메시지가 object일 경우를 대비해 message 처리 필요하나 string throw도 있음
+        alert("Transfer failed: " + e.message);
     }
 }
 
-// 로그 불러오기
 async function loadCoinLogs(user) {
     const db = window.lotGoDb;
     const t = window.t || {};
@@ -242,7 +232,7 @@ async function loadCoinLogs(user) {
     } catch (e) {
         console.error(e);
         listEl.innerHTML = `<div style="color:red; font-size:0.8rem; text-align:center;">
-            System Index required.<br>Check console for link.
+            System Index required.<br>Check console.
         </div>`;
     }
 }
