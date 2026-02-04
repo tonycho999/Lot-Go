@@ -9,7 +9,7 @@
     --primary: #3b82f6;
     --accent: #f59e0b;
     --text-main: #f8fafc;
-    /* 모바일 브라우저 툴바 제외 실제 높이 대응 */
+    /* 모바일 브라우저 상단바 제외 높이 */
     --vh: 1vh; 
 }
 
@@ -17,12 +17,13 @@
 body, html {
     margin: 0; padding: 0;
     width: 100%; 
-    height: 100%; 
+    /* calc를 사용하여 모바일 브라우저 툴바 대응 */
+    height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow: hidden; /* 바깥 스크롤 금지 */
+    overflow: hidden; 
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -46,14 +47,15 @@ body, html {
     position: relative;
 }
 
-/* [예외] 로그인 화면 스크롤 설정 */
+/* [수정] 로그인 화면 중앙 정렬 로직 강화 */
 .view-container.auth-mode {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    justify-content: center; /* 화면이 작으면 위로 붙고, 크면 중앙 정렬 */
+    padding: 40px 20px;
     box-sizing: border-box;
 }
 
@@ -68,18 +70,19 @@ body, html {
     width: 100%;
     z-index: 100;
     background: var(--bg-dark);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 그림자 강화 */
 }
 
 /* [핵심] 중앙 스크롤 영역 */
 .tab-system, 
 #game-board {
-    flex: 1; /* 가변 높이 */
+    flex: 1; 
     overflow-y: auto !important;
     overflow-x: hidden;
     width: 100%;
-    /* 하단 네비게이션 가림 방지 패딩 증가 */
-    padding-bottom: 90px; 
+    /* [수정] 스크롤 시 하단 네비게이션 뒤로 내용이 지나가게 처리 */
+    position: relative;
+    padding-bottom: 80px; /* 네비게이션 높이 + 여유공간 */
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
 }
@@ -87,24 +90,26 @@ body, html {
 /* 개별 탭 컨텐츠 보정 */
 .tab-content {
     width: 100%;
-    height: auto; /* 내용만큼 늘어나야 스크롤 생김 */
+    /* [수정] height: auto로 두어야 내용에 따라 스크롤이 생성됨 */
+    height: auto; 
     min-height: 100%;
-    display: block; /* Flex 충돌 방지 */
+    display: block; 
 }
 
 /* 하단 네비게이션 (고정) */
 .bottom-nav {
-    position: fixed; /* absolute보다 fixed가 스크롤 간섭이 적음 */
-    bottom: 0; left: 0; width: 100%;
+    position: fixed; /* absolute보다 fixed가 스크롤 간섭에서 자유로움 */
+    bottom: 0; left: 0; 
+    width: 100%;
     height: 70px;
-    background: rgba(15, 23, 42, 0.98); /* 배경 투명도 낮춤 */
+    background: rgba(15, 23, 42, 0.95); /* 가시성 위해 반투명 설정 */
     backdrop-filter: blur(10px);
     border-top: 1px solid #334155;
     display: flex; 
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단바 대응 */
 }
 
 /* -------------------------------------------
@@ -118,7 +123,7 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease; /* 전환 속도 최적화 */
     text-shadow: 0 0 5px var(--primary);
     box-shadow: 0 0 5px var(--primary);
     border-radius: 8px;
@@ -126,23 +131,30 @@ body, html {
     font-size: 1rem;
     text-transform: uppercase;
 }
+
 .neon-btn:hover { 
     background: var(--primary); 
     color: #000;
-    box-shadow: 0 0 15px var(--primary);
+    box-shadow: 0 0 20px var(--primary);
 }
-.neon-btn:active { transform: scale(0.98); }
+
+/* [추가] 버튼 클릭 시 눌리는 시각적 효과 */
+.neon-btn:active {
+    transform: scale(0.96);
+    filter: brightness(1.2);
+}
 
 .neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
-.neon-btn.secondary { color: #a855f7; border-color: #a855f7; }
-.neon-btn.success { color: #10b981; border-color: #10b981; }
+.neon-btn.secondary { color: #a855f7; border-color: #a855f7; box-shadow: 0 0 5px #a855f7; }
+.neon-btn.success { color: #10b981; border-color: #10b981; box-shadow: 0 0 5px #10b981; }
 
-/* 텍스트용 버튼 (회원가입/로그인 전환용) */
 .text-btn {
     background: none; border: none;
     color: #94a3b8; font-size: 0.9rem;
     text-decoration: underline;
-    cursor: pointer; margin-top: 10px;
+    cursor: pointer; 
+    margin-top: 15px;
+    padding: 10px;
 }
 
 .nav-item {
@@ -151,14 +163,15 @@ body, html {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     cursor: pointer; flex: 1;
     padding: 5px 0;
-    transition: 0.2s;
+    transition: color 0.3s;
 }
+
 .nav-item.active { color: var(--accent); }
 .nav-icon { font-size: 1.5rem; margin-bottom: 2px; }
 
 .neon-input {
     width: 100%;
-    padding: 12px 15px;
+    padding: 14px 15px; /* 패딩 약간 증가 */
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid #475569;
     border-radius: 8px;
@@ -167,10 +180,11 @@ body, html {
     font-size: 1rem;
     outline: none;
     box-sizing: border-box;
-    transition: 0.2s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
+
 .neon-input:focus {
     border-color: var(--primary);
     background: rgba(30, 41, 59, 1);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
