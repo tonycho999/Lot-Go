@@ -11,19 +11,18 @@
     --vh: 1vh; /* 모바일 높이 대응 */
 }
 
-/* 1. 기본 설정 및 초기화 */
+/* 1. 기본 설정 */
 * { box-sizing: border-box; }
 
 body, html {
     margin: 0; padding: 0;
     width: 100%; height: 100%;
-    /* 모바일 브라우저 툴바 제외 실제 높이 */
     height: calc(var(--vh, 1vh) * 100);
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow: hidden; /* 바깥쪽 스크롤 차단 */
-    position: fixed; /* iOS 스크롤 튕김 방지 */
+    overflow: hidden; 
+    position: fixed; 
 }
 
 #app-viewport {
@@ -40,7 +39,6 @@ body, html {
     position: relative;
 }
 
-/* 로그인 화면 예외 (중앙 정렬) */
 .view-container.auth-mode {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -49,13 +47,13 @@ body, html {
 }
 
 /* -------------------------------------------
-   [로비 레이아웃 핵심: Flex 분할 방식]
+   [로비 레이아웃: Flex 분할 방식]
    ------------------------------------------- */
 
-/* [1. 상단] 밸런스바 & 알림 영역 (높이 고정) */
+/* [1. 상단] 밸런스바 & 알림 영역 */
 #balance-container, 
 #game-header {
-    flex: 0 0 auto; /* 절대 줄어들지 않음 */
+    flex: 0 0 auto; 
     width: 100%;
     z-index: 50;
     background: var(--bg-dark);
@@ -63,10 +61,10 @@ body, html {
     position: relative;
 }
 
-/* 밸런스 정보 디자인 (폰트 축소 반영) */
+/* 밸런스 정보 */
 .balance-wrapper {
     background: linear-gradient(to right, #1e293b, #0f172a);
-    padding: 8px 15px 5px 15px; /* 공간 확보를 위해 패딩 조절 */
+    padding: 8px 15px 5px 15px; 
     text-align: center;
     border-bottom: 1px solid #334155;
     position: relative;
@@ -74,131 +72,93 @@ body, html {
 }
 
 .balance-label {
-    font-size: 0.7rem; 
-    color: #94a3b8; 
-    letter-spacing: 1px; 
-    margin-bottom: 2px;
+    font-size: 0.7rem; color: #94a3b8; letter-spacing: 1px; margin-bottom: 2px;
 }
 
 .balance-amount {
-    font-size: 1.4rem; /* 기존 1.8rem에서 축소 */
-    font-weight: 900; 
-    color: #fff; 
-    font-family: 'Orbitron', sans-serif;
-    line-height: 1.2;
+    font-size: 1.4rem; font-weight: 900; color: #fff; 
+    font-family: 'Orbitron', sans-serif; line-height: 1.2;
 }
 
-/* 하단 알림 메시지 영역 (Ticker) */
+/* 알림 메시지 (Ticker) */
 .notification-ticker {
-    width: 100%;
-    height: 30px; /* 메시지 표시 공간 */
+    width: 100%; height: 30px; 
     background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
     border-bottom: 1px solid #334155;
 }
 
 .ticker-text {
-    font-size: 0.8rem;
-    white-space: nowrap;
-    color: #cbd5e1;
+    font-size: 0.8rem; white-space: nowrap; color: #cbd5e1;
     font-family: 'Exo 2', sans-serif;
-    opacity: 0; /* 기본 숨김 */
-    transition: opacity 0.5s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    opacity: 0; transition: opacity 0.5s;
+    display: flex; align-items: center; gap: 5px;
 }
-
-/* 메시지 등장 효과 */
-.ticker-text.show {
-    opacity: 1;
-    animation: slideUpFade 0.5s ease-out;
-}
+.ticker-text.show { opacity: 1; animation: slideUpFade 0.5s ease-out; }
 
 @keyframes slideUpFade {
     from { transform: translateY(10px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
-
-/* 잭팟 메시지 스타일 */
 .jackpot-msg {
-    color: #ffd700;
-    font-weight: bold;
-    text-shadow: 0 0 5px #d4af37;
+    color: #ffd700; font-weight: bold; text-shadow: 0 0 5px #d4af37;
     animation: pulseGold 1s infinite;
 }
-
 @keyframes pulseGold {
     0% { transform: scale(1); text-shadow: 0 0 5px #d4af37; }
-    50% { transform: scale(1.05); text-shadow: 0 0 15px #ffd700, 0 0 30px #ff4500; }
+    50% { transform: scale(1.05); text-shadow: 0 0 15px #ffd700; }
     100% { transform: scale(1); text-shadow: 0 0 5px #d4af37; }
 }
-
 
 /* [2. 중앙] 탭 시스템 (스크롤 영역) */
 .tab-system, 
 #game-board {
-    flex: 1 1 auto; /* 남은 공간 모두 차지 */
-    min-height: 0; /* [중요] Flex 자식 스크롤 필수 설정 */
-    height: 100%; 
+    flex: 1 1 auto; /* 남은 공간 차지 */
+    
+    /* [수정됨] 높이를 100%로 강제하지 않음 -> Flex가 알아서 계산 */
+    height: auto; 
+    min-height: 0; 
 
-    overflow-y: scroll !important; /* 스크롤 강제 */
+    overflow-y: scroll !important;
     overflow-x: hidden;
     
     width: 100%;
     position: relative;
     padding: 0; 
-    padding-bottom: 20px;
+    
+    /* [수정됨] 하단바에 가려지지 않도록 넉넉한 여백 추가 (100px) */
+    padding-bottom: 100px !important; 
+    
     -webkit-overflow-scrolling: touch;
 }
 
-/* 탭 내용물 */
 .tab-content {
     width: 100%;
-    height: auto !important; /* 내용만큼 늘어남 */
+    height: auto !important; 
     min-height: auto !important;
     display: block;
 }
 
-
 /* [3. 하단] 네비게이션바 (고정) */
 .bottom-nav {
-    flex: 0 0 70px; /* 높이 고정 */
+    flex: 0 0 70px; 
     width: 100%;
     position: relative;
     background: #0f172a;
     border-top: 1px solid #334155;
-    
-    display: flex; 
-    justify-content: space-around;
-    align-items: center;
+    display: flex; justify-content: space-around; align-items: center;
     z-index: 100;
-    
-    /* 아이폰 홈바 대응 */
     padding-bottom: env(safe-area-inset-bottom);
     height: calc(70px + env(safe-area-inset-bottom));
 }
 
-/* -------------------------------------------
-   [UI 요소] 버튼 및 입력창
-   ------------------------------------------- */
+/* UI 요소 */
 .neon-btn {
-    background: transparent;
-    color: var(--primary);
-    border: 2px solid var(--primary);
-    padding: 12px 20px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 8px;
-    width: 100%;
-    font-size: 1rem;
-    transition: 0.2s;
-    margin-top: 10px;
+    background: transparent; color: var(--primary); border: 2px solid var(--primary);
+    padding: 12px 20px; font-family: 'Orbitron', sans-serif; font-weight: bold;
+    cursor: pointer; border-radius: 8px; width: 100%; font-size: 1rem;
+    transition: 0.2s; margin-top: 10px;
 }
 .neon-btn:hover { background: var(--primary); color: #000; }
 .neon-btn:active { transform: scale(0.96); }
@@ -208,14 +168,12 @@ body, html {
 .neon-btn.success { color: #10b981; border-color: #10b981; }
 
 .text-btn {
-    background: none; border: none;
-    color: #94a3b8; text-decoration: underline;
+    background: none; border: none; color: #94a3b8; text-decoration: underline;
     margin-top: 10px; cursor: pointer;
 }
 
 .nav-item {
-    background: none; border: none;
-    color: #64748b; font-size: 0.7rem;
+    background: none; border: none; color: #64748b; font-size: 0.7rem;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     cursor: pointer; flex: 1; padding: 5px 0;
 }
@@ -223,9 +181,7 @@ body, html {
 .nav-icon { font-size: 1.5rem; margin-bottom: 2px; }
 
 .neon-input {
-    width: 100%; padding: 12px;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid #475569;
-    border-radius: 8px; color: #fff; font-size: 1rem; outline: none;
+    width: 100%; padding: 12px; background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #475569; border-radius: 8px; color: #fff; font-size: 1rem; outline: none;
 }
 .neon-input:focus { border-color: var(--primary); }
