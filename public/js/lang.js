@@ -6,7 +6,8 @@ export const DICTIONARY = {
         cancel: "Cancel",
         close: "CLOSE",
         loading: "Loading...",
-        daily_bonus_title: "DAILY BONUS", // [추가]
+        daily_bonus_title: "DAILY BONUS",
+        
         // [Auth]
         login_subtitle: "WIN BIG OR GO HOME",
         ph_username: "Username",
@@ -21,12 +22,14 @@ export const DICTIONARY = {
         ph_referral: "Referral Code (Required)",
         btn_signup: "SIGN UP",
         btn_back_login: "Back to Login",
+        
         // [Menu]
         lobby_single: "SINGLE",
         lobby_online: "ONLINE",
         lobby_shop: "SHOP",
         lobby_coin: "COIN", 
         lobby_profile: "PROFILE",
+        
         // [Single Game]
         single_menu_easy: "EASY",
         single_menu_normal: "NORMAL",
@@ -45,20 +48,50 @@ export const DICTIONARY = {
         big_win: "✨ BIG WIN!",
         safe: "SAFE!",
         almost: "ALMOST!",
-        unlucky: "Better luck next time!", // [수정됨]
+        unlucky: "Better luck next time!",
         replay: "🔄 REPLAY",
         lobby_btn: "🏠 LOBBY",
         back_lobby: "BACK TO LOBBY",
         my_coins: "MY COINS",
-        // [Shop]
+        
+        // [Shop & Items]
         shop_title: "ITEM SHOP",
-        item_double_name: "x2 Double Ticket",
-        item_double_desc: "Doubles the prize for one game.",
         buy_btn: "BUY",
         owned: "Owned",
-        cost: "Cost",
+        cost: "Price",
         buy_confirm: "Buy this item for",
         buy_success: "Purchase successful!",
+        already_owned: "Already owned.",
+        daily_limit: "Daily Limit Reached (1/1)",
+
+        // Item Names & Descriptions
+        item_skin_gold_name: "Gold Ball Skin",
+        item_skin_gold_desc: "Bling bling! Golden texture.",
+        
+        item_double_name: "x2 Double Ticket",
+        item_double_desc: "Doubles the prize (Auto-use on Win).",
+        
+        item_spyglass_name: "Spyglass",
+        item_spyglass_desc: "Reveals 1 winning number at start.",
+        
+        item_insurance_name: "Insurance",
+        item_insurance_desc: "Recover 50% cost if you lose.",
+        
+        item_xp_boost_name: "XP Booster (1h)",
+        item_xp_boost_desc: "x2 XP gain for 1 hour (Activates on buy).",
+        
+        item_free_pass_name: "Free Pass",
+        item_free_pass_desc: "Play for free (1 per day).",
+        
+        item_discount_50_name: "50% Discount",
+        item_discount_50_desc: "50% off entry fee.",
+
+        // In-Game Item Messages
+        use_items: "USE ITEMS",
+        active_booster: "🔥 XP BOOST ACTIVE!",
+        spyglass_msg: "🕵️ Spyglass revealed: ",
+        insurance_msg: "🛡️ Insurance saved your coins!",
+
         // [Profile]
         level_guide_btn: "❓ LEVEL GUIDE",
         my_items: "MY ITEMS",
@@ -66,6 +99,7 @@ export const DICTIONARY = {
         logout: "LOGOUT",
         my_referral: "MY REFERRAL CODE",
         copied: "Copied!",
+        
         // [Popup & Alerts]
         guide_title: "LEVEL & XP SYSTEM",
         guide_subtitle_xp: "📈 HOW TO GET XP",
@@ -80,6 +114,7 @@ export const DICTIONARY = {
         alert_gift_min: "Minimum transfer amount is",
         alert_gift_confirm: "Send",
         alert_gift_success: "Successfully sent",
+        
         // [Coin Tab]
         coin_title: "TRANSFER COIN",
         rate_info: "※ Approx. Value: 1,000 C ≈ $1.00",
@@ -103,7 +138,8 @@ export const DICTIONARY = {
         cancel: "취소",
         close: "닫기",
         loading: "로딩 중...",
-        daily_bonus_title: "출석 보너스", // [추가]
+        daily_bonus_title: "출석 보너스",
+        
         // [Auth]
         login_subtitle: "인생 한방! 승부하라!",
         ph_username: "아이디",
@@ -118,12 +154,14 @@ export const DICTIONARY = {
         ph_referral: "추천인 코드 (필수)",
         btn_signup: "가입하기",
         btn_back_login: "로그인 화면으로 돌아가기",
+        
         // [메뉴]
         lobby_single: "싱글게임",
         lobby_online: "온라인",
         lobby_shop: "상점",
         lobby_coin: "코인",
         lobby_profile: "프로필",
+        
         // [싱글 게임]
         single_menu_easy: "쉬움 (EASY)",
         single_menu_normal: "보통 (NORMAL)",
@@ -142,20 +180,50 @@ export const DICTIONARY = {
         big_win: "✨ 대박 당첨!",
         safe: "본전 회수!",
         almost: "아까워요!",
-        unlucky: "아쉽네요.. 다음 기회에.. 😭", // [수정됨]
+        unlucky: "아쉽네요.. 다음 기회에.. 😭",
         replay: "🔄 다시 하기",
         lobby_btn: "🏠 로비로",
         back_lobby: "로비로 돌아가기",
         my_coins: "내 코인",
-        // [상점]
+        
+        // [상점 & 아이템]
         shop_title: "아이템 상점",
-        item_double_name: "x2배 당첨 티켓",
-        item_double_desc: "한 게임의 당첨금을 2배로 만듭니다.",
         buy_btn: "구매하기",
         owned: "보유량",
         cost: "가격",
         buy_confirm: "이 아이템을 구매하시겠습니까? 가격:",
         buy_success: "구매 성공!",
+        already_owned: "이미 보유 중입니다.",
+        daily_limit: "일일 구매 제한 (1/1)",
+
+        // 아이템 이름 및 설명
+        item_skin_gold_name: "나만의 공 (골드)",
+        item_skin_gold_desc: "블링블링! 황금색 공 스킨입니다.",
+        
+        item_double_name: "상금 더블 티켓",
+        item_double_desc: "당첨 시 상금을 2배로 받습니다.",
+        
+        item_spyglass_name: "투시경",
+        item_spyglass_desc: "게임 시작 시 정답 공 1개를 미리 봅니다.",
+        
+        item_insurance_name: "보험권",
+        item_insurance_desc: "꽝일 경우 참가비의 50%를 돌려받습니다.",
+        
+        item_xp_boost_name: "XP 부스터 (1시간)",
+        item_xp_boost_desc: "1시간 동안 경험치 2배 (구매 즉시 발동).",
+        
+        item_free_pass_name: "무료 입장권",
+        item_free_pass_desc: "참가비 무료 (매일 1회 구매 가능).",
+        
+        item_discount_50_name: "50% 할인권",
+        item_discount_50_desc: "참가비를 50% 할인받습니다.",
+
+        // 게임 내 아이템 메시지
+        use_items: "아이템 사용 설정",
+        active_booster: "🔥 XP 부스터 적용 중!",
+        spyglass_msg: "🕵️ 투시경이 번호를 찾았습니다: ",
+        insurance_msg: "🛡️ 보험권으로 코인을 일부 복구했습니다!",
+
         // [프로필]
         level_guide_btn: "❓ 레벨 가이드",
         my_items: "내 아이템",
@@ -163,6 +231,7 @@ export const DICTIONARY = {
         logout: "로그아웃",
         my_referral: "내 추천인 코드",
         copied: "복사됨!",
+        
         // [팝업 & 알림]
         guide_title: "레벨 및 XP 시스템",
         guide_subtitle_xp: "📈 경험치 획득 방법",
@@ -177,6 +246,7 @@ export const DICTIONARY = {
         alert_gift_min: "최소 송금 금액은",
         alert_gift_confirm: "보내시겠습니까?",
         alert_gift_success: "전송 성공!",
+        
         // [Coin Tab]
         coin_title: "코인 보내기",
         rate_info: "※ 가치 환산: 1,000 C ≈ $1.00 (참고용)",
