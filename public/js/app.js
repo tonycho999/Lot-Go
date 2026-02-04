@@ -98,6 +98,7 @@ async function checkDailyBonus(user) {
         const today = new Date().toDateString(); 
 
         if (lastDate !== today) {
+            // 오늘 처음 접속
             await updateDoc(userRef, {
                 coins: increment(1000),
                 lastBonusDate: today
