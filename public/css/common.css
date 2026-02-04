@@ -9,21 +9,20 @@
     --primary: #3b82f6;
     --accent: #f59e0b;
     --text-main: #f8fafc;
-    /* 모바일 브라우저 상단바 제외 높이 */
-    --vh: 1vh; 
+    --vh: 1vh; /* 모바일 높이 대응 변수 */
 }
 
 /* 1. 앱 전체 화면 고정 */
 body, html {
     margin: 0; padding: 0;
     width: 100%; 
-    /* calc를 사용하여 모바일 브라우저 툴바 대응 */
-    height: 100vh;
+    height: 100%;
+    /* 모바일 브라우저 주소창 문제 해결을 위한 높이 설정 */
     height: calc(var(--vh, 1vh) * 100);
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Exo 2', sans-serif;
-    overflow: hidden; 
+    overflow: hidden; /* 바깥쪽 스크롤 금지 */
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -36,79 +35,70 @@ body, html {
     overflow: hidden;
 }
 
-/* 2. 뷰 컨테이너 (로비, 게임 등) */
+/* 2. 뷰 컨테이너 (Flex Column 구조) */
 .view-container {
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow: hidden; /* 자식 요소에서만 스크롤 허용 */
     background: var(--bg-dark);
     position: relative;
 }
 
-/* [수정] 로그인 화면 중앙 정렬 로직 강화 */
+/* [로그인 화면 예외 처리] */
 .view-container.auth-mode {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    flex-direction: column;
+    overflow-y: auto !important; /* 내용이 길면 전체 스크롤 */
+    justify-content: center;
     align-items: center;
-    justify-content: center; /* 화면이 작으면 위로 붙고, 크면 중앙 정렬 */
-    padding: 40px 20px;
-    box-sizing: border-box;
+    padding: 20px;
 }
 
 /* -------------------------------------------
-   [로비/게임 레이아웃] 상단 고정 - 중간 스크롤 - 하단 고정
+   [로비 레이아웃: 고정 - 스크롤 - 고정]
    ------------------------------------------- */
 
-/* 상단 고정 영역 */
+/* [상단] 밸런스바 및 게임 헤더 (고정) */
 #balance-container, 
 #game-header {
-    flex-shrink: 0; 
+    flex-shrink: 0; /* 크기 줄어들지 않음 */
     width: 100%;
-    z-index: 100;
+    z-index: 50;
     background: var(--bg-dark);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 그림자 강화 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* [핵심] 중앙 스크롤 영역 */
+/* [중앙] 탭 시스템 (스크롤 영역) */
 .tab-system, 
 #game-board {
-    flex: 1; 
-    overflow-y: auto !important;
+    flex: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto !important; /* 세로 스크롤 강제 */
     overflow-x: hidden;
     width: 100%;
-    /* [수정] 스크롤 시 하단 네비게이션 뒤로 내용이 지나가게 처리 */
     position: relative;
-    padding-bottom: 80px; /* 네비게이션 높이 + 여유공간 */
+    padding-bottom: 20px; /* 하단 여백 */
     box-sizing: border-box;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
 }
 
-/* 개별 탭 컨텐츠 보정 */
+/* 탭 내부 컨텐츠 */
 .tab-content {
     width: 100%;
-    /* [수정] height: auto로 두어야 내용에 따라 스크롤이 생성됨 */
-    height: auto; 
-    min-height: 100%;
-    display: block; 
+    height: auto;
+    display: block;
 }
 
-/* 하단 네비게이션 (고정) */
+/* [하단] 네비게이션바 (고정) */
 .bottom-nav {
-    position: fixed; /* absolute보다 fixed가 스크롤 간섭에서 자유로움 */
-    bottom: 0; left: 0; 
+    flex-shrink: 0; /* 크기 줄어들지 않음 */
     width: 100%;
     height: 70px;
-    background: rgba(15, 23, 42, 0.95); /* 가시성 위해 반투명 설정 */
-    backdrop-filter: blur(10px);
+    background: rgba(15, 23, 42, 0.98);
     border-top: 1px solid #334155;
     display: flex; 
     justify-content: space-around;
     align-items: center;
-    z-index: 1000;
+    z-index: 100;
     padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단바 대응 */
 }
 
@@ -123,68 +113,40 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s ease; /* 전환 속도 최적화 */
+    transition: all 0.3s ease;
     text-shadow: 0 0 5px var(--primary);
     box-shadow: 0 0 5px var(--primary);
     border-radius: 8px;
     width: 100%;
     font-size: 1rem;
-    text-transform: uppercase;
 }
-
-.neon-btn:hover { 
-    background: var(--primary); 
-    color: #000;
-    box-shadow: 0 0 20px var(--primary);
-}
-
-/* [추가] 버튼 클릭 시 눌리는 시각적 효과 */
-.neon-btn:active {
-    transform: scale(0.96);
-    filter: brightness(1.2);
-}
+.neon-btn:hover { background: var(--primary); color: #000; }
+.neon-btn:active { transform: scale(0.98); }
 
 .neon-btn.primary { color: #3b82f6; border-color: #3b82f6; }
-.neon-btn.secondary { color: #a855f7; border-color: #a855f7; box-shadow: 0 0 5px #a855f7; }
-.neon-btn.success { color: #10b981; border-color: #10b981; box-shadow: 0 0 5px #10b981; }
+.neon-btn.secondary { color: #a855f7; border-color: #a855f7; }
+.neon-btn.success { color: #10b981; border-color: #10b981; }
 
 .text-btn {
     background: none; border: none;
-    color: #94a3b8; font-size: 0.9rem;
-    text-decoration: underline;
-    cursor: pointer; 
-    margin-top: 15px;
-    padding: 10px;
+    color: #94a3b8; margin-top: 10px; cursor: pointer; text-decoration: underline;
 }
 
 .nav-item {
     background: none; border: none;
     color: #64748b; font-size: 0.7rem;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer; flex: 1;
-    padding: 5px 0;
-    transition: color 0.3s;
+    cursor: pointer; flex: 1; padding: 5px 0;
 }
-
 .nav-item.active { color: var(--accent); }
 .nav-icon { font-size: 1.5rem; margin-bottom: 2px; }
 
 .neon-input {
-    width: 100%;
-    padding: 14px 15px; /* 패딩 약간 증가 */
-    background: rgba(30, 41, 59, 0.8);
+    width: 100%; padding: 12px;
+    background: rgba(30, 41, 59, 0.5);
     border: 1px solid #475569;
     border-radius: 8px;
-    color: #fff;
-    font-family: 'Exo 2', sans-serif;
-    font-size: 1rem;
-    outline: none;
+    color: #fff; font-size: 1rem; outline: none;
     box-sizing: border-box;
-    transition: border-color 0.3s, box-shadow 0.3s;
 }
-
-.neon-input:focus {
-    border-color: var(--primary);
-    background: rgba(30, 41, 59, 1);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
+.neon-input:focus { border-color: var(--primary); }
